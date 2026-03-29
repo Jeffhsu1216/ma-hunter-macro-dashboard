@@ -2,10 +2,10 @@ name: Daily Macro Dashboard Push
 
 on:
   schedule:
-    # 02:00 UTC = 10:00 台北時間，每天執行
+    # 每日台北時間 10:00 = UTC 02:00
     - cron: '0 2 * * *'
   workflow_dispatch:
-    # 允許手動觸發（GitHub Actions 頁面按 Run workflow）
+    # 手動觸發（GitHub Actions 頁面按 Run workflow）
 
 jobs:
   push-telegram:
