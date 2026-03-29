@@ -271,43 +271,43 @@ def fetch_economic_calendar() -> list:
 
 def fetch_taiwan_market() -> dict:
     try:
-        today_str = date.today().strftime("%Y%m%d")
-        url = f"https://www.twse.com.tw/rwd/zh/fund/T86?response=json&date={today_str}"
+        url = "https://www.twse.com.tw/rwd/zh/fund/BFI82U?response=json&type=day"
         resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
         data = resp.json()
         if data.get("stat") != "OK" or not data.get("data"):
             return None
 
         rows = data["data"]
-        fields = data.get("fields", [])
 
-        # Find 合計 row
-        total_row = None
-        for row in reversed(rows):
-            if "合計" in str(row[0]):
-                total_row = row
-                break
-        if total_row is None:
-            return None
-
-        def parse_num(s):
+        def parse_amt(s):
             try:
                 return int(str(s).replace(",", ""))
             except:
                 return 0
 
-        # Fields order: 名稱, 外資買進, 外資賣出, 外資買賣超, 投信買進, 投信賣出, 投信買賣超, 自營商買進, 自營商賣出, 自營商買賣超, 三大法人買賣超
-        foreign   = parse_num(total_row[3]) if len(total_row) > 3 else 0
-        inv_trust = parse_num(total_row[6]) if len(total_row) > 6 else 0
-        dealer    = parse_num(total_row[9]) if len(total_row) > 9 else 0
-        total     = parse_num(total_row[10]) if len(total_row) > 10 else 0
+        def yi(val):  # 轉億元，保留1位小數
+            return round(val / 1e8, 1)
+
+        foreign = inv_trust = dealer = total = 0
+        for row in rows:
+            name = row[0]
+            net  = parse_amt(row[3])
+            if name.startswith("外資及陸資"):
+                foreign = net
+            elif name == "投信":
+                inv_trust = net
+            elif "自營商" in name:
+                dealer += net
+            elif name == "合計":
+                total = net
 
         return {
-            "foreign":      foreign,
-            "inv_trust":    inv_trust,
-            "dealer":       dealer,
-            "total":        total,
-            "date":         data.get("date", today_str),
+            "foreign":   foreign,   "foreign_yi":   yi(foreign),
+            "inv_trust": inv_trust, "inv_trust_yi": yi(inv_trust),
+            "dealer":    dealer,    "dealer_yi":    yi(dealer),
+            "total":     total,     "total_yi":     yi(total),
+            "date":      data.get("date", ""),
+            "unit":      "億元",
         }
     except Exception as e:
         logger.warning(f"Taiwan market failed: {e}")
