@@ -402,22 +402,22 @@
             <div class="card-title">🇹🇼 台灣市場｜三大法人買賣超</div>
             {% if data.taiwan %}
             {% set tw = data.taiwan %}
-            {% set max_abs = [tw.foreign|abs, tw.inv_trust|abs, tw.dealer|abs, 1]|max %}
+            {% set max_abs = [tw.foreign_yi|abs, tw.inv_trust_yi|abs, tw.dealer_yi|abs, 1]|max %}
 
-            {% for label, val in [('外資', tw.foreign), ('投信', tw.inv_trust), ('自營商', tw.dealer)] %}
+            {% for label, yi_val in [('外資', tw.foreign_yi), ('投信', tw.inv_trust_yi), ('自營商', tw.dealer_yi)] %}
             <div class="inst-row">
                 <div class="inst-name">{{ label }}</div>
                 <div class="inst-bar-wrap">
                     <div class="inst-bar-track">
-                        {% set pct = (val|abs / max_abs * 50)|int %}
-                        {% if val >= 0 %}
+                        {% set pct = (yi_val|abs / max_abs * 50)|int %}
+                        {% if yi_val >= 0 %}
                         <div class="inst-bar-fill pos" style="width:{{ pct }}%;"></div>
                         {% else %}
                         <div class="inst-bar-fill neg" style="width:{{ pct }}%;"></div>
                         {% endif %}
                     </div>
-                    <div class="inst-val {{ 'up' if val >= 0 else 'down' }}">
-                        {{ '+' if val >= 0 else '' }}{{ "{:,}".format(val) }} 張
+                    <div class="inst-val {{ 'up' if yi_val >= 0 else 'down' }}">
+                        {{ '+' if yi_val >= 0 else '' }}{{ yi_val }} 億
                     </div>
                 </div>
             </div>
@@ -426,13 +426,13 @@
             <div class="divider"></div>
             <div class="row">
                 <div class="lbl" style="font-weight:600; color:var(--text);">三大法人合計</div>
-                <div class="val" style="font-size:16px;" class="{{ 'up' if tw.total >= 0 else 'down' }}">
-                    <span class="chg {{ 'up' if tw.total >= 0 else 'down' }}" style="font-size:14px; padding: 3px 8px;">
-                        {{ '+' if tw.total >= 0 else '' }}{{ "{:,}".format(tw.total) }} 張
+                <div class="val" style="font-size:16px;">
+                    <span class="chg {{ 'up' if tw.total_yi >= 0 else 'down' }}" style="font-size:14px; padding: 3px 8px;">
+                        {{ '+' if tw.total_yi >= 0 else '' }}{{ tw.total_yi }} 億元
                     </span>
                 </div>
             </div>
-            <div style="font-size:10px; color:var(--text-3); margin-top:8px;">資料日期：{{ tw.date }}</div>
+            <div style="font-size:10px; color:var(--text-3); margin-top:8px;">資料日期：{{ tw.date }}（單位：億元）</div>
             {% else %}
             <div style="color:var(--text-3); padding:20px 0; text-align:center;">
                 今日尚無資料（可能為假日或盤後更新前）
