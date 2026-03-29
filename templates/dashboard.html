@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M&A Hunter｜總經儀表板</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    <style>
+        /* ============================================================
+           M&A Hunter Macro Dashboard — Dark Theme
+           配色：深黑底 + 酒紅金 accent
+           ============================================================ */
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a25;
+            --border: #1e1e2e;
+            --text-primary: #e8e6e3;
+            --text-secondary: #8a8a9a;
+            --text-muted: #55556a;
+            --accent-gold: #c9a54e;
+            --accent-wine: #8b2252;
+            --green: #22c55e;
+            --red: #ef4444;
+            --green-bg: rgba(34, 197, 94, 0.08);
+            --red-bg: rgba(239, 68, 68, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--accent-wine) 0%, #1a0a15 100%);
+            border-bottom: 1px solid var(--accent-gold);
+            padding: 24px 0;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            letter-spacing: 1px;
+        }
+
+        .header h1 span {
+            color: var(--text-primary);
+            font-weight: 400;
+            font-size: 16px;
+            margin-left: 12px;
+        }
+
+        .header-meta {
+            text-align: right;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .header-meta .date {
+            font-size: 20px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .weekend-badge {
+            display: inline-block;
+            background: var(--accent-wine);
+            color: #fff;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: background 0.2s;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: var(--accent-gold);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .icon {
+            font-size: 18px;
+        }
+
+        /* Data rows */
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-row .label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .data-row .label .flag {
+            font-size: 16px;
+        }
+
+        .data-row .value {
+            font-size: 16px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
+
+        .data-row .change {
+            font-size: 13px;
+            font-weight: 500;
+            margin-left: 8px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .change.up {
+            color: var(--green);
+            background: var(--green-bg);
+        }
+
+        .change.down {
+            color: var(--red);
+            background: var(--red-bg);
+        }
+
+        .change.flat {
+            color: var(--text-muted);
+        }
+
+        /* Special: Fed Rate */
+        .fed-rate {
+            background: rgba(201, 165, 78, 0.06);
+            border: 1px solid rgba(201, 165, 78, 0.15);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+        }
+
+        .fed-rate .label {
+            font-size: 12px;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .fed-rate .value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent-gold);
+        }
+
+        /* Spread */
+        .spread-row {
+            background: rgba(255,255,255,0.02);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 8px;
+        }
+
+        /* VIX highlight */
+        .vix-row {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .vix-row .label {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Geopolitical section */
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .geo-item {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .geo-item:last-child {
+            border-bottom: none;
+        }
+
+        .geo-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .geo-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .geo-text strong {
+            color: var(--text-primary);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 32px 24px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 24px;
+        }
+
+        .footer a {
+            color: var(--accent-gold);
+            text-decoration: none;
+        }
+
+        /* Auto-refresh indicator */
+        .refresh-bar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 100;
+        }
+
+        .refresh-bar:hover {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+
+        .refresh-bar .dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Loading skeleton */
+        .loading { opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <h1>
+                🎯 M&A HUNTER
+                <span>總經儀表板</span>
+            </h1>
+            <div class="header-meta">
+                <div class="date">
+                    {{ today }}（{{ weekday }}）
+                    {% if is_weekend %}
+                    <span class="weekend-badge">休市日</span>
+                    {% endif %}
+                </div>
+                <div>數據日期：{{ data.market_date }}｜更新：{{ data.updated_at }}</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="grid">
+
+            <!-- ============================================================
+                 Card 1: 匯率與利率
+                 ============================================================ -->
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon">💱</span> 匯率與利率
+                </div>
+
+                <!-- Fed Rate -->
+                <div class="fed-rate">
+                    <div class="label">Fed Funds Rate</div>
+                    <div class="value">{{ data.rates.fed_rate }}%</div>
+                </div>
+
+                <!-- FX Rates -->
+                {% for fx in data.fx %}
+                <div class="data-row">
+                    <div class="label">{{ fx.name }}</div>
+                    <div class="value">
+                        {{ fx.price_fmt }}
+                        {% if fx.change_pct is not none %}
+                        <span class="change {{ 'up' if fx.change_pct > 0 else ('down' if fx.change_pct < 0 else 'flat') }}">
+                            {{ '+' if fx.change_pct > 0 else '' }}{{ fx.change_pct }}%
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Yields -->
+                <div class="data-row" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border);">
+                    <div class="label">US 10Y 殖利率</div>
+                    <div class="value">
+                        {% if data.rates.ten_y %}{{ "%.2f"|format(data.rates.ten_y) }}%{% else %}N/A{% endif %}
+                        {% if data.rates.ten_y_chg_bps is not none %}
+                        <span class="change {{ 'up' if data.rates.ten_y_chg_bps > 0 else ('down' if data.rates.ten_y_chg_bps < 0 else 'flat') }}">
+                            {{ '+' if data.rates.ten_y_chg_bps > 0 else '' }}{{ data.rates.ten_y_chg_bps }}bp
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="data-row">
+                    <div class="label">US 2Y 殖利率</div>
+                    <div class="value">
+                        {% if data.rates.two_y %}{{ "%.2f"|format(data.rates.two_y) }}%{% else %}N/A{% endif %}
+                        {% if data.rates.two_y_chg_bps is not none %}
+                        <span class="change {{ 'up' if data.rates.two_y_chg_bps > 0 else ('down' if data.rates.two_y_chg_bps < 0 else 'flat') }}">
+                            {{ '+' if data.rates.two_y_chg_bps > 0 else '' }}{{ data.rates.two_y_chg_bps }}bp
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if data.rates.spread_bps is not none %}
+                <div class="spread-row">
+                    <div class="data-row" style="border-bottom: none;">
+                        <div class="label">10Y-2Y 利差</div>
+                        <div class="value">
+                            <span class="change {{ 'up' if data.rates.spread_bps > 0 else 'down' }}">
+                                {{ '+' if data.rates.spread_bps > 0 else '' }}{{ data.rates.spread_bps|int }}bps
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- ============================================================
+                 Card 2: 全球股市 + VIX
+                 ============================================================ -->
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon">📈</span> 全球六大股市 + VIX
+                </div>
+
+                {% for idx in data.indices %}
+                {% if idx.get('is_vix') %}
+                <div class="data-row vix-row">
+                    <div class="label">
+                        <span class="flag">📉</span> VIX 恐慌指數
+                    </div>
+                    <div class="value">
+                        {{ idx.price_fmt }}
+                        {% if idx.change_pct is not none %}
+                        <span class="change {{ 'up' if idx.change_pct > 0 else ('down' if idx.change_pct < 0 else 'flat') }}">
+                            {{ '+' if idx.change_pct > 0 else '' }}{{ idx.change_pct }}%
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="data-row">
+                    <div class="label">
+                        <span class="flag">{{ idx.flag }}</span> {{ idx.name }}
+                    </div>
+                    <div class="value">
+                        {{ idx.price_fmt }}
+                        {% if idx.change_pct is not none %}
+                        <span class="change {{ 'up' if idx.change_pct > 0 else ('down' if idx.change_pct < 0 else 'flat') }}">
+                            {{ '+' if idx.change_pct > 0 else '' }}{{ idx.change_pct }}%
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- ============================================================
+                 Card 3: 原物料與加密貨幣
+                 ============================================================ -->
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon">🛢️</span> 原物料與加密貨幣
+                </div>
+
+                {% for c in data.commodities %}
+                <div class="data-row">
+                    <div class="label">{{ c.name }}</div>
+                    <div class="value">
+                        ${{ c.price_fmt }}
+                        {% if c.change_pct is not none %}
+                        <span class="change {{ 'up' if c.change_pct > 0 else ('down' if c.change_pct < 0 else 'flat') }}">
+                            {{ '+' if c.change_pct > 0 else '' }}{{ c.change_pct }}%
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- ============================================================
+                 Card 4: 國際局勢速覽
+                 ============================================================ -->
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon">🌍</span> 國際局勢速覽
+                </div>
+
+                <div class="geo-item">
+                    <span class="geo-icon">🇮🇷</span>
+                    <div class="geo-text">
+                        <strong>美以對伊朗戰爭第 29 天</strong> — 伊朗封鎖荷莫茲海峽，胡塞武裝向以色列發射飛彈，油價因戰爭溢價飆漲
+                    </div>
+                </div>
+                <div class="geo-item">
+                    <span class="geo-icon">🇺🇦</span>
+                    <div class="geo-text">
+                        <strong>俄軍春季攻勢</strong> — 單日 948 架無人機創紀錄，烏克蘭全境遭密集轟炸
+                    </div>
+                </div>
+                <div class="geo-item">
+                    <span class="geo-icon">🇺🇸🇨🇳</span>
+                    <div class="geo-text">
+                        <strong>美中貿易戰升級</strong> — 美對中關稅達 47.5%，川普 3/31 將訪北京為 2017 年來首次
+                    </div>
+                </div>
+                <div class="geo-item">
+                    <span class="geo-icon">⚖️</span>
+                    <div class="geo-text">
+                        <strong>IEEPA 關稅違憲</strong> — 美最高法院裁定總統不得以 IEEPA 加徵關稅，轉向 Section 301
+                    </div>
+                </div>
+
+                <div style="margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 11px; color: var(--text-muted);">
+                    ⚠️ 國際局勢為定期手動更新，數據部分為即時抓取
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        M&A Hunter 總經儀表板｜Built by Jeff Hsu, CFA｜圖靈金融集團<br>
+        數據來源：Yahoo Finance, FRED, CoinGecko
+    </footer>
+
+    <!-- Refresh button -->
+    <div class="refresh-bar" onclick="location.reload()">
+        <span class="dot"></span>
+        即時更新
+    </div>
+
+    <!-- Auto-refresh every 30 min -->
+    <script>
+        setTimeout(() => location.reload(), 30 * 60 * 1000);
+    </script>
+
+</body>
+</html>
