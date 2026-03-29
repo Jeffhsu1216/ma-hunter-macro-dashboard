@@ -65,8 +65,14 @@ def send_telegram_text(text: str) -> bool:
 
 def push_daily() -> bool:
     """每日推送（由排程器呼叫）"""
-    from data_fetcher import clear_cache
-    clear_cache()
+    # 強制刷新 Render 端 cache，確保截圖是最新數據
+    try:
+        resp = requests.get(f"{DASHBOARD_URL}/api/refresh", timeout=30)
+        logger.info(f"Remote cache refreshed: {resp.status_code}")
+    except Exception as e:
+        logger.warning(f"Remote refresh failed: {e}")
+
+    import time; time.sleep(3)  # 等數據抓完
 
     # 嘗試截圖
     screenshot = take_screenshot(DASHBOARD_URL)
