@@ -2,15 +2,13 @@
 總經儀表板 — 數據抓取模組
 M&A Hunter Macro Dashboard Data Fetcher
 
-數據來源：Yahoo Finance (yfinance)
-更新頻率：每日台北時間 08:00
+數據來源：Yahoo Finance (yfinance), CNN Fear & Greed, ForexFactory, TWSE
 """
 
 import yfinance as yf
-from datetime import datetime, timedelta
-import json
-import os
-import logging
+import requests
+from datetime import datetime, timedelta, date
+import json, os, logging
 
 logger = logging.getLogger(__name__)
 
@@ -18,42 +16,66 @@ logger = logging.getLogger(__name__)
 # 數據定義
 # ============================================================
 
-FX_TICKERS = {
-    "USD/TWD": "TWD=X",
-    "USD/JPY": "JPY=X",
-    "USD/CNY": "CNY=X",
-    "EUR/USD": "EURUSD=X",
-    "USD/KRW": "KRW=X",
+# (name, ticker, decimals)
+FX_TICKERS = [
+    ("DXY 美元指數", "DX-Y.NYB", 2),
+    ("USD/TWD",     "TWD=X",    2),
+    ("USD/JPY",     "JPY=X",    2),
+    ("USD/CNY",     "CNY=X",    4),
+    ("EUR/USD",     "EURUSD=X", 4),
+    ("GBP/USD",     "GBPUSD=X", 4),
+    ("AUD/USD",     "AUDUSD=X", 4),
+    ("USD/KRW",     "KRW=X",    0),
+]
+
+YIELD_TICKERS = [
+    ("2Y",  "^IRX"),
+    ("5Y",  "^FVX"),
+    ("10Y", "^TNX"),
+    ("30Y", "^TYX"),
+]
+
+# ECB/BOJ/CBC hardcoded — update when policy changes
+_CB_STATIC = {
+    "ECB": {"rate": "2.50", "next": "2026/04/17"},
+    "BOJ": {"rate": "0.50", "next": "2026/04/30"},
+    "CBC": {"rate": "2.00", "next": "2026/06/19"},
 }
 
-RATE_TICKERS = {
-    "US 10Y": "^TNX",
-    "US 2Y": "^IRX",  # 13-week T-Bill as proxy; will try 2Y separately
-}
+INDEX_TICKERS = [
+    ("S&P 500",   "^GSPC",     "🇺🇸"),
+    ("Nasdaq",    "^IXIC",     "🇺🇸"),
+    ("FTSE 100",  "^FTSE",     "🇬🇧"),
+    ("DAX",       "^GDAXI",    "🇩🇪"),
+    ("STOXX 600", "^STOXX",    "🇪🇺"),
+    ("日經 225",  "^N225",     "🇯🇵"),
+    ("KOSPI",     "^KS11",     "🇰🇷"),
+    ("恆生指數",  "^HSI",      "🇭🇰"),
+    ("上證綜合",  "000001.SS", "🇨🇳"),
+    ("Nifty 50",  "^NSEI",     "🇮🇳"),
+    ("加權指數",  "^TWII",     "🇹🇼"),
+]
 
-INDEX_TICKERS = {
-    "S&P 500": {"ticker": "^GSPC", "flag": "\U0001f1fa\U0001f1f8"},
-    "Nasdaq": {"ticker": "^IXIC", "flag": "\U0001f1fa\U0001f1f8"},
-    "上證綜合": {"ticker": "000001.SS", "flag": "\U0001f1e8\U0001f1f3"},
-    "STOXX 600": {"ticker": "^STOXX", "flag": "\U0001f1ea\U0001f1fa"},
-    "日經 225": {"ticker": "^N225", "flag": "\U0001f1ef\U0001f1f5"},
-    "KOSPI": {"ticker": "^KS11", "flag": "\U0001f1f0\U0001f1f7"},
-    "加權指數": {"ticker": "^TWII", "flag": "\U0001f1f9\U0001f1fc"},
-}
+# (name, ticker, decimals, currency_symbol)
+COMMODITY_TICKERS = [
+    ("WTI 原油",   "CL=F",    2, "$"),
+    ("布蘭特原油", "BZ=F",    2, "$"),
+    ("天然氣",     "NG=F",    3, "$"),
+    ("黃金",       "GC=F",    0, "$"),
+    ("白銀",       "SI=F",    2, "$"),
+    ("銅",         "HG=F",    3, "$"),
+    ("BTC",        "BTC-USD", 0, "$"),
+    ("ETH",        "ETH-USD", 2, "$"),
+]
 
 VIX_TICKER = "^VIX"
-
-COMMODITY_TICKERS = {
-    "WTI 原油": "CL=F",
-    "布蘭特原油": "BZ=F",
-    "黃金": "GC=F",
-    "白銀": "SI=F",
-    "BTC": "BTC-USD",
-}
-
 CACHE_FILE = os.path.join(os.path.dirname(__file__), "cache_data.json")
-CACHE_TTL_HOURS = 1  # 快取有效期（小時）
+CACHE_TTL_HOURS = 1
 
+
+# ============================================================
+# 核心抓取
+# ============================================================
 
 def _get_quote(ticker_symbol: str) -> dict:
     """取得單一標的即時報價"""
@@ -64,7 +86,6 @@ def _get_quote(ticker_symbol: str) -> dict:
         prev_close = getattr(info, "previous_close", None)
 
         if price is None or prev_close is None:
-            # fallback: 用 history
             hist = tk.history(period="5d")
             if len(hist) >= 2:
                 price = float(hist["Close"].iloc[-1])
@@ -76,109 +97,67 @@ def _get_quote(ticker_symbol: str) -> dict:
                 return {"price": None, "change_pct": None}
 
         change_pct = ((price - prev_close) / prev_close) * 100 if prev_close else 0
-        return {"price": round(float(price), 4), "change_pct": round(change_pct, 2)}
+        return {"price": round(float(price), 6), "change_pct": round(change_pct, 2)}
     except Exception as e:
-        logger.warning(f"Failed to fetch {ticker_symbol}: {e}")
+        logger.warning(f"Failed {ticker_symbol}: {e}")
         return {"price": None, "change_pct": None}
 
 
-def _format_price(price, decimals=2):
-    """格式化價格"""
+def _fmt(price, decimals=2):
     if price is None:
         return "N/A"
     if price >= 10000:
         return f"{price:,.0f}"
-    elif price >= 100:
-        return f"{price:,.{decimals}f}"
-    else:
-        return f"{price:.{decimals}f}"
+    return f"{price:,.{decimals}f}"
 
+
+# ============================================================
+# 各區塊抓取函式
+# ============================================================
 
 def fetch_fx_data() -> list:
-    """抓取匯率數據"""
     results = []
-    for name, ticker in FX_TICKERS.items():
-        data = _get_quote(ticker)
-        # EUR/USD 需要反轉顯示邏輯（yfinance 回傳的是 EURUSD）
-        if name == "EUR/USD" and data["price"]:
-            pass  # EURUSD=X already gives EUR/USD
-
-        decimals = 4 if name == "EUR/USD" else 2
-        if name == "USD/KRW" and data["price"]:
-            decimals = 0
-
+    for name, ticker, dec in FX_TICKERS:
+        q = _get_quote(ticker)
         results.append({
             "name": name,
-            "price": data["price"],
-            "price_fmt": _format_price(data["price"], decimals),
-            "change_pct": data["change_pct"],
+            "price": q["price"],
+            "price_fmt": _fmt(q["price"], dec),
+            "change_pct": q["change_pct"],
         })
     return results
 
 
-def fetch_rate_data() -> dict:
-    """抓取利率數據"""
-    # US 10Y
-    tnx = _get_quote("^TNX")
-    ten_y = tnx["price"]  # ^TNX is in percentage points
-    ten_y_chg = tnx["change_pct"]
+def fetch_yield_curve() -> dict:
+    result = {}
+    for label, ticker in YIELD_TICKERS:
+        q = _get_quote(ticker)
+        p = q["price"]
+        chg_pct = q["change_pct"]
+        chg_bps = round(chg_pct * p / 100, 1) if p and chg_pct else None
+        result[label] = {"yield": p, "change_bps": chg_bps}
 
-    # US 2Y — use ^IRX (13-week T-Bill) as proxy, or try direct history
-    two_y_data = {"price": None, "change_pct": None}
-    for two_y_ticker in ["^IRX"]:
-        try:
-            tk = yf.Ticker(two_y_ticker)
-            hist = tk.history(period="5d")
-            if len(hist) >= 2:
-                two_y_val = float(hist["Close"].iloc[-1])
-                two_y_prev = float(hist["Close"].iloc[-2])
-                two_y_chg_val = ((two_y_val - two_y_prev) / two_y_prev * 100) if two_y_prev else 0
-                two_y_data = {"price": round(two_y_val, 2), "change_pct": round(two_y_chg_val, 2)}
-                break
-            elif len(hist) == 1:
-                two_y_data = {"price": round(float(hist["Close"].iloc[-1]), 2), "change_pct": 0}
-                break
-        except:
-            continue
-
-    two_y = two_y_data["price"]
-    two_y_chg = two_y_data["change_pct"]
-
-    # 利差
-    spread = None
-    if ten_y and two_y:
-        spread = round((ten_y - two_y) * 100, 0)  # bps
-
-    return {
-        "fed_rate": "3.50 – 3.75",
-        "ten_y": ten_y,
-        "ten_y_chg_bps": round(ten_y_chg * ten_y / 100, 1) if ten_y and ten_y_chg else None,
-        "two_y": two_y,
-        "two_y_chg_bps": round(two_y_chg * two_y / 100, 1) if two_y and two_y_chg else None,
-        "spread_bps": spread,
-    }
+    y10 = result.get("10Y", {}).get("yield")
+    y2  = result.get("2Y",  {}).get("yield")
+    result["spread_10y_2y"] = round((y10 - y2) * 100, 0) if y10 and y2 else None
+    return result
 
 
 def fetch_index_data() -> list:
-    """抓取全球股市指數"""
     results = []
-    for name, info in INDEX_TICKERS.items():
-        data = _get_quote(info["ticker"])
+    for name, ticker, flag in INDEX_TICKERS:
+        q = _get_quote(ticker)
         results.append({
-            "name": name,
-            "flag": info["flag"],
-            "price": data["price"],
-            "price_fmt": _format_price(data["price"]),
-            "change_pct": data["change_pct"],
+            "name": name, "flag": flag,
+            "price": q["price"],
+            "price_fmt": _fmt(q["price"]),
+            "change_pct": q["change_pct"],
         })
-
-    # VIX
     vix = _get_quote(VIX_TICKER)
     results.append({
-        "name": "VIX",
-        "flag": "\U0001f4c9",
+        "name": "VIX", "flag": "📉",
         "price": vix["price"],
-        "price_fmt": _format_price(vix["price"]),
+        "price_fmt": _fmt(vix["price"]),
         "change_pct": vix["change_pct"],
         "is_vix": True,
     })
@@ -186,23 +165,162 @@ def fetch_index_data() -> list:
 
 
 def fetch_commodity_data() -> list:
-    """抓取原物料與加密貨幣"""
     results = []
-    for name, ticker in COMMODITY_TICKERS.items():
-        data = _get_quote(ticker)
-        decimals = 0 if name == "BTC" else 2
+    for name, ticker, dec, sym in COMMODITY_TICKERS:
+        q = _get_quote(ticker)
         results.append({
-            "name": name,
-            "price": data["price"],
-            "price_fmt": _format_price(data["price"], decimals),
-            "change_pct": data["change_pct"],
+            "name": name, "symbol": sym,
+            "price": q["price"],
+            "price_fmt": _fmt(q["price"], dec),
+            "change_pct": q["change_pct"],
         })
     return results
 
 
+def fetch_cb_rates() -> dict:
+    """抓取央行利率：Fed 動態從 FRED，其餘 hardcoded"""
+    result = {}
+    # Fed：從 FRED 抓目標區間上下限
+    try:
+        lower = requests.get(
+            "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARL",
+            timeout=8
+        ).text.strip().split("\n")[-1].split(",")[1]
+        upper = requests.get(
+            "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARU",
+            timeout=8
+        ).text.strip().split("\n")[-1].split(",")[1]
+        fed_rate = f"{float(lower):.2f}–{float(upper):.2f}"
+    except Exception as e:
+        logger.warning(f"FRED Fed rate failed: {e}")
+        fed_rate = "N/A"
+    result["Fed"] = {"rate": fed_rate, "next": "2026/05/07"}
+    result.update(_CB_STATIC)
+    return result
+
+
+def fetch_fear_greed() -> dict:
+    """抓取 CNN Fear & Greed 指數（多重 headers 嘗試）"""
+    headers_list = [
+        {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+            "Referer": "https://edition.cnn.com/markets/fear-and-greed",
+            "Accept": "application/json, text/plain, */*",
+        },
+        {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+    ]
+    for hdrs in headers_list:
+        try:
+            resp = requests.get(
+                "https://production.dataviz.cnn.io/index/fearandgreed/graphdata",
+                headers=hdrs, timeout=8
+            )
+            if resp.status_code == 200:
+                fg = resp.json()["fear_and_greed"]
+                score = round(fg["score"])
+                rating = fg["rating"].replace("_", " ").title()
+                prev = fg.get("previous_close", fg["score"])
+                return {"score": score, "rating": rating, "change": round(fg["score"] - prev, 1)}
+        except Exception:
+            continue
+
+    # Fallback: 根據 VIX 推算情緒（VIX < 15 極貪婪, > 30 極恐懼）
+    try:
+        vix = _get_quote(VIX_TICKER)
+        v = vix["price"]
+        if v:
+            if v < 12:   score, label = 85, "Extreme Greed"
+            elif v < 15: score, label = 70, "Greed"
+            elif v < 20: score, label = 55, "Neutral"
+            elif v < 25: score, label = 38, "Fear"
+            elif v < 30: score, label = 25, "Fear"
+            else:        score, label = 12, "Extreme Fear"
+            return {"score": score, "rating": f"{label} (VIX={v:.1f})", "change": None, "source": "vix_proxy"}
+    except Exception:
+        pass
+
+    return {"score": None, "rating": "N/A", "change": None}
+
+
+def fetch_economic_calendar() -> list:
+    try:
+        url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
+        events_raw = resp.json()
+        high = [e for e in events_raw
+                if e.get("impact") == "High"
+                and e.get("country") in ("USD", "CNY", "EUR", "JPY", "TWD")]
+        results = []
+        for e in high[:10]:
+            dt_str = e.get("date", "")
+            try:
+                dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+                date_fmt = dt.strftime("%m/%d %H:%M")
+            except:
+                date_fmt = dt_str[:10]
+            results.append({
+                "date": date_fmt,
+                "country": e.get("country", ""),
+                "title": e.get("title", ""),
+                "forecast": e.get("forecast") or "—",
+                "previous": e.get("previous") or "—",
+            })
+        return results
+    except Exception as e:
+        logger.warning(f"Calendar failed: {e}")
+        return []
+
+
+def fetch_taiwan_market() -> dict:
+    try:
+        today_str = date.today().strftime("%Y%m%d")
+        url = f"https://www.twse.com.tw/rwd/zh/fund/T86?response=json&date={today_str}"
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
+        data = resp.json()
+        if data.get("stat") != "OK" or not data.get("data"):
+            return None
+
+        rows = data["data"]
+        fields = data.get("fields", [])
+
+        # Find 合計 row
+        total_row = None
+        for row in reversed(rows):
+            if "合計" in str(row[0]):
+                total_row = row
+                break
+        if total_row is None:
+            return None
+
+        def parse_num(s):
+            try:
+                return int(str(s).replace(",", ""))
+            except:
+                return 0
+
+        # Fields order: 名稱, 外資買進, 外資賣出, 外資買賣超, 投信買進, 投信賣出, 投信買賣超, 自營商買進, 自營商賣出, 自營商買賣超, 三大法人買賣超
+        foreign   = parse_num(total_row[3]) if len(total_row) > 3 else 0
+        inv_trust = parse_num(total_row[6]) if len(total_row) > 6 else 0
+        dealer    = parse_num(total_row[9]) if len(total_row) > 9 else 0
+        total     = parse_num(total_row[10]) if len(total_row) > 10 else 0
+
+        return {
+            "foreign":      foreign,
+            "inv_trust":    inv_trust,
+            "dealer":       dealer,
+            "total":        total,
+            "date":         data.get("date", today_str),
+        }
+    except Exception as e:
+        logger.warning(f"Taiwan market failed: {e}")
+        return None
+
+
+# ============================================================
+# fetch_all + cache
+# ============================================================
+
 def fetch_all() -> dict:
-    """抓取所有數據，帶快取"""
-    # 檢查快取
     if os.path.exists(CACHE_FILE):
         try:
             with open(CACHE_FILE, "r") as f:
@@ -216,15 +334,18 @@ def fetch_all() -> dict:
 
     logger.info("Fetching fresh data...")
     data = {
-        "fx": fetch_fx_data(),
-        "rates": fetch_rate_data(),
-        "indices": fetch_index_data(),
-        "commodities": fetch_commodity_data(),
-        "updated_at": datetime.now().strftime("%Y/%m/%d %H:%M"),
-        "market_date": _get_last_trading_day(),
+        "fx":            fetch_fx_data(),
+        "yields":        fetch_yield_curve(),
+        "cb_rates":      fetch_cb_rates(),
+        "indices":       fetch_index_data(),
+        "commodities":   fetch_commodity_data(),
+        "fear_greed":    fetch_fear_greed(),
+        "calendar":      fetch_economic_calendar(),
+        "taiwan":        fetch_taiwan_market(),
+        "updated_at":    datetime.now().strftime("%Y/%m/%d %H:%M"),
+        "market_date":   _get_last_trading_day(),
     }
 
-    # 寫入快取
     try:
         with open(CACHE_FILE, "w") as f:
             json.dump({"timestamp": datetime.now().isoformat(), "data": data}, f, ensure_ascii=False)
@@ -235,12 +356,11 @@ def fetch_all() -> dict:
 
 
 def _get_last_trading_day() -> str:
-    """取得最近交易日"""
     now = datetime.now()
-    weekday = now.weekday()
-    if weekday == 5:  # Saturday
+    wd = now.weekday()
+    if wd == 5:
         last = now - timedelta(days=1)
-    elif weekday == 6:  # Sunday
+    elif wd == 6:
         last = now - timedelta(days=2)
     else:
         last = now
@@ -248,6 +368,5 @@ def _get_last_trading_day() -> str:
 
 
 def clear_cache():
-    """清除快取"""
     if os.path.exists(CACHE_FILE):
         os.remove(CACHE_FILE)
