@@ -67,7 +67,7 @@ def push_daily() -> bool:
     """每日推送（由排程器呼叫）"""
     # 強制刷新 Render 端 cache，確保截圖是最新數據
     try:
-        resp = requests.get(f"{DASHBOARD_URL}/api/refresh", timeout=30)
+        resp = requests.get(f"{DASHBOARD_URL}/api/refresh", timeout=90)
         logger.info(f"Remote cache refreshed: {resp.status_code}")
     except Exception as e:
         logger.warning(f"Remote refresh failed: {e}")
