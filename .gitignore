@@ -1,5 +1,13 @@
 __pycache__/
 *.pyc
-cache_data.json
 .env
 .DS_Store
+.claude/
+
+# 本機快取（GitHub Actions 每次重抓，不需進 repo）
+cache_data.json
+calendar_backup.json
+taiwan_backup.json
+
+# 本機輸出報告
+output/
