@@ -69,6 +69,7 @@ COMMODITY_TICKERS = [
 VIX_TICKER = "^VIX"
 CACHE_FILE          = os.path.join(os.path.dirname(__file__), "cache_data.json")
 CALENDAR_BACKUP     = os.path.join(os.path.dirname(__file__), "calendar_backup.json")
+TAIWAN_BACKUP       = os.path.join(os.path.dirname(__file__), "taiwan_backup.json")
 CACHE_TTL_HOURS = 1
 
 
@@ -302,12 +303,13 @@ def fetch_economic_calendar() -> list:
 
 
 def fetch_taiwan_market() -> dict:
+    """抓取三大法人買賣超；假日時自動讀取上次交易日備援快取"""
     try:
         url = "https://www.twse.com.tw/rwd/zh/fund/BFI82U?response=json&type=day"
         resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
         data = resp.json()
         if data.get("stat") != "OK" or not data.get("data"):
-            return None
+            raise ValueError("TWSE returned no data (likely weekend/holiday)")
 
         rows = data["data"]
 
@@ -333,7 +335,7 @@ def fetch_taiwan_market() -> dict:
             elif name == "合計":
                 total = net
 
-        return {
+        result = {
             "foreign":   foreign,   "foreign_yi":   yi(foreign),
             "inv_trust": inv_trust, "inv_trust_yi": yi(inv_trust),
             "dealer":    dealer,    "dealer_yi":    yi(dealer),
@@ -341,8 +343,27 @@ def fetch_taiwan_market() -> dict:
             "date":      data.get("date", ""),
             "unit":      "億元",
         }
+
+        # 成功 → 寫備援快取
+        try:
+            with open(TAIWAN_BACKUP, "w", encoding="utf-8") as f:
+                json.dump(result, f, ensure_ascii=False)
+        except:
+            pass
+
+        return result
+
     except Exception as e:
         logger.warning(f"Taiwan market failed: {e}")
+        # 讀上次備援快取（週末 / 假日）
+        try:
+            if os.path.exists(TAIWAN_BACKUP):
+                with open(TAIWAN_BACKUP, "r", encoding="utf-8") as f:
+                    cached = json.load(f)
+                logger.info(f"Taiwan: using backup cache (date={cached.get('date','')})")
+                return cached
+        except:
+            pass
         return None
 
 
