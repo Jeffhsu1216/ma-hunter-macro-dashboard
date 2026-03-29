@@ -1,0 +1,26 @@
+name: Daily Macro Dashboard Push
+
+on:
+  schedule:
+    # 02:00 UTC = 10:00 台北時間，每天執行
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # 允許手動觸發（GitHub Actions 頁面按 Run workflow）
+
+jobs:
+  push-telegram:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Push to Telegram
+        run: python -c "from notifier import push_daily; result = push_daily(); exit(0 if result else 1)"
