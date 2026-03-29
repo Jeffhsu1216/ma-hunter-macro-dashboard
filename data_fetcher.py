@@ -67,7 +67,8 @@ COMMODITY_TICKERS = [
 ]
 
 VIX_TICKER = "^VIX"
-CACHE_FILE = os.path.join(os.path.dirname(__file__), "cache_data.json")
+CACHE_FILE          = os.path.join(os.path.dirname(__file__), "cache_data.json")
+CALENDAR_BACKUP     = os.path.join(os.path.dirname(__file__), "calendar_backup.json")
 CACHE_TTL_HOURS = 1
 
 
@@ -240,33 +241,64 @@ def fetch_fear_greed() -> dict:
     return {"score": None, "rating": "N/A", "change": None}
 
 
+def _parse_calendar_events(events_raw: list) -> list:
+    """解析 ForexFactory JSON → 高影響力事件列表"""
+    high = [e for e in events_raw
+            if e.get("impact") == "High"
+            and e.get("country") in ("USD", "CNY", "EUR", "JPY", "TWD")]
+    results = []
+    for e in high[:12]:
+        dt_str = e.get("date", "")
+        try:
+            dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+            date_fmt = dt.strftime("%m/%d %H:%M")
+        except:
+            date_fmt = dt_str[:10]
+        results.append({
+            "date": date_fmt,
+            "country": e.get("country", ""),
+            "title": e.get("title", ""),
+            "forecast": e.get("forecast") or "—",
+            "previous": e.get("previous") or "—",
+        })
+    return results
+
+
 def fetch_economic_calendar() -> list:
+    """抓本週經濟日曆；失敗時用備援快取（週末常見）"""
+    for week in ["thisweek", "nextweek"]:
+        try:
+            url = f"https://nfs.faireconomy.media/ff_calendar_{week}.json"
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
+            if resp.status_code != 200:
+                continue
+            events_raw = resp.json()
+            if not events_raw:
+                continue
+            results = _parse_calendar_events(events_raw)
+            if results:
+                # 成功 → 寫備援快取
+                try:
+                    with open(CALENDAR_BACKUP, "w", encoding="utf-8") as f:
+                        json.dump(results, f, ensure_ascii=False)
+                except:
+                    pass
+                return results
+        except Exception as e:
+            logger.warning(f"Calendar {week} failed: {e}")
+            continue
+
+    # 所有來源失敗（週末）→ 讀上次備援
     try:
-        url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
-        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
-        events_raw = resp.json()
-        high = [e for e in events_raw
-                if e.get("impact") == "High"
-                and e.get("country") in ("USD", "CNY", "EUR", "JPY", "TWD")]
-        results = []
-        for e in high[:10]:
-            dt_str = e.get("date", "")
-            try:
-                dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
-                date_fmt = dt.strftime("%m/%d %H:%M")
-            except:
-                date_fmt = dt_str[:10]
-            results.append({
-                "date": date_fmt,
-                "country": e.get("country", ""),
-                "title": e.get("title", ""),
-                "forecast": e.get("forecast") or "—",
-                "previous": e.get("previous") or "—",
-            })
-        return results
-    except Exception as e:
-        logger.warning(f"Calendar failed: {e}")
-        return []
+        if os.path.exists(CALENDAR_BACKUP):
+            with open(CALENDAR_BACKUP, "r", encoding="utf-8") as f:
+                cached = json.load(f)
+            logger.info("Calendar: using backup cache")
+            return cached
+    except:
+        pass
+
+    return []
 
 
 def fetch_taiwan_market() -> dict:
