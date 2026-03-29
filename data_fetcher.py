@@ -35,10 +35,8 @@ YIELD_TICKERS = [
     ("30Y", "^TYX"),
 ]
 
-# ECB/BOJ/CBC hardcoded — update when policy changes
+# CBC hardcoded — update when policy changes
 _CB_STATIC = {
-    "ECB": {"rate": "2.50", "next": "2026/04/17"},
-    "BOJ": {"rate": "0.50", "next": "2026/04/30"},
     "CBC": {"rate": "2.00", "next": "2026/06/19"},
 }
 
