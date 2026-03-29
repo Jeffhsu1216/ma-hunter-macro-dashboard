@@ -1,12 +1,16 @@
 """
-Telegram 推送模組 — 截圖版
-每日 08:00 台北時間截圖儀表板並推送至 Telegram
+Telegram 推送模組 — 本機渲染截圖版
+本機抓最新數據 → 渲染 HTML → Playwright 截圖 → Telegram sendPhoto
+完全繞開 Render cache，確保數據即時。
 """
 
 import requests
 import os
 import asyncio
 import logging
+import tempfile
+from datetime import datetime
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -14,34 +18,56 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8743919766:AAG6z6YPW7
 TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "2117347781")
 DASHBOARD_URL      = os.environ.get("DASHBOARD_URL", "https://ma-hunter-macro-dashboard.onrender.com")
 
+TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "templates", "dashboard.html")
 
-async def _take_screenshot(url: str) -> bytes | None:
-    """使用 Playwright 截圖儀表板"""
+
+def _render_html(data: dict) -> str:
+    """用 Jinja2 本機渲染 dashboard.html"""
+    from jinja2 import Environment, FileSystemLoader
+    taipei_tz = pytz.timezone("Asia/Taipei")
+    now = datetime.now(taipei_tz)
+    weekday_map = {0:"一",1:"二",2:"三",3:"四",4:"五",5:"六",6:"日"}
+
+    env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "templates")))
+    tmpl = env.get_template("dashboard.html")
+    return tmpl.render(
+        data=data,
+        today=now.strftime("%Y/%m/%d"),
+        weekday=weekday_map[now.weekday()],
+        is_weekend=now.weekday() >= 5,
+    )
+
+
+async def _screenshot_html(html: str) -> bytes | None:
+    """將 HTML 字串寫入暫存檔，用 Playwright 截圖"""
     try:
         from playwright.async_api import async_playwright
+        with tempfile.NamedTemporaryFile(suffix=".html", delete=False, mode="w", encoding="utf-8") as f:
+            f.write(html)
+            tmp_path = f.name
+
         async with async_playwright() as p:
             browser = await p.chromium.launch(
                 args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
             )
             page = await browser.new_page(viewport={"width": 1440, "height": 900})
-            await page.goto(url, wait_until="networkidle", timeout=30000)
-            # 等待數據渲染
-            await page.wait_for_timeout(2000)
+            await page.goto(f"file://{tmp_path}", wait_until="networkidle")
+            await page.wait_for_timeout(1000)
             screenshot = await page.screenshot(full_page=True)
             await browser.close()
-            return screenshot
+
+        os.unlink(tmp_path)
+        return screenshot
     except Exception as e:
         logger.error(f"Screenshot failed: {e}")
         return None
 
 
-def take_screenshot(url: str) -> bytes | None:
-    """同步包裝"""
-    return asyncio.run(_take_screenshot(url))
+def take_screenshot(html: str) -> bytes | None:
+    return asyncio.run(_screenshot_html(html))
 
 
 def send_telegram_photo(image_bytes: bytes, caption: str) -> bool:
-    """發送截圖至 Telegram"""
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
     resp = requests.post(url,
         data={"chat_id": TELEGRAM_CHAT_ID, "caption": caption, "parse_mode": "HTML"},
@@ -52,7 +78,6 @@ def send_telegram_photo(image_bytes: bytes, caption: str) -> bool:
 
 
 def send_telegram_text(text: str) -> bool:
-    """發送純文字（截圖失敗時的 fallback）"""
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     resp = requests.post(url, json={
         "chat_id": TELEGRAM_CHAT_ID,
@@ -64,18 +89,13 @@ def send_telegram_text(text: str) -> bool:
 
 
 def push_daily() -> bool:
-    """每日推送（由排程器呼叫）"""
-    # 強制刷新 Render 端 cache，確保截圖是最新數據
-    try:
-        resp = requests.get(f"{DASHBOARD_URL}/api/refresh", timeout=90)
-        logger.info(f"Remote cache refreshed: {resp.status_code}")
-    except Exception as e:
-        logger.warning(f"Remote refresh failed: {e}")
+    """每日推送：本機抓數據 → 渲染 → 截圖 → Telegram"""
+    from data_fetcher import fetch_all, clear_cache
+    clear_cache()
+    data = fetch_all()
 
-    import time; time.sleep(3)  # 等數據抓完
-
-    # 嘗試截圖
-    screenshot = take_screenshot(DASHBOARD_URL)
+    html = _render_html(data)
+    screenshot = take_screenshot(html)
 
     if screenshot:
         caption = (
@@ -84,7 +104,6 @@ def push_daily() -> bool:
         )
         success = send_telegram_photo(screenshot, caption)
     else:
-        # Fallback: 文字版
         logger.warning("Screenshot failed, falling back to text")
         success = send_telegram_text(
             f'📊 <b>M&A Hunter 總經儀表板</b>\n'
