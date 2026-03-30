@@ -18,6 +18,7 @@ v3 更新：
 
 import yfinance as yf
 import requests
+import pytz
 from datetime import datetime, timedelta, date
 import json, os, logging
 
@@ -31,6 +32,7 @@ CALENDAR_BACKUP  = os.path.join(os.path.dirname(__file__), "calendar_backup.json
 TAIWAN_BACKUP    = os.path.join(os.path.dirname(__file__), "taiwan_backup.json")
 GEOPOLITICS_FILE = os.path.join(os.path.dirname(__file__), "geopolitics.json")
 CACHE_TTL_HOURS  = 1
+TAIPEI_TZ        = pytz.timezone("Asia/Taipei")
 
 # ============================================================
 # 數據定義
@@ -762,20 +764,47 @@ def _parse_calendar_events(events_raw: list) -> list:
             if e.get("impact") == "High"
             and e.get("country") in ("USD", "CNY", "EUR", "JPY", "TWD")]
     results = []
-    for e in high[:12]:
+    for e in high[:20]:  # 多取一些，過濾後才限制數量
+        actual = (e.get("actual") or "").strip()
+        if not actual:
+            continue  # 只顯示已公布的數據
+
         dt_str = e.get("date", "")
         try:
-            dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
-            date_fmt = dt.strftime("%m/%d %H:%M")
+            dt_utc = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+            dt_taipei = dt_utc.astimezone(TAIPEI_TZ)
+            date_fmt = dt_taipei.strftime("%m/%d %H:%M")
         except:
             date_fmt = dt_str[:10]
+
+        forecast = (e.get("forecast") or "").strip() or "—"
+        previous = (e.get("previous") or "").strip() or "—"
+
+        # 判斷超預期 / 低於預期（純數字比較）
+        beat_indicator = ""
+        try:
+            def _to_num(s):
+                return float(s.replace("%", "").replace("K", "000").replace("M", "000000").strip())
+            if forecast != "—":
+                act_num = _to_num(actual)
+                fct_num = _to_num(forecast)
+                beat_indicator = "▲" if act_num > fct_num else ("▼" if act_num < fct_num else "")
+        except:
+            pass
+
         results.append({
             "date": date_fmt,
             "country": e.get("country", ""),
             "title": e.get("title", ""),
-            "forecast": e.get("forecast") or "—",
-            "previous": e.get("previous") or "—",
+            "forecast": forecast,
+            "previous": previous,
+            "actual": actual,
+            "beat_indicator": beat_indicator,
         })
+
+        if len(results) >= 12:
+            break
+
     return results
 
 
@@ -884,13 +913,15 @@ def fetch_all() -> dict:
 
     logger.info("Fetching fresh data...")
 
-    fx_data     = fetch_fx_data()
-    yields_data = fetch_yield_curve()
-    indices     = fetch_index_data()
-    fg          = fetch_fear_greed()
-    comm_data   = fetch_commodity_data()
-    crypto_data = fetch_crypto_data()
-    tw_data     = fetch_taiwan_market()
+    fx_data     = fetch_fx_data();      fx_ts       = _now_taipei()
+    yields_data = fetch_yield_curve();  yields_ts   = _now_taipei()
+    cb_data     = fetch_cb_rates();     cb_ts       = _now_taipei()
+    indices     = fetch_index_data();   indices_ts  = _now_taipei()
+    fg          = fetch_fear_greed();   fg_ts       = _now_taipei()
+    comm_data   = fetch_commodity_data(); comm_ts   = _now_taipei()
+    crypto_data = fetch_crypto_data(); crypto_ts    = _now_taipei()
+    tw_data     = fetch_taiwan_market(); tw_ts      = _now_taipei()
+    cal_data    = fetch_economic_calendar(); cal_ts  = _now_taipei()
 
     # 提取 VIX 給情緒解釋用
     vix_item = next((i for i in indices if i.get("is_vix")), None)
@@ -903,23 +934,48 @@ def fetch_all() -> dict:
         {c["name"]: c for c in all_comm}  # pass as dict for lookup
     )
 
+    # 殖利率：優先用 FRED 資料日期（格式 YYYY-MM-DD → YYYY/MM/DD）
+    fred_date = yields_data.get("10Y", {}).get("date") or yields_data.get("2Y", {}).get("date")
+    if fred_date:
+        try:
+            yields_ts = datetime.strptime(fred_date, "%Y-%m-%d").strftime("%Y/%m/%d") + "（FRED）"
+        except:
+            pass
+
+    # 台灣三大法人：用 TWSE 資料日期
+    if tw_data and tw_data.get("date"):
+        d = tw_data["date"]
+        try:
+            tw_ts = f"{d[:4]}/{d[4:6]}/{d[6:]}（TWSE）"
+        except:
+            pass
+
     data = {
         "fx":            fx_data["items"],
         "fx_commentary": fx_data["commentary"],
+        "fx_updated_at": fx_ts,
         "yields":        yields_data,
         "yields_commentary": yields_data.pop("commentary", ""),
-        "cb_rates":      fetch_cb_rates(),
+        "yields_updated_at": yields_ts,
+        "cb_rates":      cb_data,
+        "cb_rates_updated_at": cb_ts,
         "indices":       indices,
+        "indices_updated_at": indices_ts,
         "commodities":        comm_data["items"],
         "crypto":             crypto_data,
         "commodities_commentary": combined_commentary,
+        "commodities_updated_at": comm_ts,
+        "crypto_updated_at":  crypto_ts,
         "fear_greed":    fg,
         "sentiment_commentary": _sentiment_commentary(fg, vix_price, vix_chg),
-        "calendar":      fetch_economic_calendar(),
+        "fg_updated_at": fg_ts,
+        "calendar":      cal_data,
+        "calendar_updated_at": cal_ts,
         "taiwan":             tw_data,
         "taiwan_commentary":  _taiwan_commentary(tw_data),
+        "taiwan_updated_at":  tw_ts,
         "geopolitics":   fetch_geopolitics(),
-        "updated_at":    datetime.now().strftime("%Y/%m/%d %H:%M"),
+        "updated_at":    _now_taipei(),
         "market_date":   _get_last_trading_day(),
     }
 
@@ -930,6 +986,11 @@ def fetch_all() -> dict:
         pass
 
     return data
+
+
+def _now_taipei() -> str:
+    """回傳當前台北時間字串，格式：YYYY/MM/DD HH:MM"""
+    return datetime.now(TAIPEI_TZ).strftime("%Y/%m/%d %H:%M")
 
 
 def _get_last_trading_day() -> str:
