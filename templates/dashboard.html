@@ -215,6 +215,11 @@
 
         .na { color: var(--text-3); font-size: 11px; }
         .divider { height: 1px; background: var(--border); margin: 8px 0; }
+        .card-ts {
+            font-size: 10px; color: var(--text-3); margin-top: 10px;
+            padding-top: 7px; border-top: 1px dashed var(--border);
+            text-align: right; letter-spacing: 0.3px;
+        }
 
         /* 解釋文字 */
         .commentary {
@@ -257,6 +262,9 @@
         </div>
         {% endfor %}
     </div>
+    <div style="font-size:10px; color:var(--text-3); text-align:right; margin-top:-8px; margin-bottom:2px;">
+        🕐 央行利率更新時間：{{ data.cb_rates_updated_at }}（Fed 來源：FRED）
+    </div>
 
     <!-- ② FX + 殖利率曲線 -->
     <div class="grid-2">
@@ -283,6 +291,7 @@
             {% if data.fx_commentary %}
             <div class="commentary">{{ data.fx_commentary }}</div>
             {% endif %}
+            <div class="card-ts">🕐 更新時間：{{ data.fx_updated_at }}</div>
         </div>
 
         <!-- 殖利率曲線 -->
@@ -320,6 +329,7 @@
             {% if data.yields_commentary %}
             <div class="commentary">{{ data.yields_commentary }}</div>
             {% endif %}
+            <div class="card-ts">🕐 更新時間：{{ data.yields_updated_at }}</div>
         </div>
 
     </div>
@@ -345,6 +355,7 @@
             </div>
             {% endif %}
             {% endfor %}
+            <div class="card-ts">🕐 更新時間：{{ data.indices_updated_at }}</div>
         </div>
 
         <!-- VIX + Fear & Greed -->
@@ -398,6 +409,7 @@
             {% if data.sentiment_commentary %}
             <div class="commentary">{{ data.sentiment_commentary }}</div>
             {% endif %}
+            <div class="card-ts">🕐 更新時間：{{ data.fg_updated_at }}</div>
         </div>
 
     </div>
@@ -439,6 +451,7 @@
             {% if data.commodities_commentary %}
             <div class="commentary">{{ data.commodities_commentary }}</div>
             {% endif %}
+            <div class="card-ts">🕐 原物料：{{ data.commodities_updated_at }}｜加密貨幣（CoinGecko）：{{ data.crypto_updated_at }}</div>
         </div>
 
         <!-- 台灣市場 三大法人 -->
@@ -476,10 +489,10 @@
                     </span>
                 </div>
             </div>
-            <div style="font-size:10px; color:var(--text-3); margin-top:8px;">資料日期：{{ tw.date }}（單位：億元）</div>
             {% if data.taiwan_commentary %}
             <div class="commentary">{{ data.taiwan_commentary }}</div>
             {% endif %}
+            <div class="card-ts">🕐 更新時間：{{ data.taiwan_updated_at }}</div>
             {% else %}
             <div style="color:var(--text-3); padding:20px 0; text-align:center;">
                 今日尚無資料（可能為假日或盤後更新前）
@@ -489,18 +502,19 @@
 
     </div>
 
-    <!-- ⑤ 本週經濟日曆 -->
+    <!-- ⑤ 本週經濟日曆（已公布） -->
     <div class="card">
-        <div class="card-title">📅 本週重要經濟數據日曆</div>
+        <div class="card-title">📅 本週重要經濟數據（已公布）<span style="font-size:10px; color:var(--text-3); font-weight:400; text-transform:none; letter-spacing:0; margin-left:8px;">時間為台北時間</span></div>
         {% if data.calendar %}
         <table class="cal-table">
             <thead>
                 <tr>
-                    <th>日期／時間</th>
+                    <th>日期／時間（台北）</th>
                     <th>地區</th>
                     <th>事件</th>
                     <th style="text-align:right;">預期</th>
                     <th style="text-align:right;">前值</th>
+                    <th style="text-align:right;">實際值</th>
                 </tr>
             </thead>
             <tbody>
@@ -511,12 +525,17 @@
                     <td class="event-title">{{ ev.title }}</td>
                     <td class="forecast" style="text-align:right;">{{ ev.forecast }}</td>
                     <td class="prev" style="text-align:right;">{{ ev.previous }}</td>
+                    <td style="text-align:right; font-weight:600; font-variant-numeric:tabular-nums;
+                        {{ 'color:var(--red)' if ev.beat_indicator == '▲' else ('color:var(--green)' if ev.beat_indicator == '▼' else 'color:var(--text)') }}">
+                        {{ ev.actual }}{% if ev.beat_indicator %} {{ ev.beat_indicator }}{% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        <div class="card-ts">🕐 資料截至：{{ data.calendar_updated_at }}</div>
         {% else %}
-        <div style="color:var(--text-3); padding:12px 0; text-align:center;">本週無重大數據（或資料載入中）</div>
+        <div style="color:var(--text-3); padding:12px 0; text-align:center;">本週目前尚無重大數據公布</div>
         {% endif %}
     </div>
 
