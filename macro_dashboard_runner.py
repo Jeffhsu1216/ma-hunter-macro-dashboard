@@ -115,7 +115,7 @@ def fetch_cal():
             headers={'User-Agent':'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=8) as r: raw = json.loads(r.read())
         cal_res['events'] = [e for e in raw if e.get('impact') == 'High'
-                             and e.get('currency') in {'USD','CNY','EUR','JPY','TWD'}]
+                             and e.get('country') in {'USD','CNY','EUR','JPY','TWD'}]
         cal_res['ok'] = True
     except: cal_res['events'] = []; cal_res['ok'] = False
 
@@ -222,7 +222,7 @@ def run(geopolitics_bullets=None):
                 actual = e.get('actual',''); forecast = e.get('forecast','')
                 status = '✅' if actual else '⏳'
                 val = f'實際 {actual}' if actual else f'預期 {forecast}'
-                A(f'  {status} {tf} | {e.get("currency","")} | {e.get("title","")}  {val}')
+                A(f'  {status} {tf} | {e.get("country","")} | {e.get("title","")}  {val}')
             except: pass
 
     # 國際局勢（由 Claude 層 WebSearch 傳入）
