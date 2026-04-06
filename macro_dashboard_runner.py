@@ -50,16 +50,24 @@ TICKERS = {
 crypto_res = {}; fg_res = {}; inst_res = {}; cal_res = {}
 
 def fetch_crypto():
+    """Binance 24hr ticker — 免費、無需 Key、穩定"""
     try:
+        import urllib.parse as _up
+        syms = _up.quote('["BTCUSDT","ETHUSDT","SOLUSDT"]')
         req = urllib.request.Request(
-            'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true',
+            f'https://api.binance.com/api/v3/ticker/24hr?symbols={syms}',
             headers={'User-Agent':'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as r: cg = json.loads(r.read())
-        crypto_res['btc'] = (cg['bitcoin']['usd'], cg['bitcoin']['usd_24h_change'])
-        crypto_res['eth'] = (cg['ethereum']['usd'], cg['ethereum']['usd_24h_change'])
-        crypto_res['sol'] = (cg['solana']['usd'],   cg['solana']['usd_24h_change'])
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = {item['symbol']: item for item in json.loads(r.read())}
+        def parse(sym):
+            item = data.get(sym, {})
+            return float(item['lastPrice']), float(item['priceChangePercent'])
+        crypto_res['btc'] = parse('BTCUSDT')
+        crypto_res['eth'] = parse('ETHUSDT')
+        crypto_res['sol'] = parse('SOLUSDT')
         crypto_res['ok']  = True
-    except: crypto_res['ok'] = False
+    except Exception as e:
+        crypto_res['ok'] = False
 
 def fetch_fg():
     """alternative.me Fear & Greed（公開 API，無反爬，取代 CNN）"""
