@@ -502,9 +502,9 @@
 
     </div>
 
-    <!-- ⑤ 本週經濟日曆（已公布） -->
+    <!-- ⑤ 本週經濟日曆 -->
     <div class="card">
-        <div class="card-title">📅 本週重要經濟數據（已公布）<span style="font-size:10px; color:var(--text-3); font-weight:400; text-transform:none; letter-spacing:0; margin-left:8px;">時間為台北時間</span></div>
+        <div class="card-title">📅 本週重要經濟數據<span style="font-size:10px; color:var(--text-3); font-weight:400; text-transform:none; letter-spacing:0; margin-left:8px;">時間為台北時間</span></div>
         {% if data.calendar %}
         <table class="cal-table">
             <thead>
@@ -527,7 +527,11 @@
                     <td class="prev" style="text-align:right;">{{ ev.previous }}</td>
                     <td style="text-align:right; font-weight:600; font-variant-numeric:tabular-nums;
                         {{ 'color:var(--red)' if ev.beat_indicator == '▲' else ('color:var(--green)' if ev.beat_indicator == '▼' else 'color:var(--text)') }}">
-                        {{ ev.actual }}{% if ev.beat_indicator %} {{ ev.beat_indicator }}{% endif %}
+                        {% if ev.actual %}
+                            ✅ {{ ev.actual }}{% if ev.beat_indicator %} {{ ev.beat_indicator }}{% endif %}
+                        {% else %}
+                            <span style="color:var(--text-3);">⏳ 預期 {{ ev.forecast }}</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -535,7 +539,7 @@
         </table>
         <div class="card-ts">🕐 資料截至：{{ data.calendar_updated_at }}</div>
         {% else %}
-        <div style="color:var(--text-3); padding:12px 0; text-align:center;">本週目前尚無重大數據公布</div>
+        <div style="color:var(--text-3); padding:12px 0; text-align:center;">本週目前尚無重大數據</div>
         {% endif %}
     </div>
 
