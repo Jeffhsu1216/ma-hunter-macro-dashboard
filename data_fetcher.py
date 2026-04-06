@@ -729,14 +729,30 @@ def fetch_fear_greed() -> dict:
 
 
 def _parse_calendar_events(events_raw: list) -> list:
+    """
+    解析 ForexFactory 日曆事件
+    修正：
+      - API 欄位為 `country`（非 `currency`），已修正
+      - API 不回傳 `actual`（僅排程事件），已移除 actual 過濾
+      - 同時顯示已公布（✅）與待公布（⏳）事件
+    """
+    TARGET_COUNTRIES = {"USD", "CNY", "EUR", "JPY", "TWD"}
     high = [e for e in events_raw
             if e.get("impact") == "High"
-            and e.get("country") in ("USD", "CNY", "EUR", "JPY", "TWD")]
+            and e.get("country") in TARGET_COUNTRIES]
+
+    # 依時間排序
+    def _sort_key(e):
+        try:
+            return datetime.fromisoformat(e["date"].replace("Z", "+00:00"))
+        except:
+            return datetime.min.replace(tzinfo=pytz.utc)
+    high.sort(key=_sort_key)
+
     results = []
-    for e in high[:20]:  # 多取一些，過濾後才限制數量
-        actual = (e.get("actual") or "").strip()
-        if not actual:
-            continue  # 只顯示已公布的數據
+    for e in high:
+        if len(results) >= 12:
+            break
 
         dt_str = e.get("date", "")
         try:
@@ -746,33 +762,31 @@ def _parse_calendar_events(events_raw: list) -> list:
         except:
             date_fmt = dt_str[:10]
 
+        actual   = (e.get("actual")   or "").strip()
         forecast = (e.get("forecast") or "").strip() or "—"
         previous = (e.get("previous") or "").strip() or "—"
 
-        # 判斷超預期 / 低於預期（純數字比較）
         beat_indicator = ""
-        try:
-            def _to_num(s):
-                return float(s.replace("%", "").replace("K", "000").replace("M", "000000").strip())
-            if forecast != "—":
-                act_num = _to_num(actual)
-                fct_num = _to_num(forecast)
-                beat_indicator = "▲" if act_num > fct_num else ("▼" if act_num < fct_num else "")
-        except:
-            pass
+        if actual:
+            try:
+                def _to_num(s):
+                    return float(s.replace("%","").replace("K","000").replace("M","000000").strip())
+                if forecast != "—":
+                    beat_indicator = "▲" if _to_num(actual) > _to_num(forecast) else \
+                                     ("▼" if _to_num(actual) < _to_num(forecast) else "")
+            except:
+                pass
 
         results.append({
-            "date": date_fmt,
-            "country": e.get("country", ""),
-            "title": e.get("title", ""),
-            "forecast": forecast,
-            "previous": previous,
-            "actual": actual,
+            "date":           date_fmt,
+            "country":        e.get("country", ""),
+            "title":          e.get("title", ""),
+            "forecast":       forecast,
+            "previous":       previous,
+            "actual":         actual,
             "beat_indicator": beat_indicator,
+            "published":      bool(actual),
         })
-
-        if len(results) >= 12:
-            break
 
     return results
 
