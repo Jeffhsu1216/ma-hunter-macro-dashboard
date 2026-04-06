@@ -221,7 +221,7 @@ def run(geopolitics_bullets=None):
                 tf = (t_utc + datetime.timedelta(hours=8)).strftime('%m/%d %H:%M')
                 actual = e.get('actual',''); forecast = e.get('forecast','')
                 status = '✅' if actual else '⏳'
-                val = f'實際 {actual}' if actual else f'預期 {forecast}'
+                val = f'實際 {actual}' if actual else ''
                 A(f'  {status} {tf} | {e.get("country","")} | {e.get("title","")}  {val}')
             except: pass
 
