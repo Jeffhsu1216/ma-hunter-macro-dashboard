@@ -628,48 +628,49 @@ def fetch_commodity_data() -> dict:
 
 
 def fetch_crypto_data() -> list:
-    """從 CoinGecko 抓加密貨幣（免費、無 Key、24h 即時變動）"""
+    """從 Binance 抓加密貨幣（免費、無需 Key、24h 即時變動）
+    端點：GET https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT"]
+    """
+    BINANCE_SYMBOLS = [
+        ("BTC", "BTCUSDT", 0),
+        ("ETH", "ETHUSDT", 2),
+        ("SOL", "SOLUSDT", 2),
+    ]
     try:
-        ids = ",".join([c[1] for c in CRYPTO_LIST])
-        url = (f"https://api.coingecko.com/api/v3/simple/price"
-               f"?ids={ids}&vs_currencies=usd"
-               f"&include_24hr_change=true&include_24hr_vol=true"
-               f"&include_market_cap=true")
+        import json as _json
+        syms = _json.dumps([s[1] for s in BINANCE_SYMBOLS])
+        url  = f"https://api.binance.com/api/v3/ticker/24hr?symbols={requests.utils.quote(syms)}"
         resp = requests.get(url, headers={"Accept": "application/json"}, timeout=10)
-        data = resp.json()
+        data = {item["symbol"]: item for item in resp.json()}
 
         results = []
-        for name, cg_id, dec in CRYPTO_LIST:
-            coin = data.get(cg_id, {})
-            price = coin.get("usd")
-            change_24h = coin.get("usd_24h_change")
-            vol = coin.get("usd_24h_vol", 0)
-            mcap = coin.get("usd_market_cap", 0)
-
+        for name, sym, dec in BINANCE_SYMBOLS:
+            item       = data.get(sym, {})
+            price      = float(item["lastPrice"])      if item.get("lastPrice")      else None
+            change_pct = float(item["priceChangePercent"]) if item.get("priceChangePercent") else None
+            vol        = float(item.get("volume", 0)) * price if price else 0
             results.append({
                 "name": name, "symbol": "$",
-                "price": round(price, dec) if price else None,
-                "price_fmt": _fmt(price, dec) if price else "N/A",
-                "change_pct": round(change_24h, 2) if change_24h else None,
+                "price":      round(price, dec)      if price      else None,
+                "price_fmt":  _fmt(price, dec)       if price      else "N/A",
+                "change_pct": round(change_pct, 2)   if change_pct else None,
                 "volume_24h": vol,
-                "market_cap": mcap,
-                "source": "coingecko",
+                "source":     "binance",
             })
         return results
 
     except Exception as e:
-        logger.warning(f"CoinGecko failed: {e}, falling back to yfinance")
-        # Fallback to yfinance
-        fallback_tickers = [("BTC", "BTC-USD", 0), ("ETH", "ETH-USD", 2)]
+        logger.warning(f"Binance failed: {e}, falling back to yfinance")
+        fallback_tickers = [("BTC", "BTC-USD", 0), ("ETH", "ETH-USD", 2), ("SOL", "SOL-USD", 2)]
         results = []
         for name, ticker, dec in fallback_tickers:
             q = _get_quote(ticker)
             results.append({
                 "name": name, "symbol": "$",
-                "price": q["price"],
-                "price_fmt": _fmt(q["price"], dec),
+                "price":      q["price"],
+                "price_fmt":  _fmt(q["price"], dec),
                 "change_pct": q["change_pct"],
-                "source": "yfinance_fallback",
+                "source":     "yfinance_fallback",
             })
         return results
 
