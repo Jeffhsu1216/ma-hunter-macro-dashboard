@@ -109,51 +109,30 @@ CBC_DATES_2026 = [
 # ============================================================
 
 def _get_quote(ticker_symbol: str, retries: int = 2) -> dict:
-    """取得報價：fast_info 為主（與看盤軟體一致），history 為備援，含 retry"""
-    import time
+    """Yahoo Finance v8 Chart API（直接 HTTP，不用 yfinance 避免 rate limit）"""
+    import urllib.request as _urlr, urllib.parse as _urlp, time
+    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
+           f"{_urlp.quote(ticker_symbol)}?interval=1d&range=5d")
     for attempt in range(retries + 1):
         try:
-            tk = yf.Ticker(ticker_symbol)
-
-            # 優先用 fast_info（即時報價）
-            info = tk.fast_info
-            price = getattr(info, "last_price", None)
-            prev_close = getattr(info, "previous_close", None)
-
-            if price and prev_close and prev_close > 0:
-                change_pct = ((price - prev_close) / prev_close) * 100
-                return {
-                    "price": round(float(price), 6),
-                    "prev_close": round(float(prev_close), 6),
-                    "change_pct": round(change_pct, 2),
-                }
-
-            # 備援：history(5d)
-            hist = tk.history(period="5d")
-            if hist.empty:
-                if attempt < retries:
-                    time.sleep(1)
-                    continue
-                return {"price": None, "prev_close": None, "change_pct": None}
-
-            price = float(hist["Close"].iloc[-1])
-            if len(hist) >= 2:
-                prev_close = float(hist["Close"].iloc[-2])
-                change_pct = ((price - prev_close) / prev_close) * 100 if prev_close else 0
-            else:
-                prev_close = price
-                change_pct = 0
-
+            req = _urlr.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with _urlr.urlopen(req, timeout=10) as r:
+                d = json.loads(r.read())
+            closes = d["chart"]["result"][0]["indicators"]["quote"][0]["close"]
+            closes = [x for x in closes if x is not None]
+            p    = closes[-1]
+            prev = closes[-2] if len(closes) > 1 else p
+            chg  = p - prev
+            chgp = chg / prev * 100 if prev else 0
             return {
-                "price": round(price, 6),
-                "prev_close": round(prev_close, 6),
-                "change_pct": round(change_pct, 2),
+                "price":      round(float(p),    6),
+                "prev_close": round(float(prev),  6),
+                "change_pct": round(float(chgp),  2),
             }
         except Exception as e:
-            logger.warning(f"Failed {ticker_symbol} (attempt {attempt+1}): {e}")
+            logger.warning(f"_get_quote {ticker_symbol} attempt {attempt+1}: {e}")
             if attempt < retries:
-                time.sleep(1)
-
+                time.sleep(0.4)
     return {"price": None, "prev_close": None, "change_pct": None}
 
 
@@ -638,7 +617,7 @@ def fetch_crypto_data() -> list:
     ]
     try:
         import json as _json
-        syms = _json.dumps([s[1] for s in BINANCE_SYMBOLS])
+        syms = _json.dumps([s[1] for s in BINANCE_SYMBOLS], separators=(',', ':'))
         url  = f"https://api.binance.com/api/v3/ticker/24hr?symbols={requests.utils.quote(syms)}"
         resp = requests.get(url, headers={"Accept": "application/json"}, timeout=10)
         data = {item["symbol"]: item for item in resp.json()}
@@ -717,36 +696,25 @@ def fetch_cb_rates() -> dict:
 
 
 def fetch_fear_greed() -> dict:
-    """CNN Fear & Greed 指數"""
-    headers_list = [
-        {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-            "Referer": "https://edition.cnn.com/markets/fear-and-greed",
-            "Accept": "application/json, text/plain, */*",
-        },
-        {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
-    ]
-    for hdrs in headers_list:
-        try:
-            resp = requests.get(
-                "https://production.dataviz.cnn.io/index/fearandgreed/graphdata",
-                headers=hdrs, timeout=8
-            )
-            if resp.status_code == 200:
-                fg = resp.json()["fear_and_greed"]
-                score = round(fg["score"])
-                rating = fg["rating"].replace("_", " ").title()
-                prev = fg.get("previous_close", fg["score"])
-                return {"score": score, "rating": rating, "change": round(fg["score"] - prev, 1)}
-        except Exception:
-            continue
+    """Alternative.me Fear & Greed（取代 CNN，無反爬限制，Render 可用）"""
+    try:
+        resp = requests.get(
+            "https://api.alternative.me/fng/?limit=2",
+            headers={"User-Agent": "Mozilla/5.0"}, timeout=8
+        )
+        data = resp.json()["data"]
+        score  = int(data[0]["value"])
+        rating = data[0]["value_classification"]
+        prev   = int(data[1]["value"])
+        return {"score": score, "rating": rating, "change": score - prev}
+    except Exception as e:
+        logger.warning(f"Alternative.me F&G failed: {e}")
 
     # Fallback: VIX 推算
     try:
-        tk = yf.Ticker(VIX_TICKER)
-        hist = tk.history(period="2d")
-        if not hist.empty:
-            v = float(hist["Close"].iloc[-1])
+        vix_q = _get_quote(VIX_TICKER)
+        v = vix_q.get("price")
+        if v:
             if v < 12:   score, label = 85, "Extreme Greed"
             elif v < 15: score, label = 70, "Greed"
             elif v < 20: score, label = 55, "Neutral"
