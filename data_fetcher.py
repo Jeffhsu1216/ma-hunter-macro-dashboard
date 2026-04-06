@@ -840,22 +840,28 @@ def fetch_economic_calendar() -> list:
 
 
 def fetch_taiwan_market() -> dict:
+    """
+    三大法人買賣超（億元）
+    策略：TWSE BFI82U 不帶日期 → 自動回最近交易日
+    注意：TWSE 對海外 IP（如 Render）可能封鎖，fallback 使用 taiwan_backup.json
+          backup 由本機 macro_dashboard_runner.py 每日更新後 push 至 GitHub
+    """
+    def parse_amt(s):
+        try: return int(str(s).replace(",", ""))
+        except: return 0
+
+    def yi(val):
+        return round(val / 1e8, 1)
+
     try:
+        # 嘗試直接抓 TWSE（台灣 IP 可用，海外可能 timeout）
         url = "https://www.twse.com.tw/rwd/zh/fund/BFI82U?response=json&type=day"
-        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=6)
         data = resp.json()
         if data.get("stat") != "OK" or not data.get("data"):
             raise ValueError("TWSE returned no data")
 
         rows = data["data"]
-
-        def parse_amt(s):
-            try: return int(str(s).replace(",", ""))
-            except: return 0
-
-        def yi(val):
-            return round(val / 1e8, 1)
-
         foreign = inv_trust = dealer = total = 0
         for row in rows:
             name = row[0]
@@ -876,7 +882,9 @@ def fetch_taiwan_market() -> dict:
             "total": total, "total_yi": yi(total),
             "date": data.get("date", ""),
             "unit": "億元",
+            "source": "live",
         }
+        # 成功就更新 backup
         try:
             with open(TAIWAN_BACKUP, "w", encoding="utf-8") as f:
                 json.dump(result, f, ensure_ascii=False)
@@ -885,11 +893,14 @@ def fetch_taiwan_market() -> dict:
         return result
 
     except Exception as e:
-        logger.warning(f"Taiwan market failed: {e}")
+        logger.warning(f"Taiwan TWSE live failed ({e})，改用 backup")
+        # fallback：用 github push 進來的 backup（由本機每日更新）
         try:
             if os.path.exists(TAIWAN_BACKUP):
                 with open(TAIWAN_BACKUP, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                    result = json.load(f)
+                result["source"] = "backup"
+                return result
         except:
             pass
         return None
