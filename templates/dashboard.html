@@ -532,6 +532,8 @@
                         {{ 'color:var(--red)' if ev.beat_indicator == '▲' else ('color:var(--green)' if ev.beat_indicator == '▼' else 'color:var(--text)') }}">
                         {% if ev.actual %}
                             ✅ {{ ev.actual }}{% if ev.beat_indicator %} {{ ev.beat_indicator }}{% endif %}
+                        {% elif ev.is_past %}
+                            <span style="color:#f59e0b;">⚠️ 待確認</span>
                         {% else %}
                             <span style="color:var(--text-3);">⏳</span>
                         {% endif %}

@@ -115,7 +115,8 @@ def fetch_cal():
             headers={'User-Agent':'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=8) as r: raw = json.loads(r.read())
         cal_res['events'] = [e for e in raw if e.get('impact') == 'High'
-                             and e.get('country') in {'USD','CNY','EUR','JPY','TWD'}]
+                             and e.get('country') in {'USD','CNY','EUR','JPY','TWD'}
+                             and (e.get('forecast') or '').strip()]
         cal_res['ok'] = True
     except: cal_res['events'] = []; cal_res['ok'] = False
 
@@ -215,13 +216,19 @@ def run(geopolitics_bullets=None):
     if events:
         A('')
         A('📅 <b>本週重要數據</b>')
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
         for e in events[:5]:
             try:
                 t_utc = datetime.datetime.fromisoformat(e['date'].replace('Z','+00:00'))
                 tf = (t_utc + datetime.timedelta(hours=8)).strftime('%m/%d %H:%M')
-                actual = e.get('actual',''); forecast = e.get('forecast','')
-                status = '✅' if actual else '⏳'
-                val = f'實際 {actual}' if actual else ''
+                actual = e.get('actual','')
+                is_past = t_utc < now_utc
+                if actual:
+                    status = '✅'; val = f'實際 {actual}'
+                elif is_past:
+                    status = '⚠️'; val = '待確認'
+                else:
+                    status = '⏳'; val = ''
                 A(f'  {status} {tf} | {e.get("country","")} | {e.get("title","")}  {val}')
             except: pass
 

@@ -834,17 +834,20 @@ def fetch_fear_greed() -> dict:
 def _parse_calendar_events(events_raw: list) -> list:
     """
     解析 ForexFactory 日曆事件
-    修正：
-      - API 欄位為 `country`（非 `currency`），已修正
-      - API 不回傳 `actual`（僅排程事件），已移除 actual 過濾
-      - 同時顯示已公布（✅）與待公布（⏳）事件
+    規則：
+      - 僅保留 High impact、目標國家、且有 forecast 數值的事件（移除演講/聲明類）
+      - 時間已過且無 actual → is_past=True，前端顯示 ⚠️ 待確認
+      - 時間未到 → is_past=False，前端顯示 ⏳
+      - 已有 actual → published=True，顯示 ✅ + beat indicator
     """
     TARGET_COUNTRIES = {"USD", "CNY", "EUR", "JPY", "TWD"}
+    now_utc = datetime.now(pytz.utc)
+
     high = [e for e in events_raw
             if e.get("impact") == "High"
-            and e.get("country") in TARGET_COUNTRIES]
+            and e.get("country") in TARGET_COUNTRIES
+            and (e.get("forecast") or "").strip()]   # 無預測數值（演講/聲明）直接過濾
 
-    # 依時間排序
     def _sort_key(e):
         try:
             return datetime.fromisoformat(e["date"].replace("Z", "+00:00"))
@@ -858,10 +861,12 @@ def _parse_calendar_events(events_raw: list) -> list:
             break
 
         dt_str = e.get("date", "")
+        is_past = False
         try:
             dt_utc = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
             dt_taipei = dt_utc.astimezone(TAIPEI_TZ)
             date_fmt = dt_taipei.strftime("%m/%d %H:%M")
+            is_past = dt_utc < now_utc
         except:
             date_fmt = dt_str[:10]
 
@@ -889,6 +894,7 @@ def _parse_calendar_events(events_raw: list) -> list:
             "actual":         actual,
             "beat_indicator": beat_indicator,
             "published":      bool(actual),
+            "is_past":        is_past,
         })
 
     return results
