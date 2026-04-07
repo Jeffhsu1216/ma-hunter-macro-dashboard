@@ -110,66 +110,78 @@ def fetch_inst():
     inst_res['ok'] = False
 
 def fetch_cal():
-    try:
-        # 1) ForexFactory 事件清單
-        req = urllib.request.Request('https://nfs.faireconomy.media/ff_calendar_thisweek.json',
-            headers={'User-Agent':'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=8) as r: raw = json.loads(r.read())
-        events = [e for e in raw if e.get('impact') == 'High'
-                  and e.get('country') in {'USD','CNY','EUR','JPY','TWD'}
-                  and (e.get('forecast') or '').strip()]
+    """
+    主要來源：TradingView（有 forecast + actual，無 rate limit）
+    備援：ForexFactory（TradingView 失敗時）
+    容錯：cal_raw_backup.json（雙方都失敗時）
+    過濾：僅保留 High impact、目標國家、有 forecast 數值的事件
+    """
+    import re as _re, os
+    TARGET = {'USD','CNY','EUR','JPY','TWD'}
+    raw_backup = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cal_raw_backup.json')
 
-        # 2) TradingView 抓實際值（備援）
-        now_utc = datetime.datetime.utcnow()
-        tv_from = (now_utc - datetime.timedelta(days=7)).strftime('%Y-%m-%dT00:00:00.000Z')
-        tv_to   = (now_utc + datetime.timedelta(days=7)).strftime('%Y-%m-%dT23:59:59.000Z')
-        tv_actuals = {}
+    now_utc = datetime.datetime.utcnow()
+    tv_from = (now_utc - datetime.timedelta(days=3)).strftime('%Y-%m-%dT00:00:00.000Z')
+    tv_to   = (now_utc + datetime.timedelta(days=7)).strftime('%Y-%m-%dT23:59:59.000Z')
+
+    events = []
+
+    # ── 主來源：TradingView ──
+    try:
+        tv_req = urllib.request.Request(
+            f'https://economic-calendar.tradingview.com/events?from={tv_from}&to={tv_to}&countries=US,CN,EU,JP,TW',
+            headers={'User-Agent':'Mozilla/5.0','Origin':'https://www.tradingview.com'})
+        with urllib.request.urlopen(tv_req, timeout=10) as r:
+            tv_data = json.loads(r.read())
+        if isinstance(tv_data, list):
+            for e in tv_data:
+                country = e.get('country','').upper()
+                # TV 用 US/CN/EU/JP/TW，轉成 FF 的 USD/CNY/EUR/JPY/TWD
+                country_map = {'US':'USD','CN':'CNY','EU':'EUR','JP':'JPY','TW':'TWD'}
+                country_code = country_map.get(country, country)
+                if country_code not in TARGET: continue
+                if e.get('importance', 0) < 1: continue   # TV: -1=low,0=medium,1=high,2=highest
+                forecast = str(e.get('forecast') or '').strip()
+                if not forecast or forecast == 'None': continue  # 過濾無預測值
+                events.append({
+                    'title':    e.get('title',''),
+                    'country':  country_code,
+                    'date':     e.get('date',''),
+                    'forecast': forecast,
+                    'previous': str(e.get('previous') or '').strip(),
+                    'actual':   str(e.get('actual') or '').strip() if e.get('actual') is not None else '',
+                    'impact':   'High',
+                })
+    except Exception as ex:
+        pass  # 降級到 ForexFactory
+
+    # ── 備援：ForexFactory（TV 失敗時）──
+    if not events:
         try:
-            tv_req = urllib.request.Request(
-                f'https://economic-calendar.tradingview.com/events?from={tv_from}&to={tv_to}&countries=US,CN,EU,JP,TW',
-                headers={'User-Agent':'Mozilla/5.0','Origin':'https://www.tradingview.com'})
-            with urllib.request.urlopen(tv_req, timeout=10) as r:
-                tv_data = json.loads(r.read())
-            if isinstance(tv_data, list):
-                for ev in tv_data:
-                    if ev.get('actual') is not None:
-                        tv_actuals[ev.get('title','').lower().strip()] = str(ev['actual'])
+            req = urllib.request.Request('https://nfs.faireconomy.media/ff_calendar_thisweek.json',
+                headers={'User-Agent':'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=8) as r: raw = json.loads(r.read())
+            events = [e for e in raw if e.get('impact') == 'High'
+                      and e.get('country') in TARGET
+                      and (e.get('forecast') or '').strip()]
         except: pass
 
-        # 3) 把 TV 實際值回填進 ForexFactory 事件
-        import re as _re
-        for e in events:
-            if not (e.get('actual') or '').strip():
-                title_l = e.get('title','').lower().strip()
-                val = tv_actuals.get(title_l, '')
-                if not val:  # 去後綴模糊比對
-                    clean = _re.sub(r'\s*(m/m|q/q|y/y|final|preliminary|flash)\s*$','',title_l).strip()
-                    for tv_t, tv_v in tv_actuals.items():
-                        tv_c = _re.sub(r'\s*(m/m|q/q|y/y|final|preliminary|flash)\s*$','',tv_t).strip()
-                        if clean == tv_c:
-                            val = tv_v; break
-                if val:
-                    e['actual'] = val
+    # ── 容錯：讀上次備份 ──
+    if not events:
+        try:
+            with open(raw_backup, 'r', encoding='utf-8') as f:
+                events = json.load(f)
+        except: pass
 
-        # 儲存 raw backup 供下次失敗時使用
-        import os
-        raw_backup = os.path.join(os.path.dirname(__file__), 'cal_raw_backup.json')
+    # 儲存備份
+    if events:
         try:
             with open(raw_backup, 'w', encoding='utf-8') as f:
                 json.dump(events, f, ensure_ascii=False)
         except: pass
-        cal_res['events'] = events
-        cal_res['ok'] = True
-    except:
-        # ForexFactory 失敗時讀 raw backup
-        try:
-            import os
-            raw_backup = os.path.join(os.path.dirname(__file__), 'cal_raw_backup.json')
-            with open(raw_backup, 'r', encoding='utf-8') as f:
-                cal_res['events'] = json.load(f)
-            cal_res['ok'] = True
-        except:
-            cal_res['events'] = []; cal_res['ok'] = False
+
+    cal_res['events'] = events
+    cal_res['ok'] = bool(events)
 
 def run(geopolitics_bullets=None):
     NOW       = now_tw()
