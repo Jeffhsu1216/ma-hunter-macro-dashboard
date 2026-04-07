@@ -685,44 +685,69 @@ def _index_commentary(indices: list) -> str:
 
 
 def _calendar_commentary(cal: list) -> str:
-    """根據本週經濟日曆生成總結"""
+    """根據本週經濟日曆生成總結，已公布事件逐項解讀"""
     if not cal:
         return ""
     parts = []
 
     published = [e for e in cal if e.get("published")]
-    pending   = [e for e in cal if not e.get("published")]
+    pending   = [e for e in cal if not e.get("published") and not e.get("is_past")]
+    past_unconfirmed = [e for e in cal if e.get("is_past")]
 
-    # 已公布事件解讀
-    beats, misses = [], []
+    # ── 已公布：逐項解讀 ──
     for e in published:
-        if e.get("beat_indicator") == "▲":
-            beats.append(e["title"])
-        elif e.get("beat_indicator") == "▼":
-            misses.append(e["title"])
+        title = e.get("title", "")
+        actual = e.get("actual", "")
+        forecast = e.get("forecast", "—")
+        bi = e.get("beat_indicator", "")
+        title_l = title.lower()
 
-    if beats:
-        parts.append(f"優於預期：{'、'.join(beats[:3])}")
-    if misses:
-        parts.append(f"遜於預期：{'、'.join(misses[:3])}")
-    if published and not beats and not misses:
-        parts.append(f"本週已公布 {len(published)} 項數據，實際值與預期接近")
+        try:
+            act_num = float(actual.replace("%","").replace("K","").replace(",","").strip())
+            fc_num  = float(forecast.replace("%","").replace("K","").replace(",","").strip()) if forecast != "—" else None
+        except:
+            act_num = None; fc_num = None
 
-    # 待公布重要事件
-    if pending:
-        upcoming = "、".join(e["title"] for e in pending[:3])
-        parts.append(f"本週待公布：{upcoming}")
+        beat_word = "優於預期" if bi == "▲" else ("遜於預期" if bi == "▼" else "符合預期")
+        unit = "%" if "%" in actual else ""
 
-    # 特別點名 FOMC Minutes / PCE / NFP
-    key_events = {"FOMC": "FOMC Minutes", "PCE": "PCE", "GDP": "GDP", "NFP": "Non-Farm", "CPI": "CPI"}
-    highlighted = []
-    for e in pending:
-        for keyword, label in key_events.items():
-            if keyword in e.get("title", "").upper() or keyword in e.get("title", ""):
-                highlighted.append(e["title"])
-                break
-    if highlighted:
-        parts.append(f"市場焦點：{'、'.join(highlighted[:2])}，公布後可能引發較大波動")
+        if "ism services" in title_l or "non manufacturing pmi" in title_l:
+            trend = "服務業景氣擴張（>50）" if act_num and act_num > 50 else "服務業景氣收縮（<50）"
+            parts.append(f"ISM 服務業 PMI {actual}（{beat_word}，預期 {forecast}），{trend}，{'需注意新訂單與就業分項走向' if bi == '▼' else '支撐美國服務業佔比 80% 的 GDP'}")
+        elif "cpi" in title_l or "inflation rate" in title_l or "core inflation" in title_l:
+            parts.append(f"{title} 實際 {actual}（{beat_word}，預期 {forecast}），{'通膨高於預期，Fed 降息壓力增大' if bi == '▲' else ('通膨降溫，市場降息預期升溫' if bi == '▼' else '通膨符合 Fed 預測路徑')}")
+        elif "pce" in title_l:
+            parts.append(f"{title} {actual}（{beat_word}，預期 {forecast}），{'PCE 為 Fed 核心通膨指標，高於預期將延後降息時程' if bi == '▲' else 'PCE 回落支撐 Fed 降息預期'}")
+        elif "gdp" in title_l:
+            parts.append(f"GDP {actual}（{beat_word}，預期 {forecast}），{'經濟成長動能優於市場預期' if bi == '▲' else '經濟成長放緩，衰退疑慮升溫'}")
+        elif "durable goods" in title_l:
+            parts.append(f"耐久財訂單 {actual}（{beat_word}，預期 {forecast}），{'製造業資本支出需求增強' if bi == '▲' else '企業資本投資趨保守'}")
+        elif "jobless claims" in title_l or "initial claims" in title_l:
+            parts.append(f"首次申請失業救濟金 {actual}（{beat_word}，預期 {forecast}），{'申請人數增加，勞動市場出現鬆弛' if bi == '▲' else '勞動市場仍緊俏，支撐消費'}")
+        elif "personal income" in title_l:
+            parts.append(f"個人收入 {actual}（{beat_word}，預期 {forecast}），{'薪資成長支撐消費動能' if bi == '▲' else '薪資增速放緩，消費潛力承壓'}")
+        elif "personal spending" in title_l:
+            parts.append(f"個人支出 {actual}（{beat_word}，預期 {forecast}），{'消費擴張是美國 GDP 最大支柱' if bi == '▲' else '消費降溫，需觀察信心指標'}")
+        elif "ppi" in title_l:
+            parts.append(f"PPI {actual}（{beat_word}，預期 {forecast}），{'生產者物價上漲，通膨上游壓力升溫' if bi == '▲' else '上游通膨壓力緩解，有利終端物價穩定'}")
+        elif "consumer confidence" in title_l or "michigan" in title_l:
+            parts.append(f"{title} {actual}（{beat_word}，預期 {forecast}），{'消費信心回升，支撐零售與服務業需求' if bi == '▲' else '消費信心走弱，留意未來消費支出'}")
+        elif "retail sales" in title_l:
+            parts.append(f"零售銷售 {actual}（{beat_word}，預期 {forecast}），{'消費端仍有活力' if bi == '▲' else '消費降溫，需關注信心指標'}")
+        elif beat_word != "符合預期":
+            parts.append(f"{title} {actual}（{beat_word}，預期 {forecast}）")
+
+    # ── 未確認（時間已過但無資料）──
+    if past_unconfirmed:
+        items = "、".join(e["title"] for e in past_unconfirmed[:2])
+        parts.append(f"⚠️ 待確認：{items}（時間已過，尚未取得實際值）")
+
+    # ── 本週待公布重點 ──
+    KEY_KEYWORDS = ["cpi","pce","gdp","payroll","nonfarm","jobless","pmi","ppi","consumer confidence","michigan","retail"]
+    key_pending = [e for e in pending if any(k in e.get("title","").lower() for k in KEY_KEYWORDS)]
+    if key_pending:
+        upcoming = "、".join(e["title"] for e in key_pending[:4])
+        parts.append(f"本週待公布重點：{upcoming}")
 
     return "。".join(parts) + "。" if parts else ""
 
@@ -957,7 +982,7 @@ def _parse_calendar_events(events_raw: list, tv_actuals: dict = None) -> list:
     now_utc = datetime.now(pytz.utc)
 
     high = [e for e in events_raw
-            if e.get("impact") == "High"
+            if e.get("impact") in ("High", "Medium")
             and e.get("country") in TARGET_COUNTRIES
             and (e.get("forecast") or "").strip()]   # 無預測數值（演講/聲明）直接過濾
 
@@ -970,7 +995,7 @@ def _parse_calendar_events(events_raw: list, tv_actuals: dict = None) -> list:
 
     results = []
     for e in high:
-        if len(results) >= 12:
+        if len(results) >= 15:
             break
 
         dt_str = e.get("date", "")
@@ -1049,7 +1074,7 @@ def _fetch_tv_calendar_full(tv_from: str, tv_to: str) -> list:
             country_code = COUNTRY_MAP.get(e.get("country", "").upper(), "")
             if country_code not in TARGET_COUNTRIES:
                 continue
-            if e.get("importance", 0) < 1:
+            if e.get("importance", -1) < 0:
                 continue
             forecast_raw = e.get("forecastRaw")
             if forecast_raw is None:
