@@ -151,9 +151,25 @@ def fetch_cal():
                 if val:
                     e['actual'] = val
 
+        # 儲存 raw backup 供下次失敗時使用
+        import os
+        raw_backup = os.path.join(os.path.dirname(__file__), 'cal_raw_backup.json')
+        try:
+            with open(raw_backup, 'w', encoding='utf-8') as f:
+                json.dump(events, f, ensure_ascii=False)
+        except: pass
         cal_res['events'] = events
         cal_res['ok'] = True
-    except: cal_res['events'] = []; cal_res['ok'] = False
+    except:
+        # ForexFactory 失敗時讀 raw backup
+        try:
+            import os
+            raw_backup = os.path.join(os.path.dirname(__file__), 'cal_raw_backup.json')
+            with open(raw_backup, 'r', encoding='utf-8') as f:
+                cal_res['events'] = json.load(f)
+            cal_res['ok'] = True
+        except:
+            cal_res['events'] = []; cal_res['ok'] = False
 
 def run(geopolitics_bullets=None):
     NOW       = now_tw()
