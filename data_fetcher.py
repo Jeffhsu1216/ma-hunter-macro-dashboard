@@ -1021,14 +1021,66 @@ def _parse_calendar_events(events_raw: list, tv_actuals: dict = None) -> list:
     return results
 
 
+def _fetch_tv_calendar_full(tv_from: str, tv_to: str) -> list:
+    """
+    從 TradingView 抓完整日曆事件清單（含 forecast + actual）
+    用於 ForexFactory 失敗時的備援，回傳已格式化的事件 list
+    """
+    TARGET_COUNTRIES = {"USD", "CNY", "EUR", "JPY", "TWD"}
+    COUNTRY_MAP = {"US": "USD", "CN": "CNY", "EU": "EUR", "JP": "JPY", "TW": "TWD"}
+    try:
+        resp = requests.get(
+            "https://economic-calendar.tradingview.com/events",
+            headers={"User-Agent": "Mozilla/5.0", "Origin": "https://www.tradingview.com"},
+            params={"from": tv_from, "to": tv_to, "countries": "US,CN,EU,JP,TW"},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        raw_events = data.get("result", data) if isinstance(data, dict) else data
+        if not isinstance(raw_events, list):
+            return []
+
+        # 轉換成 _parse_calendar_events 所需的 FF 格式
+        now_utc = datetime.now(pytz.utc)
+        pseudo_raw = []
+        for e in raw_events:
+            country_code = COUNTRY_MAP.get(e.get("country", "").upper(), "")
+            if country_code not in TARGET_COUNTRIES:
+                continue
+            if e.get("importance", 0) < 1:
+                continue
+            forecast_raw = e.get("forecastRaw")
+            if forecast_raw is None:
+                continue  # 無預測數值
+            pseudo_raw.append({
+                "title":    e.get("title", ""),
+                "country":  country_code,
+                "date":     e.get("date", ""),
+                "impact":   "High",
+                "forecast": str(forecast_raw),
+                "previous": str(e.get("previousRaw") or ""),
+                "actual":   str(e.get("actualRaw")) if e.get("actualRaw") is not None else "",
+            })
+
+        # 直接呼叫解析（tv_actuals 已內嵌在 actual 欄位裡，不需再補）
+        return _parse_calendar_events(pseudo_raw, tv_actuals={})
+    except Exception as ex:
+        logger.warning(f"TradingView full calendar failed: {ex}")
+        return []
+
+
 def fetch_economic_calendar() -> list:
-    # 先抓 TradingView 實際值（涵蓋本週 + 上週，確保剛發布的數據都在）
     now_utc = datetime.now(pytz.utc)
-    tv_from = (now_utc - timedelta(days=7)).strftime("%Y-%m-%dT00:00:00.000Z")
+    tv_from = (now_utc - timedelta(days=3)).strftime("%Y-%m-%dT00:00:00.000Z")
     tv_to   = (now_utc + timedelta(days=7)).strftime("%Y-%m-%dT23:59:59.000Z")
+
+    # 同時抓 TV actuals（供 FF 事件補值用）
     tv_actuals = _fetch_tv_actuals(tv_from, tv_to)
     logger.info(f"TradingView actuals fetched: {len(tv_actuals)} events")
 
+    # ── 主來源：ForexFactory ──
     for week in ["thisweek", "nextweek"]:
         try:
             url = f"https://nfs.faireconomy.media/ff_calendar_{week}.json"
@@ -1047,13 +1099,36 @@ def fetch_economic_calendar() -> list:
                     pass
                 return results
         except Exception as e:
-            logger.warning(f"Calendar {week} failed: {e}")
+            logger.warning(f"Calendar FF {week} failed: {e}")
             continue
 
+    # ── 備援一：TradingView 完整日曆 ──
+    logger.info("FF failed, trying TradingView full calendar...")
+    tv_results = _fetch_tv_calendar_full(tv_from, tv_to)
+    if tv_results:
+        try:
+            with open(CALENDAR_BACKUP, "w", encoding="utf-8") as f:
+                json.dump(tv_results, f, ensure_ascii=False)
+        except:
+            pass
+        return tv_results
+
+    # ── 備援二：calendar_backup.json（同週才用）──
     try:
         if os.path.exists(CALENDAR_BACKUP):
             with open(CALENDAR_BACKUP, "r", encoding="utf-8") as f:
-                return json.load(f)
+                cached = json.load(f)
+            # 確認備份是本週資料（第一筆日期要在 5 天內）
+            if cached:
+                first_date = cached[0].get("date", "")
+                try:
+                    from datetime import datetime as _dt
+                    cached_dt = _dt.strptime(first_date, "%m/%d %H:%M")
+                    cached_dt = cached_dt.replace(year=now_utc.year)
+                    if abs((now_utc.replace(tzinfo=None) - cached_dt).days) <= 7:
+                        return cached
+                except:
+                    pass
     except:
         pass
     return []
