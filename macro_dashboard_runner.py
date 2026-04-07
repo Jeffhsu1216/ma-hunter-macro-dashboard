@@ -111,12 +111,47 @@ def fetch_inst():
 
 def fetch_cal():
     try:
+        # 1) ForexFactory 事件清單
         req = urllib.request.Request('https://nfs.faireconomy.media/ff_calendar_thisweek.json',
             headers={'User-Agent':'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=8) as r: raw = json.loads(r.read())
-        cal_res['events'] = [e for e in raw if e.get('impact') == 'High'
-                             and e.get('country') in {'USD','CNY','EUR','JPY','TWD'}
-                             and (e.get('forecast') or '').strip()]
+        events = [e for e in raw if e.get('impact') == 'High'
+                  and e.get('country') in {'USD','CNY','EUR','JPY','TWD'}
+                  and (e.get('forecast') or '').strip()]
+
+        # 2) TradingView 抓實際值（備援）
+        now_utc = datetime.datetime.utcnow()
+        tv_from = (now_utc - datetime.timedelta(days=7)).strftime('%Y-%m-%dT00:00:00.000Z')
+        tv_to   = (now_utc + datetime.timedelta(days=7)).strftime('%Y-%m-%dT23:59:59.000Z')
+        tv_actuals = {}
+        try:
+            tv_req = urllib.request.Request(
+                f'https://economic-calendar.tradingview.com/events?from={tv_from}&to={tv_to}&countries=US,CN,EU,JP,TW',
+                headers={'User-Agent':'Mozilla/5.0','Origin':'https://www.tradingview.com'})
+            with urllib.request.urlopen(tv_req, timeout=10) as r:
+                tv_data = json.loads(r.read())
+            if isinstance(tv_data, list):
+                for ev in tv_data:
+                    if ev.get('actual') is not None:
+                        tv_actuals[ev.get('title','').lower().strip()] = str(ev['actual'])
+        except: pass
+
+        # 3) 把 TV 實際值回填進 ForexFactory 事件
+        import re as _re
+        for e in events:
+            if not (e.get('actual') or '').strip():
+                title_l = e.get('title','').lower().strip()
+                val = tv_actuals.get(title_l, '')
+                if not val:  # 去後綴模糊比對
+                    clean = _re.sub(r'\s*(m/m|q/q|y/y|final|preliminary|flash)\s*$','',title_l).strip()
+                    for tv_t, tv_v in tv_actuals.items():
+                        tv_c = _re.sub(r'\s*(m/m|q/q|y/y|final|preliminary|flash)\s*$','',tv_t).strip()
+                        if clean == tv_c:
+                            val = tv_v; break
+                if val:
+                    e['actual'] = val
+
+        cal_res['events'] = events
         cal_res['ok'] = True
     except: cal_res['events'] = []; cal_res['ok'] = False
 
