@@ -511,6 +511,109 @@ def _taiwan_commentary(tw: dict) -> str:
     return "。".join(parts) + "。" if parts else ""
 
 
+def _index_commentary(indices: list) -> str:
+    """根據全球股市漲跌生成解釋"""
+    non_vix = [i for i in indices if not i.get("is_vix")]
+    if not non_vix:
+        return ""
+    parts = []
+
+    valid = [i for i in non_vix if i.get("change_pct") is not None]
+    if not valid:
+        return ""
+
+    best  = max(valid, key=lambda x: x["change_pct"])
+    worst = min(valid, key=lambda x: x["change_pct"])
+
+    # 整體氛圍
+    up_count   = sum(1 for i in valid if i["change_pct"] > 0)
+    down_count = sum(1 for i in valid if i["change_pct"] < 0)
+    total      = len(valid)
+
+    if up_count >= total * 0.8:
+        parts.append(f"全球股市普漲，{up_count}/{total} 大市場上揚，風險偏好回升")
+    elif down_count >= total * 0.8:
+        parts.append(f"全球股市齊跌，{down_count}/{total} 大市場收跌，避險情緒主導")
+    elif up_count > down_count:
+        parts.append(f"股市多頭略占優勢（{up_count} 漲 / {down_count} 跌）")
+    else:
+        parts.append(f"股市偏弱（{down_count} 跌 / {up_count} 漲）")
+
+    # 最強 / 最弱
+    if best["change_pct"] > 0.5:
+        parts.append(f"領漲：{best['name']} {best['change_pct']:+.2f}%")
+    if worst["change_pct"] < -0.5:
+        parts.append(f"領跌：{worst['name']} {worst['change_pct']:+.2f}%")
+
+    # 台股
+    taiex = next((i for i in valid if i["name"] == "加權指數"), None)
+    if taiex and taiex.get("change_pct") is not None:
+        c = taiex["change_pct"]
+        if c < -2:
+            parts.append(f"台股重挫 {c:.2f}%，需留意外資動向與半導體類股壓力")
+        elif c < -1:
+            parts.append(f"台股下跌 {c:.2f}%，表現弱於全球均值")
+        elif c > 2:
+            parts.append(f"台股強漲 {c:.2f}%，表現明顯優於全球")
+        elif c > 0.5:
+            parts.append(f"台股上漲 {c:.2f}%，跟隨全球多頭")
+
+    # US vs Asia 背離
+    sp = next((i for i in valid if i["name"] == "S&P 500"), None)
+    nk = next((i for i in valid if i["name"] == "日經 225"), None)
+    if sp and nk and sp.get("change_pct") is not None and nk.get("change_pct") is not None:
+        diff = sp["change_pct"] - nk["change_pct"]
+        if diff > 2:
+            parts.append("美股明顯強於亞股，資金偏向美國市場")
+        elif diff < -2:
+            parts.append("亞股相對強勢，美股承壓")
+
+    return "。".join(parts) + "。" if parts else ""
+
+
+def _calendar_commentary(cal: list) -> str:
+    """根據本週經濟日曆生成總結"""
+    if not cal:
+        return ""
+    parts = []
+
+    published = [e for e in cal if e.get("published")]
+    pending   = [e for e in cal if not e.get("published")]
+
+    # 已公布事件解讀
+    beats, misses = [], []
+    for e in published:
+        if e.get("beat_indicator") == "▲":
+            beats.append(e["title"])
+        elif e.get("beat_indicator") == "▼":
+            misses.append(e["title"])
+
+    if beats:
+        parts.append(f"優於預期：{'、'.join(beats[:3])}")
+    if misses:
+        parts.append(f"遜於預期：{'、'.join(misses[:3])}")
+    if published and not beats and not misses:
+        parts.append(f"本週已公布 {len(published)} 項數據，實際值與預期接近")
+
+    # 待公布重要事件
+    if pending:
+        upcoming = "、".join(e["title"] for e in pending[:3])
+        parts.append(f"本週待公布：{upcoming}")
+
+    # 特別點名 FOMC Minutes / PCE / NFP
+    key_events = {"FOMC": "FOMC Minutes", "PCE": "PCE", "GDP": "GDP", "NFP": "Non-Farm", "CPI": "CPI"}
+    highlighted = []
+    for e in pending:
+        for keyword, label in key_events.items():
+            if keyword in e.get("title", "").upper() or keyword in e.get("title", ""):
+                highlighted.append(e["title"])
+                break
+    if highlighted:
+        parts.append(f"市場焦點：{'、'.join(highlighted[:2])}，公布後可能引發較大波動")
+
+    return "。".join(parts) + "。" if parts else ""
+
+
 # ============================================================
 # 各區塊抓取函式
 # ============================================================
@@ -953,7 +1056,8 @@ def fetch_all() -> dict:
         "yields_updated_at": yields_ts,
         "cb_rates":      cb_data,
         "cb_rates_updated_at": cb_ts,
-        "indices":       indices,
+        "indices":            indices,
+        "indices_commentary": _index_commentary(indices),
         "indices_updated_at": indices_ts,
         "commodities":        comm_data["items"],
         "crypto":             crypto_data,
@@ -963,8 +1067,9 @@ def fetch_all() -> dict:
         "fear_greed":    fg,
         "sentiment_commentary": _sentiment_commentary(fg, vix_price, vix_chg),
         "fg_updated_at": fg_ts,
-        "calendar":      cal_data,
-        "calendar_updated_at": cal_ts,
+        "calendar":             cal_data,
+        "calendar_commentary":  _calendar_commentary(cal_data),
+        "calendar_updated_at":  cal_ts,
         "taiwan":             tw_data,
         "taiwan_commentary":  _taiwan_commentary(tw_data),
         "taiwan_updated_at":  tw_ts,

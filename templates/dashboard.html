@@ -355,6 +355,9 @@
             </div>
             {% endif %}
             {% endfor %}
+            {% if data.indices_commentary %}
+            <div class="commentary">{{ data.indices_commentary }}</div>
+            {% endif %}
             <div class="card-ts">🕐 更新時間：{{ data.indices_updated_at }}</div>
         </div>
 
@@ -537,6 +540,9 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% if data.calendar_commentary %}
+        <div class="commentary">{{ data.calendar_commentary }}</div>
+        {% endif %}
         <div class="card-ts">🕐 資料截至：{{ data.calendar_updated_at }}</div>
         {% else %}
         <div style="color:var(--text-3); padding:12px 0; text-align:center;">本週目前尚無重大數據</div>
