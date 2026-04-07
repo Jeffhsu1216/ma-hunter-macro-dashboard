@@ -161,6 +161,119 @@ def _get_fred_csv(series_id: str, n_rows: int = 10) -> list:
         return []
 
 
+# ============================================================
+# 備援抓取：TradingView → FRED（ForexFactory 未回填實際值時）
+# ============================================================
+
+def _fetch_tv_actuals(date_from: str, date_to: str) -> dict:
+    """
+    TradingView 經濟日曆 API（主備援）
+    回傳：{ normalized_title: actual_str }
+    端點：https://economic-calendar.tradingview.com/events
+    """
+    try:
+        resp = requests.get(
+            "https://economic-calendar.tradingview.com/events",
+            headers={"User-Agent": "Mozilla/5.0", "Origin": "https://www.tradingview.com"},
+            params={"from": date_from, "to": date_to,
+                    "countries": "US,CN,EU,JP,TW"},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return {}
+        events = resp.json()
+        if not isinstance(events, list):
+            events = events.get("result", events.get("events", []))
+        result = {}
+        for e in events:
+            actual = e.get("actual")
+            if actual is not None:
+                title_key = e.get("title", "").lower().strip()
+                result[title_key] = str(actual)
+        return result
+    except Exception as ex:
+        logger.warning(f"TradingView actuals failed: {ex}")
+        return {}
+
+
+def _match_tv_actual(ff_title: str, tv_actuals: dict) -> str:
+    """
+    把 ForexFactory 的事件標題對應到 TradingView 的實際值
+    策略：先完全比對（lower），再關鍵詞比對
+    """
+    title_l = ff_title.lower().strip()
+
+    # 1. 直接比對
+    if title_l in tv_actuals:
+        return tv_actuals[title_l]
+
+    # 2. 去除常見後綴再比對（m/m, q/q, y/y, final, preliminary, flash）
+    import re
+    clean = re.sub(r'\s*(m/m|q/q|y/y|mom|qoq|yoy|final|preliminary|flash|revised)\s*$',
+                   '', title_l).strip()
+    for tv_title, val in tv_actuals.items():
+        tv_clean = re.sub(r'\s*(m/m|q/q|y/y|mom|qoq|yoy|final|preliminary|flash|revised)\s*$',
+                          '', tv_title).strip()
+        if clean == tv_clean:
+            return val
+
+    # 3. 關鍵詞包含比對（取最長匹配）
+    best_match, best_len = "", 0
+    for tv_title, val in tv_actuals.items():
+        if clean in tv_title or tv_title in clean:
+            if len(tv_title) > best_len:
+                best_match, best_len = val, len(tv_title)
+    return best_match
+
+
+# FRED 備援（TradingView 找不到時的第二道防線）
+FRED_BACKUP_MAP = [
+    # title 關鍵字（lower）          FRED series ID          格式
+    ("core pce",                   "PCEPILFE",             "mom_pct"),
+    ("pce price index",            "PCEPI",                "mom_pct"),
+    ("core cpi",                   "CPILFESL",             "mom_pct"),
+    ("cpi m/m",                    "CPIAUCSL",             "mom_pct"),
+    ("cpi y/y",                    "CPIAUCSL",             "yoy_pct"),
+    ("final gdp",                  "A191RL1Q225SBEA",      "level_1dp_pct"),
+    ("gdp q/q",                    "A191RL1Q225SBEA",      "level_1dp_pct"),
+    ("nonfarm payrolls",           "PAYEMS",               "mom_abs_k"),
+    ("non-farm payrolls",          "PAYEMS",               "mom_abs_k"),
+    ("unemployment rate",          "UNRATE",               "level_1dp_pct"),
+]
+
+
+def _fetch_actual_from_fred(title: str) -> str:
+    """FRED 備援（第二層）：針對標準宏觀指標"""
+    title_l = title.lower()
+    for keyword, series_id, fmt in FRED_BACKUP_MAP:
+        if keyword in title_l:
+            try:
+                n = 14 if fmt == "yoy_pct" else 3
+                rows = _get_fred_csv(series_id, n_rows=n)
+                if not rows:
+                    return ""
+                v = rows[-1][1]
+                if fmt == "level_1dp":
+                    return f"{v:.1f}"
+                elif fmt == "level_1dp_pct":
+                    return f"{v:.1f}%"
+                elif fmt == "mom_pct":
+                    if len(rows) >= 2:
+                        pct = (v - rows[-2][1]) / rows[-2][1] * 100 if rows[-2][1] else 0
+                        return f"{pct:+.1f}%"
+                elif fmt == "yoy_pct":
+                    if len(rows) >= 13:
+                        pct = (v - rows[-13][1]) / rows[-13][1] * 100 if rows[-13][1] else 0
+                        return f"{pct:+.1f}%"
+                elif fmt == "mom_abs_k":
+                    if len(rows) >= 2:
+                        return f"{(v - rows[-2][1]) * 1000:+,.0f}K"
+            except Exception as e:
+                logger.warning(f"FRED backup {series_id} failed: {e}")
+            break
+    return ""
+
+
 def _next_meeting(schedule: list) -> str:
     today = date.today()
     for d in schedule:
@@ -831,7 +944,7 @@ def fetch_fear_greed() -> dict:
     return {"score": None, "rating": "N/A", "change": None}
 
 
-def _parse_calendar_events(events_raw: list) -> list:
+def _parse_calendar_events(events_raw: list, tv_actuals: dict = None) -> list:
     """
     解析 ForexFactory 日曆事件
     規則：
@@ -871,6 +984,14 @@ def _parse_calendar_events(events_raw: list) -> list:
             date_fmt = dt_str[:10]
 
         actual   = (e.get("actual")   or "").strip()
+        # ForexFactory 未回填時：① TradingView → ② FRED
+        if is_past and not actual:
+            title = e.get("title", "")
+            if tv_actuals:
+                actual = _match_tv_actual(title, tv_actuals)
+            if not actual:
+                actual = _fetch_actual_from_fred(title)
+
         forecast = (e.get("forecast") or "").strip() or "—"
         previous = (e.get("previous") or "").strip() or "—"
 
@@ -894,13 +1015,20 @@ def _parse_calendar_events(events_raw: list) -> list:
             "actual":         actual,
             "beat_indicator": beat_indicator,
             "published":      bool(actual),
-            "is_past":        is_past,
+            "is_past":        is_past and not bool(actual),  # 有值就不再顯示 ⚠️
         })
 
     return results
 
 
 def fetch_economic_calendar() -> list:
+    # 先抓 TradingView 實際值（涵蓋本週 + 上週，確保剛發布的數據都在）
+    now_utc = datetime.now(pytz.utc)
+    tv_from = (now_utc - timedelta(days=7)).strftime("%Y-%m-%dT00:00:00.000Z")
+    tv_to   = (now_utc + timedelta(days=7)).strftime("%Y-%m-%dT23:59:59.000Z")
+    tv_actuals = _fetch_tv_actuals(tv_from, tv_to)
+    logger.info(f"TradingView actuals fetched: {len(tv_actuals)} events")
+
     for week in ["thisweek", "nextweek"]:
         try:
             url = f"https://nfs.faireconomy.media/ff_calendar_{week}.json"
@@ -910,7 +1038,7 @@ def fetch_economic_calendar() -> list:
             events_raw = resp.json()
             if not events_raw:
                 continue
-            results = _parse_calendar_events(events_raw)
+            results = _parse_calendar_events(events_raw, tv_actuals=tv_actuals)
             if results:
                 try:
                     with open(CALENDAR_BACKUP, "w", encoding="utf-8") as f:
