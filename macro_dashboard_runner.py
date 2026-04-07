@@ -133,6 +133,8 @@ def fetch_cal():
             headers={'User-Agent':'Mozilla/5.0','Origin':'https://www.tradingview.com'})
         with urllib.request.urlopen(tv_req, timeout=10) as r:
             tv_data = json.loads(r.read())
+        if isinstance(tv_data, dict):
+            tv_data = tv_data.get('result', [])
         if isinstance(tv_data, list):
             for e in tv_data:
                 country = e.get('country','').upper()
