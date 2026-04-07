@@ -142,7 +142,7 @@ def fetch_cal():
                 country_map = {'US':'USD','CN':'CNY','EU':'EUR','JP':'JPY','TW':'TWD'}
                 country_code = country_map.get(country, country)
                 if country_code not in TARGET: continue
-                if e.get('importance', 0) < 1: continue   # TV: -1=low,0=medium,1=high,2=highest
+                if e.get('importance', -1) < 0: continue   # TV: -1=low,0=medium,1=high
                 forecast = str(e.get('forecast') or '').strip()
                 if not forecast or forecast == 'None': continue  # 過濾無預測值
                 events.append({
@@ -282,7 +282,7 @@ def run(geopolitics_bullets=None):
         A('')
         A('📅 <b>本週重要數據</b>')
         now_utc = datetime.datetime.now(datetime.timezone.utc)
-        for e in events[:5]:
+        for e in events[:10]:
             try:
                 t_utc = datetime.datetime.fromisoformat(e['date'].replace('Z','+00:00'))
                 tf = (t_utc + datetime.timedelta(hours=8)).strftime('%m/%d %H:%M')
