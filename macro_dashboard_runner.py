@@ -1,14 +1,15 @@
 """
-總經儀表板 Runner v4（已優化）
+總經儀表板 Runner v5（已優化）
 執行：python3 macro_dashboard_runner.py
 - threading 並行抓取所有數據（~8s）
 - CNN Fear & Greed → alternative.me（無反爬）
 - 三大法人 → TWSE BFI82U（金額彙總，正確欄位）
 - 國際局勢 → Claude WebSearch 層補充
 - 輸出 Telegram 推送
+- 三大法人成功後自動寫入 taiwan_backup.json + git push（供 Render fallback）
 """
 
-import urllib.request, urllib.parse, json, datetime, threading, time
+import urllib.request, urllib.parse, json, datetime, threading, time, os, subprocess
 
 # ══════════════════════════════════════════
 TOKEN   = '8743919766:AAG6z6YPW7Gqt7rF2KY2xC9mvbm2Ge31tjQ'
@@ -103,7 +104,8 @@ def fetch_inst():
                           amt(rows.get('自營商(避險)',['','','','0']))
                 total   = amt(rows.get('合計',['','','','0']))
                 inst_res.update(foreign=foreign, trust=trust, dealer=dealer,
-                                total=total, date=check.strftime('%m/%d'), ok=True)
+                                total=total, date=check.strftime('%m/%d'),
+                                full_date=check.strftime('%Y%m%d'), ok=True)
                 return
         except: pass
         check -= datetime.timedelta(days=1)
@@ -185,6 +187,43 @@ def fetch_cal():
     cal_res['events'] = events
     cal_res['ok'] = bool(events)
 
+SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))   # macro-dashboard/
+BACKUP_PATH = os.path.join(SCRIPT_DIR, 'taiwan_backup.json')
+
+def _push_taiwan_backup():
+    """把 inst_res 寫入 taiwan_backup.json，然後 git commit + push 供 Render fallback
+    macro-dashboard 是獨立 repo：git -C SCRIPT_DIR
+    """
+    if not inst_res.get('ok'):
+        return
+    backup = {
+        "foreign":      inst_res['foreign'],
+        "foreign_yi":   round(inst_res['foreign'] / 1e8, 1),
+        "inv_trust":    inst_res['trust'],
+        "inv_trust_yi": round(inst_res['trust']   / 1e8, 1),
+        "dealer":       inst_res['dealer'],
+        "dealer_yi":    round(inst_res['dealer']  / 1e8, 1),
+        "total":        inst_res['total'],
+        "total_yi":     round(inst_res['total']   / 1e8, 1),
+        "date":         inst_res.get('full_date', ''),
+        "unit":         "億元",
+        "source":       "runner_backup",
+    }
+    try:
+        with open(BACKUP_PATH, 'w', encoding='utf-8') as f:
+            json.dump(backup, f, ensure_ascii=False, indent=2)
+        date_str = inst_res.get('full_date', 'unknown')
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'add', 'taiwan_backup.json'], check=True)
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'commit', '-m',
+                        f'[auto] 更新三大法人備份 {date_str}'], check=True)
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'push'], check=True)
+        print(f'✅ taiwan_backup.json 已更新並推送（{date_str}）')
+    except subprocess.CalledProcessError as e:
+        print(f'⚠️  git push 失敗（{e}）；backup 已寫入本機')
+    except Exception as e:
+        print(f'⚠️  備份寫入失敗：{e}')
+
+
 def run(geopolitics_bullets=None):
     NOW       = now_tw()
     DATE_STR  = NOW.strftime('%Y/%m/%d')
@@ -199,6 +238,9 @@ def run(geopolitics_bullets=None):
     for fn in [fetch_crypto, fetch_fg, fetch_inst, fetch_cal]:
         th = threading.Thread(target=fn); th.start(); threads.append(th)
     for th in threads: th.join(timeout=30)
+
+    # ── 三大法人備份更新（寫 json + git push） ──
+    _push_taiwan_backup()
 
     def get(t):      return yf_results.get(t, (None, None, None))
     def pct(v):      return f'{v:+.2f}%' if v is not None else 'N/A'
@@ -326,7 +368,20 @@ def run(geopolitics_bullets=None):
         result = json.loads(r.read())
     return result.get('ok', False), msg
 
+GEO_PATH = os.path.join(SCRIPT_DIR, 'geopolitics.json')
+
 if __name__ == '__main__':
-    ok, msg = run()
+    # 讀取 Claude 預先寫入的 geopolitics.json（由 Claude WebSearch 層產生）
+    geo_bullets = None
+    try:
+        if os.path.exists(GEO_PATH):
+            with open(GEO_PATH, 'r', encoding='utf-8') as f:
+                geo_data = json.load(f)
+            geo_bullets = geo_data.get('bullets')
+            print(f'📰 載入地緣政治 {len(geo_bullets or [])} 則')
+    except Exception as e:
+        print(f'⚠️  geopolitics.json 讀取失敗：{e}')
+
+    ok, msg = run(geopolitics_bullets=geo_bullets)
     print('✅ 傳送成功' if ok else '❌ 傳送失敗')
     print(msg)
