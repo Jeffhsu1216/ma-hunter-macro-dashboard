@@ -109,7 +109,11 @@ CBC_DATES_2026 = [
 # ============================================================
 
 def _get_quote(ticker_symbol: str, retries: int = 2) -> dict:
-    """Yahoo Finance v8 Chart API（直接 HTTP，不用 yfinance 避免 rate limit）"""
+    """Yahoo Finance v8 Chart API（直接 HTTP，不用 yfinance 避免 rate limit）
+
+    修正：優先使用 meta.regularMarketPrice 當現價（避免節假日/時區造成 closes[-1] 落後）
+         前收盤優先用 meta.chartPreviousClose，fallback 到 closes[-2]
+    """
     import urllib.request as _urlr, urllib.parse as _urlp, time
     url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
            f"{_urlp.quote(ticker_symbol)}?interval=1d&range=5d")
@@ -118,10 +122,24 @@ def _get_quote(ticker_symbol: str, retries: int = 2) -> dict:
             req = _urlr.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with _urlr.urlopen(req, timeout=10) as r:
                 d = json.loads(r.read())
-            closes = d["chart"]["result"][0]["indicators"]["quote"][0]["close"]
-            closes = [x for x in closes if x is not None]
-            p    = closes[-1]
-            prev = closes[-2] if len(closes) > 1 else p
+            result = d["chart"]["result"][0]
+            meta   = result["meta"]
+
+            # 現價：優先用 regularMarketPrice（即時/最新），避免節假日 None 問題
+            p = meta.get("regularMarketPrice")
+
+            # 前收盤：chartPreviousClose 是最後一個完整 session 的收盤
+            prev = meta.get("chartPreviousClose")
+
+            # fallback：若 meta 欄位缺失，才回頭用 closes 陣列
+            if p is None or prev is None:
+                closes = result["indicators"]["quote"][0]["close"]
+                closes = [x for x in closes if x is not None]
+                if not closes:
+                    raise ValueError("no valid closes")
+                if p    is None: p    = closes[-1]
+                if prev is None: prev = closes[-2] if len(closes) > 1 else closes[-1]
+
             chg  = p - prev
             chgp = chg / prev * 100 if prev else 0
             return {
