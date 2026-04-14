@@ -363,12 +363,12 @@ def run(geopolitics_bullets=None):
                 actual = e.get('actual','')
                 is_past = t_utc < now_utc
                 if actual:
-                    status = '✅'; val = f'實際 {actual}'
+                    status = '✅'; val = f'實際 {_fmt_val(actual)}'
                 elif is_past:
                     status = '⚠️'; val = '待確認'
                 else:
                     status = '⏳'; val = ''
-                A(f'  {status} {tf} | {e.get("country","")} | {e.get("title","")}  {val}')
+                A(f'  {status} {tf} | {e.get("country","")} | {_cal_title(e.get("title",""))}  {val}')
             except: pass
 
     # 國際局勢（由 Claude 層 WebSearch 傳入）
@@ -399,6 +399,55 @@ def run(geopolitics_bullets=None):
     with urllib.request.urlopen(req, timeout=15) as r:
         result = json.loads(r.read())
     return result.get('ok', False), msg
+
+# ── 日曆：事件標題中文對照 ─────────────────────────────────────────────────────
+_CAL_ZH = {
+    "Non Farm Payrolls":"非農就業人數","Nonfarm Payrolls":"非農就業人數",
+    "Unemployment Rate":"失業率","Initial Jobless Claims":"初次申請失業救濟",
+    "ADP Nonfarm Employment Change":"ADP非農就業",
+    "Average Hourly Earnings MoM":"平均時薪(月)",
+    "CPI MoM":"CPI(月)","CPI YoY":"CPI(年)",
+    "Core CPI MoM":"核心CPI(月)","Core CPI YoY":"核心CPI(年)",
+    "PPI MoM":"PPI(月)","PPI YoY":"PPI(年)",
+    "Core PPI MoM":"核心PPI(月)",
+    "Import Prices MoM":"進口物價(月)","Export Prices MoM":"出口物價(月)",
+    "PCE Price Index MoM":"PCE物價(月)","Core PCE Price Index MoM":"核心PCE(月)",
+    "GDP Growth Rate QoQ":"GDP(季)","Industrial Production MoM":"工業生產(月)",
+    "Retail Sales MoM":"零售銷售(月)","Core Retail Sales MoM":"核心零售(月)",
+    "Consumer Confidence":"消費者信心","Michigan Consumer Sentiment":"密西根信心",
+    "Existing Home Sales":"成屋銷售","New Home Sales":"新屋銷售",
+    "Housing Starts":"新屋開工","Building Permits":"建築許可",
+    "NAHB Housing Market Index":"NAHB房市",
+    "ISM Manufacturing PMI":"ISM製造業PMI","ISM Services PMI":"ISM服務業PMI",
+    "Philadelphia Fed Manufacturing Index":"費城聯儲製造業",
+    "NY Empire State Manufacturing Index":"紐約製造業",
+    "Federal Funds Rate":"聯邦基金利率","FOMC Meeting Minutes":"FOMC會議紀要",
+    "Trade Balance":"貿易差額","Balance of Trade":"貿易差額",
+    "Net Long-term TIC Flows":"長期資本淨流入",
+    "Durable Goods Orders MoM":"耐久財訂單(月)",
+}
+
+def _cal_title(t):
+    zh = _CAL_ZH.get(t)
+    if not zh:
+        for k,v in _CAL_ZH.items():
+            if k.lower() in t.lower():
+                zh = v; break
+    return f"{t}（{zh}）" if zh else t
+
+def _fmt_val(v):
+    if not v: return v
+    v = v.strip()
+    if not v or v[-1].upper() in ('K','M','B','T','%'): return v
+    try:
+        n = float(v.replace(',',''))
+        a = abs(n); s = "-" if n < 0 else ""
+        if   a >= 1e12: return f"{s}{a/1e12:.2f}T"
+        elif a >= 1e9:  return f"{s}{a/1e9:.2f}B"
+        elif a >= 1e6:  return f"{s}{a/1e6:.2f}M"
+        elif a >= 1e4:  return f"{s}{a/1e3:.1f}K"
+    except: pass
+    return v
 
 GEO_PATH = os.path.join(SCRIPT_DIR, 'geopolitics.json')
 
