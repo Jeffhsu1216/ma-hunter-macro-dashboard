@@ -944,6 +944,109 @@ def fetch_fear_greed() -> dict:
     return {"score": None, "rating": "N/A", "change": None}
 
 
+# ── 日曆事件：標題中文對照表 ──────────────────────────────────────────────────
+_CAL_TITLE_ZH = {
+    # 就業
+    "Non Farm Payrolls":                   "非農就業人數",
+    "Nonfarm Payrolls":                    "非農就業人數",
+    "Unemployment Rate":                   "失業率",
+    "Initial Jobless Claims":              "初次申請失業救濟",
+    "Continuing Jobless Claims":           "持續申請失業救濟",
+    "ADP Nonfarm Employment Change":       "ADP非農就業",
+    "Average Hourly Earnings MoM":         "平均時薪 (月)",
+    # 通膨
+    "CPI MoM":                             "CPI (月)",
+    "CPI YoY":                             "CPI (年)",
+    "Core CPI MoM":                        "核心CPI (月)",
+    "Core CPI YoY":                        "核心CPI (年)",
+    "PPI MoM":                             "PPI (月)",
+    "PPI YoY":                             "PPI (年)",
+    "Core PPI MoM":                        "核心PPI (月)",
+    "PCE Price Index MoM":                 "PCE物價指數 (月)",
+    "Core PCE Price Index MoM":            "核心PCE (月)",
+    "Import Prices MoM":                   "進口物價 (月)",
+    "Export Prices MoM":                   "出口物價 (月)",
+    # GDP / 生產
+    "GDP Growth Rate QoQ":                 "GDP (季)",
+    "GDP Growth Rate QoQ 2nd Est":         "GDP 二估 (季)",
+    "GDP Growth Rate QoQ Final":           "GDP 終值 (季)",
+    "Industrial Production MoM":           "工業生產 (月)",
+    "Capacity Utilization Rate":           "產能利用率",
+    "Manufacturing Production MoM":        "製造業產出 (月)",
+    # 消費 / 零售
+    "Retail Sales MoM":                    "零售銷售 (月)",
+    "Core Retail Sales MoM":               "核心零售銷售 (月)",
+    "Consumer Confidence":                 "消費者信心",
+    "Michigan Consumer Sentiment":         "密西根消費者信心",
+    "Michigan Consumer Sentiment Final":   "密西根消費者信心終值",
+    # 房市
+    "Existing Home Sales":                 "成屋銷售",
+    "New Home Sales":                      "新屋銷售",
+    "Housing Starts":                      "新屋開工",
+    "Building Permits":                    "建築許可",
+    "NAHB Housing Market Index":           "NAHB房市指數",
+    "Pending Home Sales MoM":              "成屋簽約 (月)",
+    # PMI / 景氣
+    "ISM Manufacturing PMI":               "ISM製造業PMI",
+    "ISM Non-Manufacturing PMI":           "ISM服務業PMI",
+    "ISM Services PMI":                    "ISM服務業PMI",
+    "S&P Global Manufacturing PMI":        "S&P製造業PMI",
+    "Philadelphia Fed Manufacturing Index":"費城聯儲製造業",
+    "NY Empire State Manufacturing Index": "紐約製造業指數",
+    "Chicago PMI":                         "芝加哥PMI",
+    "Dallas Fed Manufacturing Index":      "達拉斯製造業指數",
+    # Fed / 利率
+    "Federal Funds Rate":                  "聯邦基金利率",
+    "FOMC Meeting Minutes":                "FOMC會議紀要",
+    "Fed Interest Rate Decision":          "Fed利率決策",
+    # 貿易 / 資本
+    "Trade Balance":                       "貿易差額",
+    "Balance of Trade":                    "貿易差額",
+    "Net Long-term TIC Flows":             "長期資本淨流入",
+    "Current Account":                     "經常帳",
+    # 耐久財
+    "Durable Goods Orders MoM":            "耐久財訂單 (月)",
+    "Core Durable Goods Orders MoM":       "核心耐久財 (月)",
+    # 台灣
+    "GDP Growth Rate":                     "GDP成長率",
+    "Export Orders YoY":                   "出口訂單 (年)",
+    "Industrial Production YoY":           "工業生產 (年)",
+    "Unemployment Rate":                   "失業率",
+}
+
+def _translate_cal_title(title: str) -> str:
+    """回傳 '英文（中文）' 格式；找不到對照則只回傳英文"""
+    zh = _CAL_TITLE_ZH.get(title)
+    if zh:
+        return f"{title}（{zh}）"
+    # 模糊匹配（title 包含 key 或 key 包含 title）
+    for k, v in _CAL_TITLE_ZH.items():
+        if k.lower() in title.lower() or title.lower() in k.lower():
+            return f"{title}（{v}）"
+    return title
+
+def _fmt_cal_value(v: str) -> str:
+    """格式化日曆數值：>1M 換算為 K/M/B/T，保留原有 % 符號"""
+    if not v or v in ("—", "N/A", ""):
+        return v
+    v = v.strip()
+    # 已有單位後綴（%、K、M、B、T）→ 直接回傳
+    if v and v[-1].upper() in ('K', 'M', 'B', 'T', '%'):
+        return v
+    # 嘗試解析純數字（支援負號、小數、逗號千分位）
+    try:
+        num = float(v.replace(',', ''))
+        abs_num = abs(num)
+        sign = "-" if num < 0 else ""
+        if   abs_num >= 1_000_000_000_000: return f"{sign}{abs_num/1_000_000_000_000:.2f}T"
+        elif abs_num >= 1_000_000_000:     return f"{sign}{abs_num/1_000_000_000:.2f}B"
+        elif abs_num >= 1_000_000:         return f"{sign}{abs_num/1_000_000:.2f}M"
+        elif abs_num >= 10_000:            return f"{sign}{abs_num/1_000:.1f}K"
+        else:                              return v
+    except:
+        return v
+
+
 def _parse_calendar_events(events_raw: list, tv_actuals: dict = None) -> list:
     """
     解析 ForexFactory 日曆事件
@@ -1009,13 +1112,13 @@ def _parse_calendar_events(events_raw: list, tv_actuals: dict = None) -> list:
         results.append({
             "date":           date_fmt,
             "country":        e.get("country", ""),
-            "title":          e.get("title", ""),
-            "forecast":       forecast,
-            "previous":       previous,
-            "actual":         actual,
+            "title":          _translate_cal_title(e.get("title", "")),
+            "forecast":       _fmt_cal_value(forecast),
+            "previous":       _fmt_cal_value(previous),
+            "actual":         _fmt_cal_value(actual),
             "beat_indicator": beat_indicator,
             "published":      bool(actual),
-            "is_past":        is_past and not bool(actual),  # 有值就不再顯示 ⚠️
+            "is_past":        is_past and not bool(actual),
         })
 
     return results
