@@ -38,16 +38,17 @@ TAIPEI_TZ        = pytz.timezone("Asia/Taipei")
 # 數據定義
 # ============================================================
 
-# (name, ticker, decimals)
+# (name, ticker, decimals, invert)
+# invert=True：yfinance 給 USD/XXX，需倒轉為 XXX/USD（price=1/p，change_pct 取反）
 FX_TICKERS = [
-    ("DXY 美元指數", "DX-Y.NYB", 2),
-    ("USD/TWD",     "TWD=X",    2),
-    ("USD/JPY",     "JPY=X",    2),
-    ("USD/CNY",     "CNY=X",    4),
-    ("EUR/USD",     "EURUSD=X", 4),
-    ("GBP/USD",     "GBPUSD=X", 4),
-    ("AUD/USD",     "AUDUSD=X", 4),
-    ("USD/KRW",     "KRW=X",    0),
+    ("DXY 美元指數", "DX-Y.NYB", 2, False),
+    ("TWD/USD",     "TWD=X",    4, True),
+    ("JPY/USD",     "JPY=X",    6, True),
+    ("CNY/USD",     "CNY=X",    4, True),
+    ("EUR/USD",     "EURUSD=X", 4, False),
+    ("GBP/USD",     "GBPUSD=X", 4, False),
+    ("AUD/USD",     "AUDUSD=X", 4, False),
+    ("KRW/USD",     "KRW=X",    6, True),
 ]
 
 # 殖利率用 FRED（官方來源，精準）
@@ -305,12 +306,9 @@ def _next_meeting(schedule: list) -> str:
 # ============================================================
 
 def _fx_commentary(fx_list: list) -> str:
-    """以美元為基礎解釋匯率變動
-
-    報價邏輯（判讀方式）：
-      DXY         ↑ = 美元走強
-      USD/XXX 系列 ↑ = 美元走強、該幣走弱（TWD, JPY, CNY, KRW）
-      XXX/USD 系列 ↑ = 該幣走強、美元走弱（EUR, GBP, AUD）
+    """統一 XXX/USD 格式解釋匯率變動
+    XXX/USD ↑ = XXX 走強、美元走弱（所有幣對統一邏輯）
+    DXY ↑ = 美元走強
     """
     fm = {f["name"]: f for f in fx_list}
     parts = []
@@ -330,30 +328,17 @@ def _fx_commentary(fx_list: list) -> str:
         else:
             parts.append("DXY 持平，匯市觀望")
 
-    # ── 逐幣解釋（只解釋顯著變動的）──
-    # USD/XXX 系列：數值↑ = 該幣貶值（對台灣投資人：TWD 貶 = 進口成本增加）
-    usd_xxx = [
-        ("USD/TWD", "新台幣", "外資匯出壓力增、進口成本上升", "外資匯入支撐、進口成本下降"),
-        ("USD/JPY", "日圓",   "日本出口競爭力增但進口通膨壓力大", "避險資金湧入日圓、日銀可能調整政策"),
-        ("USD/CNY", "人民幣", "中國資本外流壓力或政策寬鬆預期", "中國經濟信心回升或政策引導升值"),
-        ("USD/KRW", "韓元",   "韓國出口導向受益但外資流出壓力", "外資回流韓股、韓元走強"),
+    # ── 逐幣解釋（統一：XXX/USD ↑ = XXX 升值）──
+    all_pairs = [
+        ("TWD/USD", "新台幣", "外資匯入支撐、進口成本下降", "外資匯出壓力增、進口成本上升"),
+        ("JPY/USD", "日圓",   "避險資金湧入日圓、日銀可能調整政策", "日本出口競爭力增但進口通膨壓力大"),
+        ("CNY/USD", "人民幣", "中國經濟信心回升或政策引導升值", "中國資本外流壓力或政策寬鬆預期"),
+        ("KRW/USD", "韓元",   "外資回流韓股、韓元走強", "韓國出口導向受益但外資流出壓力"),
+        ("EUR/USD", "歐元",   "歐洲經濟數據優於預期或 ECB 鷹派", "歐洲經濟疲弱或美元避險需求上升"),
+        ("GBP/USD", "英鎊",   "英國經濟韌性或 BOE 偏鷹", "英國經濟下行壓力或脫歐後續影響"),
+        ("AUD/USD", "澳幣",   "大宗商品需求回升、中國經濟改善預期", "商品價格走弱或全球風險趨避"),
     ]
-    for pair, cname, up_reason, dn_reason in usd_xxx:
-        item = fm.get(pair, {})
-        c = item.get("change_pct")
-        if c is not None and abs(c) >= 0.2:
-            if c > 0:
-                parts.append(f"{cname}貶值 {abs(c):.2f}%（{pair} ↑），{up_reason}")
-            else:
-                parts.append(f"{cname}升值 {abs(c):.2f}%（{pair} ↓），{dn_reason}")
-
-    # XXX/USD 系列：數值↑ = 該幣升值 / 美元走弱
-    xxx_usd = [
-        ("EUR/USD", "歐元", "歐洲經濟數據優於預期或 ECB 鷹派", "歐洲經濟疲弱或美元避險需求上升"),
-        ("GBP/USD", "英鎊", "英國經濟韌性或 BOE 偏鷹", "英國經濟下行壓力或脫歐後續影響"),
-        ("AUD/USD", "澳幣", "大宗商品需求回升、中國經濟改善預期", "商品價格走弱或全球風險趨避"),
-    ]
-    for pair, cname, up_reason, dn_reason in xxx_usd:
+    for pair, cname, up_reason, dn_reason in all_pairs:
         item = fm.get(pair, {})
         c = item.get("change_pct")
         if c is not None and abs(c) >= 0.2:
@@ -775,15 +760,20 @@ def _calendar_commentary(cal: list) -> str:
 # ============================================================
 
 def fetch_fx_data() -> dict:
-    """抓匯率，DXY 置頂，其餘按漲跌幅排序 + 解釋"""
+    """抓匯率，統一 XXX/USD 格式，DXY 置頂，其餘按漲跌幅排序 + 解釋"""
     results = []
-    for name, ticker, dec in FX_TICKERS:
+    for name, ticker, dec, inv in FX_TICKERS:
         q = _get_quote(ticker)
+        price   = q["price"]
+        chg_pct = q["change_pct"]
+        if inv and price:
+            price   = 1.0 / price
+            chg_pct = (-chg_pct) if chg_pct is not None else None
         results.append({
             "name": name,
-            "price": q["price"],
-            "price_fmt": _fmt(q["price"], dec),
-            "change_pct": q["change_pct"],
+            "price": price,
+            "price_fmt": _fmt(price, dec) if price is not None else "N/A",
+            "change_pct": chg_pct,
         })
 
     # DXY 固定第一行，其餘按漲跌幅排序
@@ -996,7 +986,7 @@ def _parse_calendar_events(events_raw: list, tv_actuals: dict = None) -> list:
       - 時間未到 → is_past=False，前端顯示 ⏳
       - 已有 actual → published=True，顯示 ✅ + beat indicator
     """
-    TARGET_COUNTRIES = {"USD", "CNY", "EUR", "JPY", "TWD"}
+    TARGET_COUNTRIES = {"USD", "TWD"}
     now_utc = datetime.now(pytz.utc)
 
     high = [e for e in events_raw
@@ -1069,13 +1059,13 @@ def _fetch_tv_calendar_full(tv_from: str, tv_to: str) -> list:
     從 TradingView 抓完整日曆事件清單（含 forecast + actual）
     用於 ForexFactory 失敗時的備援，回傳已格式化的事件 list
     """
-    TARGET_COUNTRIES = {"USD", "CNY", "EUR", "JPY", "TWD"}
-    COUNTRY_MAP = {"US": "USD", "CN": "CNY", "EU": "EUR", "JP": "JPY", "TW": "TWD"}
+    TARGET_COUNTRIES = {"USD", "TWD"}
+    COUNTRY_MAP = {"US": "USD", "TW": "TWD"}
     try:
         resp = requests.get(
             "https://economic-calendar.tradingview.com/events",
             headers={"User-Agent": "Mozilla/5.0", "Origin": "https://www.tradingview.com"},
-            params={"from": tv_from, "to": tv_to, "countries": "US,CN,EU,JP,TW"},
+            params={"from": tv_from, "to": tv_to, "countries": "US,TW"},
             timeout=10,
         )
         if resp.status_code != 200:
