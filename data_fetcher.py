@@ -346,7 +346,7 @@ def _fx_commentary(fx_list: list) -> str:
         else:
             parts.append(f"{cname}貶值 {abs(c):.2f}%（{name} ↓），{dn_reason}")
 
-    return "\n".join(p + "。" for p in parts) if parts else "匯率整體變動不大，市場觀望氣氛濃厚。"
+    return "<br>".join(p + "。" for p in parts) if parts else "匯率整體變動不大，市場觀望氣氛濃厚。"
 
 
 def _yield_commentary(yields: dict) -> str:
@@ -383,7 +383,7 @@ def _yield_commentary(yields: dict) -> str:
         direction = "上升" if chg_2y > 0 else "下降"
         parts.append(f"2Y 利率單日{direction} {abs(chg_2y):.0f}bps，反映市場對 Fed 政策預期調整")
 
-    return "。".join(parts) + "。" if parts else "殖利率變動不大，市場等待新催化劑。"
+    return "<br>".join(p + "。" for p in parts) if parts else "殖利率變動不大，市場等待新催化劑。"
 
 
 def _sentiment_commentary(fg: dict, vix_price: float = None, vix_chg: float = None) -> str:
@@ -457,7 +457,7 @@ def _sentiment_commentary(fg: dict, vix_price: float = None, vix_chg: float = No
             direction = "回升" if change > 0 else "惡化"
             parts.append(f"CNN 指數較前日{direction} {change:+.1f} 點")
 
-    return "。".join(parts) + "。" if parts else "市場情緒數據暫無法取得。"
+    return "<br>".join(p + "。" for p in parts) if parts else "市場情緒數據暫無法取得。"
 
 
 def _commodity_commentary(cm) -> str:
@@ -578,7 +578,7 @@ def _commodity_commentary(cm) -> str:
         elif btc_c - eth_c > 3:
             parts.append("BTC 獨強、ETH 落後，資金集中流向比特幣避險")
 
-    return "。".join(parts) + "。" if parts else "原物料整體變動不大，市場觀望。"
+    return "<br>".join(p + "。" for p in parts) if parts else "原物料整體變動不大，市場觀望。"
 
 
 def _taiwan_commentary(tw: dict) -> str:
@@ -623,7 +623,7 @@ def _taiwan_commentary(tw: dict) -> str:
     elif f_yi > 50 and i_yi < -10:
         parts.append("外資買、投信賣，法人態度分歧")
 
-    return "。".join(parts) + "。" if parts else ""
+    return "<br>".join(p + "。" for p in parts) if parts else ""
 
 
 def _index_commentary(indices: list) -> str:
@@ -683,7 +683,7 @@ def _index_commentary(indices: list) -> str:
         elif diff < -2:
             parts.append("亞股相對強勢，美股承壓")
 
-    return "。".join(parts) + "。" if parts else ""
+    return "<br>".join(p + "。" for p in parts) if parts else ""
 
 
 def _calendar_commentary(cal: list) -> str:
@@ -751,7 +751,7 @@ def _calendar_commentary(cal: list) -> str:
         upcoming = "、".join(e["title"] for e in key_pending[:4])
         parts.append(f"本週待公布重點：{upcoming}")
 
-    return "。".join(parts) + "。" if parts else ""
+    return "<br>".join(p + "。" for p in parts) if parts else ""
 
 
 # ============================================================

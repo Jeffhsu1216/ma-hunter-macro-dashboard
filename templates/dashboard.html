@@ -228,7 +228,6 @@
             border-left: 3px solid var(--gold);
             border-radius: 0 6px 6px 0;
             font-size: 12px; color: var(--text-2); line-height: 1.7;
-            white-space: pre-wrap;
         }
         .commentary::before {
             content: "💡 "; font-size: 12px;
@@ -290,7 +289,7 @@
             </div>
             {% endfor %}
             {% if data.fx_commentary %}
-            <div class="commentary">{{ data.fx_commentary }}</div>
+            <div class="commentary">{{ data.fx_commentary | safe }}</div>
             {% endif %}
             <div class="card-ts">🕐 更新時間：{{ data.fx_updated_at }}</div>
         </div>
@@ -328,7 +327,7 @@
             </div>
             {% endif %}
             {% if data.yields_commentary %}
-            <div class="commentary">{{ data.yields_commentary }}</div>
+            <div class="commentary">{{ data.yields_commentary | safe }}</div>
             {% endif %}
             <div class="card-ts">🕐 更新時間：{{ data.yields_updated_at }}</div>
         </div>
@@ -357,7 +356,7 @@
             {% endif %}
             {% endfor %}
             {% if data.indices_commentary %}
-            <div class="commentary">{{ data.indices_commentary }}</div>
+            <div class="commentary">{{ data.indices_commentary | safe }}</div>
             {% endif %}
             <div class="card-ts">🕐 更新時間：{{ data.indices_updated_at }}</div>
         </div>
@@ -411,7 +410,7 @@
             <div style="text-align:center; color:var(--text-3); padding:20px 0;">Fear & Greed 資料無法取得</div>
             {% endif %}
             {% if data.sentiment_commentary %}
-            <div class="commentary">{{ data.sentiment_commentary }}</div>
+            <div class="commentary">{{ data.sentiment_commentary | safe }}</div>
             {% endif %}
             <div class="card-ts">🕐 更新時間：{{ data.fg_updated_at }}</div>
         </div>
@@ -453,7 +452,7 @@
             </div>
             {% endfor %}
             {% if data.commodities_commentary %}
-            <div class="commentary">{{ data.commodities_commentary }}</div>
+            <div class="commentary">{{ data.commodities_commentary | safe }}</div>
             {% endif %}
             <div class="card-ts">🕐 原物料：{{ data.commodities_updated_at }}｜加密貨幣（CoinGecko）：{{ data.crypto_updated_at }}</div>
         </div>
@@ -494,7 +493,7 @@
                 </div>
             </div>
             {% if data.taiwan_commentary %}
-            <div class="commentary">{{ data.taiwan_commentary }}</div>
+            <div class="commentary">{{ data.taiwan_commentary | safe }}</div>
             {% endif %}
             <div class="card-ts">🕐 更新時間：{{ data.taiwan_updated_at }}</div>
             {% else %}
@@ -544,7 +543,7 @@
             </tbody>
         </table>
         {% if data.calendar_commentary %}
-        <div class="commentary">{{ data.calendar_commentary }}</div>
+        <div class="commentary">{{ data.calendar_commentary | safe }}</div>
         {% endif %}
         <div class="card-ts">🕐 資料截至：{{ data.calendar_updated_at }}</div>
         {% else %}
