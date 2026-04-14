@@ -461,122 +461,90 @@ def _sentiment_commentary(fg: dict, vix_price: float = None, vix_chg: float = No
 
 
 def _commodity_commentary(cm) -> str:
-    """根據原物料+加密數據生成詳細解釋。cm 可以是 list 或 dict"""
-    if isinstance(cm, list):
-        cm = {c["name"]: c for c in cm}
+    """根據原物料+加密數據生成詳細解釋，敘述順序與顯示排序一致（按漲跌幅降冪）"""
+    # 統一轉為排序後的 list
+    if isinstance(cm, dict):
+        cm_list = sorted(cm.values(), key=lambda x: x.get("change_pct") or -999, reverse=True)
+    else:
+        cm_list = list(cm)
+
+    # 建 dict 供多品項比較邏輯使用
+    cm_dict = {c["name"]: c for c in cm_list}
     parts = []
 
-    # ── 原油（全球通膨領先指標）──
-    wti = cm.get("WTI 原油", {})
-    brent = cm.get("布蘭特原油", {})
-    wti_c = wti.get("change_pct")
-    wti_p = wti.get("price", 0)
-    brent_c = brent.get("change_pct")
-    brent_p = brent.get("price", 0)
+    for item in cm_list:
+        name = item["name"]
+        c = item.get("change_pct")
+        p = item.get("price", 0) or 0
 
-    if wti_c is not None:
-        if wti_c > 3:
-            parts.append(f"WTI 原油大漲 {wti_c:+.2f}% 至 ${wti_p:.2f}，"
-                         f"可能受地緣衝突升級（中東局勢/制裁）或 OPEC+ 減產等供給面因素推動")
-        elif wti_c > 1:
-            parts.append(f"WTI 上漲 {wti_c:+.2f}% 至 ${wti_p:.2f}，供需面偏緊")
-        elif wti_c < -3:
-            parts.append(f"WTI 重挫 {wti_c:+.2f}% 至 ${wti_p:.2f}，"
-                         f"可能反映全球需求放緩預期、美國庫存意外增加或 OPEC+ 增產訊號")
-        elif wti_c < -1:
-            parts.append(f"WTI 下跌 {wti_c:+.2f}% 至 ${wti_p:.2f}，需求面偏弱")
-        else:
-            parts.append(f"WTI 原油 ${wti_p:.2f}（{wti_c:+.2f}%），價格窄幅震盪")
+        # ── WTI 原油 ──
+        if name == "WTI 原油":
+            if c is None: continue
+            if   c >  3: parts.append(f"WTI 原油大漲 {c:+.2f}% 至 ${p:.2f}，可能受地緣衝突升級（中東局勢/制裁）或 OPEC+ 減產等供給面因素推動")
+            elif c >  1: parts.append(f"WTI 上漲 {c:+.2f}% 至 ${p:.2f}，供需面偏緊")
+            elif c < -3: parts.append(f"WTI 重挫 {c:+.2f}% 至 ${p:.2f}，可能反映全球需求放緩預期、美國庫存意外增加或 OPEC+ 增產訊號")
+            elif c < -1: parts.append(f"WTI 下跌 {c:+.2f}% 至 ${p:.2f}，需求面偏弱")
+            else:        parts.append(f"WTI 原油 ${p:.2f}（{c:+.2f}%），價格窄幅震盪")
+            if   p > 90: parts.append(f"油價處於 ${p:.0f} 高位，推升運輸與製造成本，通膨壓力可能延遲 Fed 降息時程")
+            elif p < 60: parts.append(f"油價跌至 ${p:.0f} 低位，有利消費者但打擊能源類股獲利")
 
-    if wti_p and wti_p > 90:
-        parts.append(f"油價處於 ${wti_p:.0f} 高位，推升運輸與製造成本，"
-                     f"通膨壓力可能延遲 Fed 降息時程")
-    elif wti_p and wti_p < 60:
-        parts.append(f"油價跌至 ${wti_p:.0f} 低位，有利消費者但打擊能源類股獲利")
+        # ── 布蘭特原油（主要顯示 Brent-WTI 價差）──
+        elif name == "布蘭特原油":
+            wti_p = cm_dict.get("WTI 原油", {}).get("price", 0) or 0
+            if p and wti_p:
+                spread = p - wti_p
+                if spread > 8:
+                    parts.append(f"Brent-WTI 價差擴至 ${spread:.1f}，反映國際市場供給緊於美國")
 
-    # WTI vs Brent 價差
-    if wti_p and brent_p and brent_p > 0:
-        spread = brent_p - wti_p
-        if spread > 8:
-            parts.append(f"Brent-WTI 價差擴至 ${spread:.1f}，反映國際市場供給緊於美國")
+        # ── 天然氣 ──
+        elif name == "天然氣":
+            if c is not None and abs(c) > 1.5:
+                direction = "上漲" if c > 0 else "下跌"
+                reason = "冬季取暖需求或供給中斷" if c > 0 else "暖冬或庫存充足"
+                parts.append(f"天然氣{direction} {abs(c):.2f}% 至 ${p:.3f}，{reason}，影響電力與工業成本")
 
-    # ── 天然氣 ──
-    ng = cm.get("天然氣", {})
-    ng_c = ng.get("change_pct")
-    ng_p = ng.get("price", 0)
-    if ng_c is not None and abs(ng_c) > 1.5:
-        direction = "上漲" if ng_c > 0 else "下跌"
-        reason = "冬季取暖需求或供給中斷" if ng_c > 0 else "暖冬或庫存充足"
-        parts.append(f"天然氣{direction} {abs(ng_c):.2f}% 至 ${ng_p:.3f}，{reason}，"
-                     f"影響電力與工業成本")
+        # ── 黃金 ──
+        elif name == "黃金":
+            if c is not None:
+                if   c >  1.5: parts.append(f"黃金大漲 {c:+.2f}% 至 ${p:,.0f}，避險需求與央行購金雙重推動，實質利率下行預期支撐金價")
+                elif c >  0.3: parts.append(f"黃金上漲 {c:+.2f}% 至 ${p:,.0f}，避險買盤持續")
+                elif c < -1.5: parts.append(f"黃金下跌 {c:+.2f}%，美元走強或實質利率上升壓抑金價")
+                elif c < -0.3: parts.append(f"黃金微跌 {c:+.2f}%，獲利了結賣壓")
+            if p > 4000:
+                parts.append(f"金價 ${p:,.0f} 處於歷史高位，反映去美元化趨勢與全球央行儲備多元化")
 
-    # ── 黃金（避險 + 通膨對沖）──
-    gold = cm.get("黃金", {})
-    gold_c = gold.get("change_pct")
-    gold_p = gold.get("price", 0)
-    if gold_c is not None:
-        if gold_c > 1.5:
-            parts.append(f"黃金大漲 {gold_c:+.2f}% 至 ${gold_p:,.0f}，"
-                         f"避險需求與央行購金雙重推動，實質利率下行預期支撐金價")
-        elif gold_c > 0.3:
-            parts.append(f"黃金上漲 {gold_c:+.2f}% 至 ${gold_p:,.0f}，避險買盤持續")
-        elif gold_c < -1.5:
-            parts.append(f"黃金下跌 {gold_c:+.2f}%，美元走強或實質利率上升壓抑金價")
-        elif gold_c < -0.3:
-            parts.append(f"黃金微跌 {gold_c:+.2f}%，獲利了結賣壓")
+        # ── 白銀 ──
+        elif name == "白銀":
+            if c is not None and abs(c) > 1.5:
+                direction = "上漲" if c > 0 else "下跌"
+                parts.append(f"白銀{direction} {abs(c):.2f}%，兼具工業（光伏、電子）與貴金屬屬性，{'跟隨金價走強' if c > 0 else '工業需求疑慮拖累'}")
 
-    if gold_p and gold_p > 4000:
-        parts.append(f"金價 ${gold_p:,.0f} 處於歷史高位，反映去美元化趨勢與全球央行儲備多元化")
+        # ── 銅 ──
+        elif name == "銅":
+            if c is not None:
+                if abs(c) > 1.5:
+                    direction = "上漲" if c > 0 else "下跌"
+                    signal = "全球製造業 PMI 改善或中國基建需求回升" if c > 0 else "工業需求放緩，中國經濟復甦不如預期"
+                    parts.append(f"銅價{direction} {abs(c):.2f}% 至 ${p:.3f}/磅，「銅博士」暗示{signal}")
+                elif abs(c) > 0.5:
+                    direction = "小漲" if c > 0 else "小跌"
+                    parts.append(f"銅價{direction} {abs(c):.2f}%，反映工業活動溫和波動")
 
-    # ── 白銀（工業 + 貴金屬雙重屬性）──
-    silver = cm.get("白銀", {})
-    silver_c = silver.get("change_pct")
-    if silver_c is not None and abs(silver_c) > 1.5:
-        direction = "上漲" if silver_c > 0 else "下跌"
-        parts.append(f"白銀{direction} {abs(silver_c):.2f}%，"
-                     f"兼具工業（光伏、電子）與貴金屬屬性，"
-                     f"{'跟隨金價走強' if silver_c > 0 else '工業需求疑慮拖累'}")
+        # ── BTC ──
+        elif name == "BTC":
+            if c is None: continue
+            if   c >  5: parts.append(f"BTC 大漲 {c:+.2f}% 至 ${p:,.0f}，機構資金流入或監管利多，風險偏好顯著回升")
+            elif c >  2: parts.append(f"BTC 上漲 {c:+.2f}%，加密市場情緒偏多")
+            elif c < -5: parts.append(f"BTC 重挫 {c:+.2f}%，流動性收緊或大戶拋售，風險資產全面承壓")
+            elif c < -2: parts.append(f"BTC 下跌 {c:+.2f}%，加密市場風險偏好下降")
+            else:        parts.append(f"BTC ${p:,.0f}（{c:+.2f}%），窄幅整理")
 
-    # ── 銅（全球景氣晴雨表）──
-    copper = cm.get("銅", {})
-    copper_c = copper.get("change_pct")
-    copper_p = copper.get("price", 0)
-    if copper_c is not None:
-        if abs(copper_c) > 1.5:
-            direction = "上漲" if copper_c > 0 else "下跌"
-            signal = ("全球製造業 PMI 改善或中國基建需求回升"
-                      if copper_c > 0 else "工業需求放緩，中國經濟復甦不如預期")
-            parts.append(f"銅價{direction} {abs(copper_c):.2f}% 至 ${copper_p:.3f}/磅，"
-                         f"「銅博士」暗示{signal}")
-        elif abs(copper_c) > 0.5:
-            direction = "小漲" if copper_c > 0 else "小跌"
-            parts.append(f"銅價{direction} {abs(copper_c):.2f}%，反映工業活動溫和波動")
-
-    # ── BTC / ETH（風險偏好 + 流動性指標）──
-    btc = cm.get("BTC", {})
-    eth = cm.get("ETH", {})
-    btc_c = btc.get("change_pct")
-    btc_p = btc.get("price", 0)
-    eth_c = eth.get("change_pct")
-
-    if btc_c is not None:
-        if btc_c > 5:
-            parts.append(f"BTC 大漲 {btc_c:+.2f}% 至 ${btc_p:,.0f}，"
-                         f"機構資金流入或監管利多，風險偏好顯著回升")
-        elif btc_c > 2:
-            parts.append(f"BTC 上漲 {btc_c:+.2f}%，加密市場情緒偏多")
-        elif btc_c < -5:
-            parts.append(f"BTC 重挫 {btc_c:+.2f}%，流動性收緊或大戶拋售，風險資產全面承壓")
-        elif btc_c < -2:
-            parts.append(f"BTC 下跌 {btc_c:+.2f}%，加密市場風險偏好下降")
-        else:
-            parts.append(f"BTC ${btc_p:,.0f}（{btc_c:+.2f}%），窄幅整理")
-
-    if eth_c is not None and btc_c is not None:
-        if eth_c - btc_c > 3:
-            parts.append("ETH 明顯跑贏 BTC，山寨幣輪動行情啟動")
-        elif btc_c - eth_c > 3:
-            parts.append("BTC 獨強、ETH 落後，資金集中流向比特幣避險")
+        # ── ETH（與 BTC 相對表現）──
+        elif name == "ETH":
+            btc_c = cm_dict.get("BTC", {}).get("change_pct")
+            if c is not None and btc_c is not None:
+                if   c - btc_c >  3: parts.append("ETH 明顯跑贏 BTC，山寨幣輪動行情啟動")
+                elif btc_c - c >  3: parts.append("BTC 獨強、ETH 落後，資金集中流向比特幣避險")
 
     return "<br>".join(p + "。" for p in parts) if parts else "原物料整體變動不大，市場觀望。"
 
@@ -1266,11 +1234,10 @@ def fetch_all() -> dict:
     vix_price = vix_item["price"] if vix_item else None
     vix_chg   = vix_item["change_pct"] if vix_item else None
 
-    # 合併原物料 + 加密貨幣用於 commentary
+    # 合併原物料 + 加密貨幣，按漲跌幅排序後傳入 commentary
     all_comm = comm_data["items"] + crypto_data
-    combined_commentary = _commodity_commentary(
-        {c["name"]: c for c in all_comm}  # pass as dict for lookup
-    )
+    all_comm_sorted = sorted(all_comm, key=lambda x: x.get("change_pct") or -999, reverse=True)
+    combined_commentary = _commodity_commentary(all_comm_sorted)
 
     # 殖利率：優先用 FRED 資料日期（格式 YYYY-MM-DD → YYYY/MM/DD）
     fred_date = yields_data.get("10Y", {}).get("date") or yields_data.get("2Y", {}).get("date")
