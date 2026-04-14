@@ -119,7 +119,7 @@ def fetch_cal():
     過濾：僅保留 High impact、目標國家、有 forecast 數值的事件
     """
     import re as _re, os
-    TARGET = {'USD','CNY','EUR','JPY','TWD'}
+    TARGET = {'USD','TWD'}
     raw_backup = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cal_raw_backup.json')
 
     now_utc = datetime.datetime.utcnow()
@@ -131,7 +131,7 @@ def fetch_cal():
     # ── 主來源：TradingView ──
     try:
         tv_req = urllib.request.Request(
-            f'https://economic-calendar.tradingview.com/events?from={tv_from}&to={tv_to}&countries=US,CN,EU,JP,TW',
+            f'https://economic-calendar.tradingview.com/events?from={tv_from}&to={tv_to}&countries=US,TW',
             headers={'User-Agent':'Mozilla/5.0','Origin':'https://www.tradingview.com'})
         with urllib.request.urlopen(tv_req, timeout=10) as r:
             tv_data = json.loads(r.read())
@@ -267,11 +267,43 @@ def run(geopolitics_bullets=None):
     A(f'<i>{DATE_STR}（週{WEEKDAY}）｜{FETCH_TIME} 台北時間</i>')
     A('')
 
+    def fFX(v):
+        """匯率專用格式：自動選擇小數位數"""
+        if v is None: return 'N/A'
+        if v >= 10:   return f'{v:,.2f}'
+        if v >= 1:    return f'{v:,.4f}'
+        if v >= 0.01: return f'{v:,.4f}'
+        return f'{v:,.6f}'
+
     A('💱 <b>匯率</b>')
-    for t,lbl in [('DX-Y.NYB','DXY 美元'),('TWD=X','USD/TWD'),('JPY=X','USD/JPY'),
-                  ('EURUSD=X','EUR/USD'),('KRW=X','USD/KRW')]:
-        p,d,dp = get(t)
-        if p: A(f'  {lbl}  <code>{fN(p):>10}</code>  {arr(d)} {pct(dp)}')
+    # DXY 永遠第一
+    _p, _d, _dp = get('DX-Y.NYB')
+    if _p: A(f'  DXY 美元  <code>{fFX(_p):>12}</code>  {arr(_d)} {pct(_dp)}')
+
+    # 其餘幣對：統一為 XXX/USD 格式，yfinance 給 USD/XXX 的倒轉過來
+    _fx_pairs = [
+        ('EURUSD=X', 'EUR/USD', False),
+        ('GBPUSD=X', 'GBP/USD', False),
+        ('AUDUSD=X', 'AUD/USD', False),
+        ('TWD=X',    'TWD/USD', True),
+        ('JPY=X',    'JPY/USD', True),
+        ('CNY=X',    'CNY/USD', True),
+        ('KRW=X',    'KRW/USD', True),
+    ]
+    _fx_rows = []
+    for _t, _lbl, _inv in _fx_pairs:
+        _op, _od, _odp = get(_t)
+        if _op is None: continue
+        if _inv:
+            _np  = 1.0 / _op
+            _ndp = -_odp
+            _nd  = _np * _ndp / 100
+        else:
+            _np, _nd, _ndp = _op, _od, _odp
+        _fx_rows.append((_lbl, _np, _nd, _ndp))
+    _fx_rows.sort(key=lambda x: x[3], reverse=True)  # 漲幅最大排最上
+    for _lbl, _np, _nd, _ndp in _fx_rows:
+        A(f'  {_lbl}  <code>{fFX(_np):>12}</code>  {arr(_nd)} {pct(_ndp)}')
 
     A('')
     A('📐 <b>美債殖利率</b>')
@@ -370,7 +402,24 @@ def run(geopolitics_bullets=None):
 
 GEO_PATH = os.path.join(SCRIPT_DIR, 'geopolitics.json')
 
+def _push_geopolitics_json():
+    """把 geopolitics.json git commit + push 供 Render 即時更新國際局勢區塊"""
+    try:
+        date_str = now_tw().strftime('%Y%m%d')
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'add', 'geopolitics.json'], check=True)
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'commit', '-m',
+                        f'[auto] 更新國際局勢 {date_str}'], check=True)
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'push'], check=True)
+        print(f'✅ geopolitics.json 已更新並推送（{date_str}）')
+    except subprocess.CalledProcessError as e:
+        print(f'⚠️  geopolitics.json git push 失敗：{e}')
+    except Exception as e:
+        print(f'⚠️  geopolitics.json 推送異常：{e}')
+
 if __name__ == '__main__':
+    # 推送 geopolitics.json → Render 即時更新國際局勢區塊
+    _push_geopolitics_json()
+
     # 讀取 Claude 預先寫入的 geopolitics.json（由 Claude WebSearch 層產生）
     geo_bullets = None
     try:
