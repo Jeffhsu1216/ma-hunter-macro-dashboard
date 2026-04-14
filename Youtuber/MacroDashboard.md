@@ -7,8 +7,8 @@
 ## 一、觸發與排程
 
 **觸發詞**：`總經日報` / `macro dashboard`
-**排程**：每日早上 08:00（台北時間）自動執行
-**輸出**：Telegram 截圖（PNG）+ 完整網頁連結
+**排程**：每日 **08:00** 與 **20:00**（台北時間）各執行一次
+**輸出**：直接在對話輸出完整儀表板文字（含各區塊解讀）
 
 ---
 
@@ -25,16 +25,18 @@
 
 ### 💱 匯率
 
-| 數據 | 代號 | 來源 |
-|------|------|------|
-| DXY 美元指數 | DX-Y.NYB | yfinance |
-| USD/TWD | TWD=X | yfinance |
-| USD/JPY | JPY=X | yfinance |
-| USD/CNY | CNY=X | yfinance |
-| EUR/USD | EURUSD=X | yfinance |
-| GBP/USD | GBPUSD=X | yfinance |
-| AUD/USD | AUDUSD=X | yfinance |
-| USD/KRW | KRW=X | yfinance |
+**格式規則：統一以 XXX/USD（USD 在後）顯示，DXY 永遠第一，其餘按漲跌幅排序（降冪）**
+
+| 顯示標籤 | YF 代號 | yfinance 原始 | 是否需倒轉 |
+|---------|---------|--------------|-----------|
+| DXY 美元指數 | DX-Y.NYB | — | 否（永遠第一） |
+| EUR/USD | EURUSD=X | EUR/USD ✓ | 否 |
+| GBP/USD | GBPUSD=X | GBP/USD ✓ | 否 |
+| AUD/USD | AUDUSD=X | AUD/USD ✓ | 否 |
+| TWD/USD | TWD=X | USD/TWD → 倒轉 | 是（price = 1/p，change% 取反） |
+| JPY/USD | JPY=X | USD/JPY → 倒轉 | 是 |
+| CNY/USD | CNY=X | USD/CNY → 倒轉 | 是 |
+| KRW/USD | KRW=X | USD/KRW → 倒轉 | 是 |
 
 ### 📐 殖利率曲線（新）
 
@@ -69,9 +71,9 @@
 | 上證綜合 | 000001.SS | yfinance |
 | Nifty 50 | ^NSEI | yfinance |
 | 加權指數（TAIEX） | ^TWII | yfinance |
-| VIX | ^VIX | yfinance |
+| VIX | ^VIX | yfinance（移至市場情緒區塊） |
 
-### 🛢️ 原物料與加密貨幣
+### 🛢️ 原物料
 
 | 商品 | 代號 | 來源 |
 |------|------|------|
@@ -81,63 +83,155 @@
 | 黃金 | GC=F | yfinance |
 | 白銀 | SI=F | yfinance |
 | 銅 | HG=F | yfinance |
-| BTC | BTC-USD | yfinance |
-| ETH | ETH-USD | yfinance |
 
-### 🧠 新增模組
+### 🪙 加密貨幣（CoinGecko，yfinance 不穩定）
 
-| 模組 | 來源 URL |
+**API**：`https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true`
+
+| 幣種 | CoinGecko id |
+|------|-------------|
+| BTC | bitcoin |
+| ETH | ethereum |
+| SOL | solana |
+
+**錯誤處理**：若 CoinGecko 失敗（timeout/429），fallback 至 `https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT`（ETHUSDT/SOLUSDT）
+
+### 😱 市場情緒（VIX + Fear & Greed 並排）
+
+**取得方式**：
+- VIX：yfinance `^VIX`（price + 1d change%）
+- Fear & Greed：`https://api.alternative.me/fng/?limit=2`（取代 CNN，無反爬限制）
+  - ⚠️ CNN API 回傳 HTTP 418，已永久棄用
+
+**輸出格式（左右並排）**：
+```
+😱 市場情緒
+┌──────────────────────────┬──────────────────────────┐
+│  📊 VIX 恐慌指數          │  🧠 CNN Fear & Greed      │
+│  當前值：XX.XX            │  當前值：XX（Extreme Fear）│
+│  漲跌：+X.XX（+X.X%）    │  漲跌：前值 XX → 今 XX   │
+│  解讀：市場情緒XX         │  解讀：投資人情緒XX       │
+└──────────────────────────┴──────────────────────────┘
+```
+
+**VIX 解讀對照表**：
+| 值域 | 市場情緒 |
 |------|---------|
-| CNN Fear & Greed | https://production.dataviz.cnn.io/index/fearandgreed/graphdata |
-| 本週經濟日曆 | https://nfs.faireconomy.media/ff_calendar_thisweek.json（High impact，USD/CNY/EUR/JPY） |
-| 台灣三大法人買賣超 | https://www.twse.com.tw/rwd/zh/fund/T86?response=json |
+| < 15 | 極度樂觀，市場平靜 |
+| 15–20 | 正常波動，市場穩定 |
+| 20–25 | 輕度不安，需留意 |
+| 25–30 | 市場緊張，風險升高 |
+| 30–40 | 明顯恐慌，謹慎操作 |
+| > 40 | 極度恐慌，歷史性高點 |
 
-#### 📅 本週經濟日曆 — 處理規則
+**CNN Fear & Greed 解讀對照表**：
+| 值域 | 情緒標籤 | 含義 |
+|------|---------|------|
+| 0–24 | Extreme Fear（極度恐懼） | 市場超賣，潛在買點 |
+| 25–44 | Fear（恐懼） | 投資人保守，可逢低佈局 |
+| 45–55 | Neutral（中性） | 市場平衡，觀望為主 |
+| 56–74 | Greed（貪婪） | 情緒偏多，注意過熱 |
+| 75–100 | Extreme Greed（極度貪婪） | 市場超買，注意修正風險 |
 
-**篩選條件：**
-- `impact = "High"` 僅顯示高重要性事件
-- `currency` 僅取：USD、CNY、EUR、JPY、TWD
-- **只顯示 `actual` 欄位不為空的事件**（即已公布數據）；未公布者不顯示
+### 🏦 台灣三大法人買賣超（最新交易日）
 
-**時間轉換：**
-- 原始時間為 UTC，一律轉換為 **台灣時間（UTC+8）** 顯示
-- 格式：`MM/DD（週X）HH:MM（台北）`
+**API**：`https://www.twse.com.tw/rwd/zh/fund/BFI82U?response=json&dayDate={YYYYMMDD}&type=day`
+- ⚠️ T86 改用 BFI82U（金額彙總），T86 僅回傳個股明細，合計列格式已變更
 
-**輸出欄位（每筆）：**
+**取得策略**：
+1. 先嘗試今日日期（`dayDate=今日YYYYMMDD`）
+2. 若回傳 `stat != "OK"` 或資料為空 → 退一個交易日重試（最多退 7 個交易日）
+3. 取回後標注實際資料日期（非執行日期）
 
-| 欄位 | 說明 |
-|------|------|
-| 時間 | 台灣時間，格式 MM/DD HH:MM |
-| 貨幣 | 對應央行貨幣（USD / EUR / JPY / CNY / TWD） |
-| 事件名稱 | 原文事件名，必要時附繁中說明 |
-| 預期值 | `forecast` 欄位；若為空則顯示「—」 |
-| 前值 | `previous` 欄位 |
-| 實際值 | `actual` 欄位（**已公布才顯示**） |
+**欄位對應**（`買賣差額` = index 3）：
+- 外資 = `外資及陸資(不含外資自營商)` + `外資自營商`
+- 投信 = `投信`
+- 自營商 = `自營商(自行買賣)` + `自營商(避險)`
+- 合計 = `合計`
 
-**排版格式（文字輸出）：**
+**輸出欄位**：外資、投信、自營商 買賣差額（億元，+為買超、-為賣超），加總合計
+
+### 📅 本週經濟數據（已公布 + 即將公布）
+
+**API**：`https://nfs.faireconomy.media/ff_calendar_thisweek.json`
+
+**篩選條件**：
+- `impact = "High"` 僅顯示高重要性
+- `currency` 僅取：**USD、TWD**（其他貨幣一律不顯示）
+- TradingView API 請求參數：`countries=US,TW`
+
+**顯示規則**：
+- **已公布**（`actual` 不為空）：顯示實際值，評估 ▲（超預期）/ ▼（低於預期）/ ＝（符合預期），並附一句評語（如：「優於預期，對美元偏正面」）
+- **未公布**（`actual` 為空）：標注「待公布」，顯示預期值與前值
+
+**排版格式**：
 ```
-📅 本週重要經濟數據（已公布）
+📅 本週重要經濟數據
 ─────────────────────────────────────────────
-MM/DD HH:MM（台北） ｜ 貨幣 ｜ 事件名稱
-  預期：X.X%　前值：X.X%　實際：X.X% ▲/▼
+✅ MM/DD HH:MM（台北） ｜ USD ｜ 事件名稱
+   預期：X.X%　前值：X.X%　實際：X.X% ▲ 超預期
+   評估：優於預期，有利美元/市場偏正向
+
+⏳ MM/DD HH:MM（台北） ｜ USD ｜ 事件名稱（待公布）
+   預期：X.X%　前值：X.X%
 ─────────────────────────────────────────────
 ```
-- 實際值 > 預期值 → 加 ▲（超預期）
-- 實際值 < 預期值 → 加 ▼（低於預期）
-- 無預期值則不顯示符號
-- 若本週尚無已公布高重要性數據：顯示「本週目前尚無重大數據公布」
+- 若本週尚無任何高重要性事件：顯示「本週目前尚無重大數據」
 
-### 🌍 國際局勢
+### 🌍 國際局勢（每次執行強制更新，搜尋 12 小時視窗）
 
-**搜尋策略**：
-1. WebSearch `"geopolitical risk today {date}"` — 英文全球視角
-2. WebSearch `"國際局勢 戰爭 衝突 {年月日}"` — 繁中視角
-3. 來源偏好：Reuters、BBC、鉅亨網國際、工商時報國際
+**時間視窗規則**：
+- 執行時間為早上 08:00 → 搜尋「昨日 20:00 至今日 08:00」的新聞
+- 執行時間為晚上 20:00 → 搜尋「今日 08:00 至今日 20:00」的新聞
+- 計算方式：`搜尋起點 = 執行時間 − 12小時`，`搜尋終點 = 執行時間`
+
+**搜尋策略**（每次執行必做，禁止使用快取）：
+1. WebSearch `geopolitical military sanction trade war {YYYY/MM/DD}`（英文）
+2. WebSearch `國際局勢 戰爭 制裁 貿易摩擦 {YYYY年M月D日} 最新`（中文）
+3. 視情況補搜當日最重要事件的詳情（第三次 WebSearch）
+4. 來源偏好：Reuters、BBC、鉅亨網國際、工商時報、聯合新聞網、ETtoday
 
 **篩選標準**：
 - 僅列影響金融市場的重大地緣事件（戰爭、制裁、貿易摩擦、軍事行動）
-- 最多 3-5 則，每則一句話摘要
-- 若當日無重大事件：標記「今日無重大地緣政治變動」
+- 最多 3–5 則，每則：標題 + 一句話影響評估
+- 若視窗內無重大事件：標記「本時段無重大地緣政治變動」
+- **必須包含台灣板塊**（兩岸動態、台海局勢、美台關係）
+
+**⚠️ 必須在執行 Runner 前完成（關鍵流程）：**
+1. Claude 完成 WebSearch 後，將 bullets 寫入 `geopolitics.json`（格式見下）
+2. **再執行** `python3 macro_dashboard_runner.py`
+3. Runner 自動執行 `_push_geopolitics_json()`：git commit + push `geopolitics.json` → Render 即時更新網頁儀表板
+4. Runner 自動讀取 `geopolitics.json` → 帶入 Telegram 訊息的 🌍 國際局勢區塊
+5. ⛔ 若跳過步驟 1 直接執行 runner，國際局勢區塊將為空白
+
+**geopolitics.json 雙格式規範**：
+```json
+{
+  "updated": "YYYY/MM/DD",
+  "bullets": [
+    "🇺🇸🇮🇷 事件摘要一句話（Telegram 用）",
+    "💰 事件摘要一句話",
+    "💥 事件摘要一句話",
+    "🌐 事件摘要一句話"
+  ],
+  "categories": [
+    {
+      "icon": "⚔️",
+      "title": "分類名稱",
+      "items": [
+        {
+          "icon": "🇮🇷",
+          "title": "事件標題",
+          "desc": "詳細描述（網頁版用）"
+        }
+      ]
+    }
+  ]
+}
+```
+- `bullets`：Telegram runner 使用，每則一行，最多 5 則
+- `categories`：網頁版儀表板使用，支援多層分類與詳細描述
+- 兩者每次執行都必須同步更新
 
 ---
 
@@ -185,8 +279,20 @@ MM/DD HH:MM（台北） ｜ 貨幣 ｜ 事件名稱
 
 - **執行頻率**：每日 08:00 台北時間
 - **假日處理**：週六日仍執行，但標注休市數據
-- **輸出位置**：Telegram Bot 推送截圖 + 網頁連結
+- **輸出位置**：Telegram Bot 推送（HTML parse mode + inline button）
+- **腳本路徑**：`~/Desktop/Claude/Youtuber/macro-dashboard/macro_dashboard_runner.py`
+- **推送方式**：`run(geopolitics_bullets=[...])` — 國際局勢由 Claude WebSearch 層傳入
+
+## 六、推送設定
+
+| 參數 | 值 |
+|------|-----|
+| 平台 | Telegram |
+| Bot Token | `8743919766:AAG6z6YPW7Gqt7rF2KY2xC9mvbm2Ge31tjQ` |
+| Chat ID | `2117347781` |
+| Dashboard URL | `https://ma-hunter-macro-dashboard.onrender.com` |
+| LINE | ⚠️ LINE Notify 已停服；Messaging API 需 Official Account，暫不使用 |
 
 ---
 
-*最後更新：2026-03-30（v2 — 本週經濟日曆改為「已公布數據」台北時間顯示，新增全模組更新時間戳記）*
+*最後更新：2026-04-14（v6 已優化 — 匯率統一 XXX/USD 格式並按漲跌幅排序、本週數據僅抓 USD+TWD、國際局勢必含台灣板塊、geopolitics.json 執行時自動 git push 至 Render）*
