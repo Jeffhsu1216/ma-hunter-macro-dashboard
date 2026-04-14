@@ -306,46 +306,45 @@ def _next_meeting(schedule: list) -> str:
 # ============================================================
 
 def _fx_commentary(fx_list: list) -> str:
-    """統一 XXX/USD 格式解釋匯率變動
-    XXX/USD ↑ = XXX 走強、美元走弱（所有幣對統一邏輯）
+    """統一 XXX/USD 格式解釋匯率變動，敘述順序與顯示排序一致（DXY 第一，其餘按漲跌幅）
+    XXX/USD ↑ = XXX 走強、美元走弱
     DXY ↑ = 美元走強
     """
-    fm = {f["name"]: f for f in fx_list}
+    # 各幣對的中文名稱與漲/跌時的解讀
+    _META = {
+        "TWD/USD": ("新台幣", "外資匯入支撐、進口成本下降",       "外資匯出壓力增、進口成本上升"),
+        "JPY/USD": ("日圓",   "避險資金湧入日圓、日銀可能調整政策","日本出口競爭力增但進口通膨壓力大"),
+        "CNY/USD": ("人民幣", "中國經濟信心回升或政策引導升值",   "中國資本外流壓力或政策寬鬆預期"),
+        "KRW/USD": ("韓元",   "外資回流韓股、韓元走強",           "韓國出口導向受益但外資流出壓力"),
+        "EUR/USD": ("歐元",   "歐洲經濟數據優於預期或 ECB 鷹派", "歐洲經濟疲弱或美元避險需求上升"),
+        "GBP/USD": ("英鎊",   "英國經濟韌性或 BOE 偏鷹",         "英國經濟下行壓力或脫歐後續影響"),
+        "AUD/USD": ("澳幣",   "大宗商品需求回升、中國經濟改善預期","商品價格走弱或全球風險趨避"),
+    }
     parts = []
 
-    # ── DXY 總覽 ──
-    dxy = fm.get("DXY 美元指數", {})
-    dc = dxy.get("change_pct")
-    if dc is not None:
-        if dc > 0.5:
-            parts.append(f"DXY 美元指數上漲 {dc:+.2f}%，美元全面走強，非美貨幣承壓")
-        elif dc > 0.1:
-            parts.append(f"DXY 小幅走強 {dc:+.2f}%，美元偏強格局")
-        elif dc < -0.5:
-            parts.append(f"DXY 下跌 {dc:+.2f}%，美元走弱，非美貨幣反彈")
-        elif dc < -0.1:
-            parts.append(f"DXY 微跌 {dc:+.2f}%，美元稍弱")
-        else:
-            parts.append("DXY 持平，匯市觀望")
+    for item in fx_list:
+        name = item["name"]
+        c    = item.get("change_pct")
 
-    # ── 逐幣解釋（統一：XXX/USD ↑ = XXX 升值）──
-    all_pairs = [
-        ("TWD/USD", "新台幣", "外資匯入支撐、進口成本下降", "外資匯出壓力增、進口成本上升"),
-        ("JPY/USD", "日圓",   "避險資金湧入日圓、日銀可能調整政策", "日本出口競爭力增但進口通膨壓力大"),
-        ("CNY/USD", "人民幣", "中國經濟信心回升或政策引導升值", "中國資本外流壓力或政策寬鬆預期"),
-        ("KRW/USD", "韓元",   "外資回流韓股、韓元走強", "韓國出口導向受益但外資流出壓力"),
-        ("EUR/USD", "歐元",   "歐洲經濟數據優於預期或 ECB 鷹派", "歐洲經濟疲弱或美元避險需求上升"),
-        ("GBP/USD", "英鎊",   "英國經濟韌性或 BOE 偏鷹", "英國經濟下行壓力或脫歐後續影響"),
-        ("AUD/USD", "澳幣",   "大宗商品需求回升、中國經濟改善預期", "商品價格走弱或全球風險趨避"),
-    ]
-    for pair, cname, up_reason, dn_reason in all_pairs:
-        item = fm.get(pair, {})
-        c = item.get("change_pct")
-        if c is not None and abs(c) >= 0.2:
-            if c > 0:
-                parts.append(f"{cname}升值 {abs(c):.2f}%（{pair} ↑），{up_reason}")
-            else:
-                parts.append(f"{cname}貶值 {abs(c):.2f}%（{pair} ↓），{dn_reason}")
+        # ── DXY 總覽（永遠第一）──
+        if "DXY" in name:
+            if c is None: continue
+            if   c >  0.5: parts.append(f"DXY 美元指數上漲 {c:+.2f}%，美元全面走強，非美貨幣承壓")
+            elif c >  0.1: parts.append(f"DXY 小幅走強 {c:+.2f}%，美元偏強格局")
+            elif c < -0.5: parts.append(f"DXY 下跌 {c:+.2f}%，美元走弱，非美貨幣反彈")
+            elif c < -0.1: parts.append(f"DXY 微跌 {c:+.2f}%，美元稍弱")
+            else:           parts.append("DXY 持平，匯市觀望")
+            continue
+
+        # ── 其餘幣對（按傳入順序，即漲跌幅排序）──
+        meta = _META.get(name)
+        if not meta or c is None or abs(c) < 0.2:
+            continue
+        cname, up_reason, dn_reason = meta
+        if c > 0:
+            parts.append(f"{cname}升值 {abs(c):.2f}%（{name} ↑），{up_reason}")
+        else:
+            parts.append(f"{cname}貶值 {abs(c):.2f}%（{name} ↓），{dn_reason}")
 
     return "。".join(parts) + "。" if parts else "匯率整體變動不大，市場觀望氣氛濃厚。"
 
