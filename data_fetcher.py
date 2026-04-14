@@ -346,7 +346,7 @@ def _fx_commentary(fx_list: list) -> str:
         else:
             parts.append(f"{cname}貶值 {abs(c):.2f}%（{name} ↓），{dn_reason}")
 
-    return "。".join(parts) + "。" if parts else "匯率整體變動不大，市場觀望氣氛濃厚。"
+    return "\n".join(p + "。" for p in parts) if parts else "匯率整體變動不大，市場觀望氣氛濃厚。"
 
 
 def _yield_commentary(yields: dict) -> str:
