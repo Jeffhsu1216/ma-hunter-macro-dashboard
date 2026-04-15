@@ -50,28 +50,40 @@ TICKERS = {
 crypto_res = {}; fg_res = {}; inst_res = {}; cal_res = {}; cb_res = {}; spx_tech = {}
 
 def fetch_fed_rate():
-    """從 FRED 動態抓 Fed 利率區間，失敗 fallback hardcoded"""
-    FED_FALLBACK = "3.50–3.75"  # 最後已知值，FRED 失敗時使用
+    """從 FRED 動態抓 Fed/ECB/BOJ 利率，失敗各自 fallback"""
+    def _fred_csv(series_id, timeout=25):
+        url = f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}'
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            lines = r.read().decode().strip().split('\n')[1:]
+        rows = []
+        for line in lines[-3:]:
+            parts = line.split(',')
+            if len(parts) == 2 and parts[1] != '.':
+                rows.append(float(parts[1]))
+        return rows
+
+    # Fed
     try:
-        def _fred_csv(series_id):
-            url = f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}'
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req, timeout=8) as r:
-                lines = r.read().decode().strip().split('\n')[1:]
-            rows = []
-            for line in lines[-3:]:
-                parts = line.split(',')
-                if len(parts) == 2 and parts[1] != '.':
-                    rows.append(float(parts[1]))
-            return rows
         lower = _fred_csv('DFEDTARL')
         upper = _fred_csv('DFEDTARU')
-        if lower and upper:
-            cb_res['fed'] = f'{lower[-1]:.2f}–{upper[-1]:.2f}'
-        else:
-            cb_res['fed'] = FED_FALLBACK
+        cb_res['fed'] = f'{lower[-1]:.2f}–{upper[-1]:.2f}' if lower and upper else '3.50–3.75'
     except:
-        cb_res['fed'] = FED_FALLBACK
+        cb_res['fed'] = '3.50–3.75'
+
+    # ECB
+    try:
+        ecb = _fred_csv('ECBDFR')
+        cb_res['ecb'] = f'{ecb[-1]:.2f}' if ecb else '2.00'
+    except:
+        cb_res['ecb'] = '2.00'
+
+    # BOJ
+    try:
+        boj = _fred_csv('IRSTJPN156N')
+        cb_res['boj'] = f'{boj[-1]:.2f}' if boj else '0.50'
+    except:
+        cb_res['boj'] = '0.50'
 
 def fetch_crypto():
     """Binance 24hr ticker — 免費、無需 Key、穩定"""
@@ -417,7 +429,9 @@ def run(geopolitics_bullets=None):
 
     A('')
     fed = cb_res.get('fed', '3.50–3.75')
-    A(f'🏦 <b>央行利率</b>  Fed {fed}% ｜ ECB 2.50% ｜ BOJ 0.50% ｜ CBC 2.00%')
+    ecb = cb_res.get('ecb', '2.00')
+    boj = cb_res.get('boj', '0.50')
+    A(f'🏦 <b>央行利率</b>  Fed {fed}% ｜ ECB {ecb}% ｜ BOJ {boj}% ｜ CBC 2.00%')
 
     A('')
     A(f'🇹🇼 <b>三大法人</b>（{inst_res.get("date","N/A")}）')
