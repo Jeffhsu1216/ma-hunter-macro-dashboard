@@ -620,6 +620,85 @@ def _push_geopolitics_json():
     except Exception as e:
         print(f'⚠️  geopolitics.json 推送異常：{e}')
 
+def _auto_fetch_geopolitics():
+    """Claude API + web_search 自動抓取當日重大地緣政治事件，更新 geopolitics.json"""
+    api_key = os.environ.get('ANTHROPIC_API_KEY')
+    if not api_key:
+        print('⚠️  ANTHROPIC_API_KEY 未設定，跳過地緣政治自動更新')
+        return
+
+    try:
+        import anthropic
+    except ImportError:
+        print('⚠️  anthropic 套件未安裝，跳過地緣政治自動更新')
+        return
+
+    now = now_tw()
+    today_str = now.strftime('%Y年%m月%d日')
+    print(f'🌍 自動抓取 {today_str} 地緣政治事件...')
+
+    client = anthropic.Anthropic(api_key=api_key)
+    prompt = f"""今天是{today_str}。請搜尋今日（最近24小時）重大國際地緣政治事件。
+
+重點關注：戰爭/軍事衝突（俄烏、中東、印太）、重大經濟制裁、貿易摩擦/關稅戰、外交危機。
+
+輸出格式：JSON陣列，3–5則，每則：{{"flag":"🇺🇸", "text":"事件摘要（35字以內）"}}
+
+⚠️ 只輸出純 JSON 陣列，不要任何說明文字。"""
+
+    messages = [{"role": "user", "content": prompt}]
+    bullets = None
+
+    for _ in range(10):
+        response = client.messages.create(
+            model='claude-opus-4-6',
+            max_tokens=800,
+            tools=[{"type": "web_search_20250305", "name": "web_search"}],
+            messages=messages,
+        )
+        messages.append({"role": "assistant", "content": response.content})
+
+        if response.stop_reason == 'end_turn':
+            text = ''.join(b.text for b in response.content
+                           if hasattr(b, 'text') and b.type == 'text')
+            try:
+                m = re.search(r'\[.*\]', text, re.DOTALL)
+                if m:
+                    events = json.loads(m.group())
+                    bullets = [f"{e['flag']} {e['text']}" for e in events
+                               if 'flag' in e and 'text' in e]
+            except Exception as ex:
+                print(f'⚠️  地緣政治 JSON 解析失敗：{ex}')
+            break
+
+        if response.stop_reason == 'tool_use':
+            user_content = []
+            for block in response.content:
+                if hasattr(block, 'type') and block.type == 'tool_result':
+                    user_content.append({
+                        "type": "tool_result",
+                        "tool_use_id": block.tool_use_id,
+                        "content": block.content,
+                    })
+            if user_content:
+                messages.append({"role": "user", "content": user_content})
+
+    if bullets:
+        try:
+            geo = {}
+            if os.path.exists(GEO_PATH):
+                with open(GEO_PATH, 'r', encoding='utf-8') as f:
+                    geo = json.load(f)
+            geo['bullets'] = bullets
+            with open(GEO_PATH, 'w', encoding='utf-8') as f:
+                json.dump(geo, f, ensure_ascii=False, indent=2)
+            print(f'✅ 地緣政治自動更新完成：{len(bullets)} 則')
+        except Exception as ex:
+            print(f'⚠️  geopolitics.json 寫入失敗：{ex}')
+    else:
+        print('⚠️  地緣政治自動更新失敗，保留現有資料')
+
+
 if __name__ == '__main__':
     # 先同步遠端，避免後續 push 被 reject
     try:
@@ -628,10 +707,13 @@ if __name__ == '__main__':
     except Exception:
         pass  # pull 失敗不阻斷主流程
 
-    # 推送 geopolitics.json → GitHub Pages 即時更新國際局勢區塊
+    # Step 1：Claude API 自動抓取當日地緣政治事件（寫入 geopolitics.json）
+    _auto_fetch_geopolitics()
+
+    # Step 2：推送 geopolitics.json（含更新 updated 時間戳）
     _push_geopolitics_json()
 
-    # 讀取 Claude 預先寫入的 geopolitics.json（由 Claude WebSearch 層產生）
+    # Step 3：讀取 geo_bullets
     geo_bullets = None
     try:
         if os.path.exists(GEO_PATH):
@@ -642,9 +724,12 @@ if __name__ == '__main__':
     except Exception as e:
         print(f'⚠️  geopolitics.json 讀取失敗：{e}')
 
+    # Step 4：送 Telegram
     ok, msg = run(geopolitics_bullets=geo_bullets)
-    print('✅ 傳送成功' if ok else '❌ 傳送失敗')
-    print(msg)
+    print('✅ Telegram 傳送成功' if ok else '❌ Telegram 傳送失敗')
+
+    # Step 5：更新 GitHub Pages 靜態 HTML
+    _push_docs_html(geo_bullets=geo_bullets)
 
     # 生成靜態 HTML → 推送至 GitHub Pages
     _push_docs_html(geo_bullets=geo_bullets)
