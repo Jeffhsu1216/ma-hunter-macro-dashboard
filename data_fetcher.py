@@ -167,7 +167,7 @@ def _get_fred_csv(series_id: str, n_rows: int = 10) -> list:
     """從 FRED 抓 CSV，回傳最後 n 筆 [(date_str, value_float), ...]"""
     try:
         url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, timeout=(5, 25), headers={"User-Agent": "Mozilla/5.0"})
         lines = resp.text.strip().split("\n")[1:]
         results = []
         for line in lines[-n_rows:]:
@@ -904,15 +904,29 @@ def fetch_cb_rates() -> dict:
         "next": _next_meeting(FOMC_DATES_2026),
     }
 
-    # ── ECB（手動更新，上次決策 2025-03）──
+    # ── ECB（FRED ECBDFR 動態抓，失敗 fallback）──
+    ECB_FALLBACK = "2.00"  # 2026-04 確認值（已連續降息至 2.00%）
+    try:
+        ecb_rows = _get_fred_csv("ECBDFR", 3)
+        ecb_rate = f"{ecb_rows[-1][1]:.2f}" if ecb_rows else ECB_FALLBACK
+    except Exception as e:
+        logger.warning(f"FRED ECB rate failed: {e}, using fallback")
+        ecb_rate = ECB_FALLBACK
     result["ECB"] = {
-        "rate": "2.50",
+        "rate": ecb_rate,
         "next": "手動更新",
     }
 
-    # ── BOJ（手動更新，上次決策 2025-01）──
+    # ── BOJ（FRED IRSTJPN156N 動態抓，失敗 fallback）──
+    BOJ_FALLBACK = "0.50"  # 2026-04 確認值（2025-01 升至 0.50%）
+    try:
+        boj_rows = _get_fred_csv("IRSTJPN156N", 3)
+        boj_rate = f"{boj_rows[-1][1]:.2f}" if boj_rows else BOJ_FALLBACK
+    except Exception as e:
+        logger.warning(f"FRED BOJ rate failed: {e}, using fallback")
+        boj_rate = BOJ_FALLBACK
     result["BOJ"] = {
-        "rate": "0.50",
+        "rate": boj_rate,
         "next": "手動更新",
     }
 
