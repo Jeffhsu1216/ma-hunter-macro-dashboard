@@ -2,7 +2,7 @@ services:
   - type: web
     name: ma-hunter-dashboard
     runtime: python
-    buildCommand: pip install -r requirements.txt && python -m playwright install --with-deps chromium
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
