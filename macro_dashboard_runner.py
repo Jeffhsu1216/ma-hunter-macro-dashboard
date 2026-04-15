@@ -67,16 +67,16 @@ def fetch_fed_rate():
     try:
         lower = _fred_csv('DFEDTARL')
         upper = _fred_csv('DFEDTARU')
-        cb_res['fed'] = f'{lower[-1]:.2f}–{upper[-1]:.2f}' if lower and upper else '3.50–3.75'
+        cb_res['fed'] = f'{lower[-1]:.2f}–{upper[-1]:.2f}' if lower and upper else '4.25–4.50'
     except:
-        cb_res['fed'] = '3.50–3.75'
+        cb_res['fed'] = '4.25–4.50'
 
     # ECB
     try:
         ecb = _fred_csv('ECBDFR')
-        cb_res['ecb'] = f'{ecb[-1]:.2f}' if ecb else '2.00'
+        cb_res['ecb'] = f'{ecb[-1]:.2f}' if ecb else '2.50'
     except:
-        cb_res['ecb'] = '2.00'
+        cb_res['ecb'] = '2.50'
 
     # BOJ
     try:
