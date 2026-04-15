@@ -601,7 +601,15 @@ def _push_docs_html(geo_bullets=None):
 def _push_geopolitics_json():
     """把 geopolitics.json git commit + push 供 Render 即時更新國際局勢區塊"""
     try:
-        date_str = now_tw().strftime('%Y%m%d')
+        now = now_tw()
+        date_str = now.strftime('%Y%m%d')
+        # 自動把 updated 欄位更新為「YYYY/MM/DD HH:MM 台北時間」
+        if os.path.exists(GEO_PATH):
+            with open(GEO_PATH, 'r', encoding='utf-8') as f:
+                geo = json.load(f)
+            geo['updated'] = now.strftime('%Y/%m/%d %H:%M') + ' 台北時間'
+            with open(GEO_PATH, 'w', encoding='utf-8') as f:
+                json.dump(geo, f, ensure_ascii=False, indent=2)
         subprocess.run(['git', '-C', SCRIPT_DIR, 'add', 'geopolitics.json'], check=True)
         subprocess.run(['git', '-C', SCRIPT_DIR, 'commit', '-m',
                         f'[auto] 更新國際局勢 {date_str}'], check=True)
