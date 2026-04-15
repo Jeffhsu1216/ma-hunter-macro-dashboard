@@ -930,9 +930,20 @@ def fetch_cb_rates() -> dict:
         "next": "手動更新",
     }
 
-    # ── CBC ──
+    # ── CBC（台灣央行重貼現率 — CBC 官網自動更新）──
+    CBC_FALLBACK = "2.00"  # 2024-03-22 起確認值
+    try:
+        import re as _re
+        _cbc_resp = requests.get(
+            'https://www.cbc.gov.tw/tw/cp-534-4088-F0CAF-2.html',
+            headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+        _m = _re.search(r'重貼現率.*?<em>([\d.]+)%</em>', _cbc_resp.text, _re.DOTALL)
+        cbc_rate = _m.group(1) if _m else CBC_FALLBACK
+    except Exception as e:
+        logger.warning(f"CBC rate scrape failed: {e}, using fallback")
+        cbc_rate = CBC_FALLBACK
     result["CBC"] = {
-        "rate": "2.00",
+        "rate": cbc_rate,
         "next": _next_meeting(CBC_DATES_2026),
     }
 
