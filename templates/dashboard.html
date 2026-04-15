@@ -294,42 +294,55 @@
             <div class="card-ts">🕐 更新時間：{{ data.fx_updated_at }}</div>
         </div>
 
-        <!-- 殖利率曲線 -->
+        <!-- 美股技術面 -->
         <div class="card">
-            <div class="card-title">📐 美國殖利率曲線</div>
-            <div class="yield-bars">
-                {% set max_yield = 6.0 %}
-                {% for label, info in data.yields.items() if label != 'spread_10y_2y' %}
-                {% set y = info.yield %}
-                {% set bps = info.change_bps %}
-                <div class="yield-bar-row">
-                    <div class="yield-bar-label">{{ label }}</div>
-                    <div class="yield-bar-track">
-                        <div class="yield-bar-fill" style="width: {{ ((y / max_yield) * 100)|int if y else 0 }}%;"></div>
-                    </div>
-                    <div class="yield-bar-val">{{ "%.2f%%"|format(y) if y else 'N/A' }}</div>
-                    <div class="yield-bar-bps">
-                        {% if bps is not none %}
-                        <span class="chg {{ 'up' if bps > 0 else ('down' if bps < 0 else 'flat') }}">
-                            {{ '+' if bps > 0 else '' }}{{ bps }}bp
+            <div class="card-title">📊 美股技術面</div>
+            {% for key in ['spx', 'ndq'] %}
+            {% set t = data.spx_tech.get(key, {}) %}
+            {% if t.get('ok') %}
+            <div style="margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+                    <span style="font-weight:600; font-size:13px;">{{ t.name }}</span>
+                    <span style="font-size:15px; font-weight:700; color:var(--text-1);">{{ "{:,.0f}".format(t.price) }}</span>
+                </div>
+                <div class="row">
+                    <div class="lbl" style="font-size:11px;">MA50</div>
+                    <div class="val" style="font-size:11px;">
+                        {{ "{:,.0f}".format(t.ma50) }}
+                        <span class="chg {{ 'up' if t.pct50 > 0 else 'down' }}">
+                            {{ '+' if t.pct50 > 0 else '' }}{{ t.pct50 }}%
                         </span>
-                        {% endif %}
                     </div>
                 </div>
-                {% endfor %}
+                <div class="row">
+                    <div class="lbl" style="font-size:11px;">MA200</div>
+                    <div class="val" style="font-size:11px;">
+                        {{ "{:,.0f}".format(t.ma200) }}
+                        <span class="chg {{ 'up' if t.pct200 > 0 else 'down' }}">
+                            {{ '+' if t.pct200 > 0 else '' }}{{ t.pct200 }}%
+                        </span>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:4px;">
+                    <div class="lbl" style="font-size:11px;">RSI(14)</div>
+                    <div class="val" style="font-size:11px;">
+                        <b>{{ t.rsi }}</b>
+                        <span style="color:var(--text-3); margin-left:4px;">{{ t.rsi_lbl }}</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="lbl" style="font-size:11px;">均線訊號</div>
+                    <div class="val" style="font-size:11px;">
+                        <span class="chg {{ 'up' if t.cross_ok else 'down' }}">
+                            {{ t.cross }}{{ ' ✅' if t.cross_ok else ' ⚠️' }}
+                        </span>
+                    </div>
+                </div>
             </div>
-            {% if data.yields.spread_10y_2y is not none %}
-            <div class="spread-box">
-                <span class="lbl">10Y − 2Y 利差</span>
-                <span class="chg {{ 'up' if data.yields.spread_10y_2y > 0 else 'down' }}">
-                    {{ '+' if data.yields.spread_10y_2y > 0 else '' }}{{ data.yields.spread_10y_2y|int }} bps
-                </span>
-            </div>
+            {% if not loop.last %}<hr style="border:none; border-top:1px solid rgba(255,255,255,0.05); margin:8px 0;">{% endif %}
             {% endif %}
-            {% if data.yields_commentary %}
-            <div class="commentary">{{ data.yields_commentary | safe }}</div>
-            {% endif %}
-            <div class="card-ts">🕐 更新時間：{{ data.yields_updated_at }}</div>
+            {% endfor %}
+            <div class="card-ts">🕐 更新時間：{{ data.spx_tech_updated_at }}</div>
         </div>
 
     </div>

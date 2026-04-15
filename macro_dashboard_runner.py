@@ -42,13 +42,12 @@ def fetch_group(tickers, delay=0.15):
         time.sleep(delay)
 
 TICKERS = {
-    'fx':    ['DX-Y.NYB','TWD=X','JPY=X','CNY=X','EURUSD=X','GBPUSD=X','AUDUSD=X','KRW=X'],
-    'bonds': ['^IRX','^FVX','^TNX','^TYX'],
-    'eq':    ['^GSPC','^IXIC','^TWII','^N225','^HSI','000001.SS','^GDAXI','^FTSE','^KS11','^VIX'],
-    'comm':  ['GC=F','SI=F','CL=F','BZ=F','NG=F','HG=F'],
+    'fx':   ['DX-Y.NYB','TWD=X','JPY=X','CNY=X','EURUSD=X','GBPUSD=X','AUDUSD=X','KRW=X'],
+    'eq':   ['^GSPC','^IXIC','^TWII','^N225','^HSI','000001.SS','^GDAXI','^FTSE','^KS11','^VIX'],
+    'comm': ['GC=F','SI=F','CL=F','BZ=F','NG=F','HG=F'],
 }
 
-crypto_res = {}; fg_res = {}; inst_res = {}; cal_res = {}; cb_res = {}
+crypto_res = {}; fg_res = {}; inst_res = {}; cal_res = {}; cb_res = {}; spx_tech = {}
 
 def fetch_fed_rate():
     """從 FRED 動態抓 Fed 利率區間，失敗 fallback hardcoded"""
@@ -93,6 +92,55 @@ def fetch_crypto():
         crypto_res['ok']  = True
     except Exception as e:
         crypto_res['ok'] = False
+
+def fetch_spx_tech():
+    """S&P 500 + Nasdaq 技術面：MA50、MA200、RSI(14)"""
+    def _hist(symbol):
+        url = f'https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?interval=1d&range=1y'
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=12) as r:
+            d = json.loads(r.read())
+        closes = d['chart']['result'][0]['indicators']['quote'][0]['close']
+        return [x for x in closes if x is not None]
+
+    def _rsi(closes, period=14):
+        deltas = [closes[i] - closes[i-1] for i in range(1, len(closes))]
+        gains  = [max(d, 0)      for d in deltas[-period:]]
+        losses = [abs(min(d, 0)) for d in deltas[-period:]]
+        avg_g = sum(gains)  / period
+        avg_l = sum(losses) / period
+        if avg_l == 0: return 100.0
+        return round(100 - 100 / (1 + avg_g / avg_l), 1)
+
+    def _rsi_lbl(v):
+        if v < 30: return '超賣 🔵'
+        if v < 40: return '偏弱'
+        if v < 50: return '中性偏弱'
+        if v < 60: return '中性偏多'
+        if v < 70: return '偏多'
+        return '超買 🔴'
+
+    for key, sym, name in [('spx', '^GSPC', 'S&amp;P 500'), ('ndq', '^IXIC', 'Nasdaq')]:
+        try:
+            closes = _hist(sym)
+            if len(closes) < 200:
+                spx_tech[key] = {'ok': False}
+                continue
+            price  = closes[-1]
+            ma50   = sum(closes[-50:])  / 50
+            ma200  = sum(closes[-200:]) / 200
+            rsi    = _rsi(closes)
+            spx_tech[key] = {
+                'ok': True, 'name': name, 'price': price,
+                'ma50': ma50, 'ma200': ma200, 'rsi': rsi,
+                'pct50':  (price - ma50)  / ma50  * 100,
+                'pct200': (price - ma200) / ma200 * 100,
+                'rsi_lbl': _rsi_lbl(rsi),
+                'cross': '黃金交叉 ✅' if ma50 > ma200 else '死亡交叉 ⚠️',
+            }
+        except:
+            spx_tech[key] = {'ok': False}
+
 
 def fetch_fg():
     """alternative.me Fear & Greed（公開 API，無反爬，取代 CNN）"""
@@ -259,7 +307,7 @@ def run(geopolitics_bullets=None):
     for g in TICKERS.values():
         th = threading.Thread(target=fetch_group, args=(g, 0.15))
         th.start(); threads.append(th); time.sleep(0.02)
-    for fn in [fetch_crypto, fetch_fg, fetch_inst, fetch_cal, fetch_fed_rate]:
+    for fn in [fetch_crypto, fetch_fg, fetch_inst, fetch_cal, fetch_fed_rate, fetch_spx_tech]:
         th = threading.Thread(target=fn); th.start(); threads.append(th)
     for th in threads: th.join(timeout=30)
 
@@ -330,10 +378,13 @@ def run(geopolitics_bullets=None):
         A(f'  {_lbl}  <code>{fFX(_np):>12}</code>  {arr(_nd)} {pct(_ndp)}')
 
     A('')
-    A('📐 <b>美債殖利率</b>')
-    for t,lbl in [('^IRX','2Y'),('^TNX','10Y'),('^TYX','30Y')]:
-        p,d,dp = get(t)
-        if p: A(f'  US {lbl}  <code>{fN(p)}%</code>  {arr(d)} {d:+.3f}bp')
+    A('📊 <b>美股技術面</b>')
+    for key in ['spx', 'ndq']:
+        t = spx_tech.get(key, {})
+        if t.get('ok'):
+            A(f'  <b>{t["name"]}</b>  <code>{fN(t["price"], 0)}</code>')
+            A(f'    MA50 {fN(t["ma50"], 0)}（{t["pct50"]:+.1f}%）  MA200 {fN(t["ma200"], 0)}（{t["pct200"]:+.1f}%）')
+            A(f'    RSI(14) <b>{t["rsi"]}</b> {t["rsi_lbl"]}  ｜  {t["cross"]}')
 
     A('')
     A('📈 <b>全球股市</b>')
