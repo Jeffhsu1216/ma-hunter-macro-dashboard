@@ -9,12 +9,12 @@
 - 三大法人成功後自動寫入 taiwan_backup.json + git push（供 Render fallback）
 """
 
-import urllib.request, urllib.parse, json, datetime, threading, time, os, subprocess
+import urllib.request, urllib.parse, json, datetime, threading, time, os, subprocess, re
 
 # ══════════════════════════════════════════
 TOKEN   = '8743919766:AAG6z6YPW7Gqt7rF2KY2xC9mvbm2Ge31tjQ'
 CHAT_ID = '2117347781'
-DASHBOARD_URL = 'https://ma-hunter-macro-dashboard.onrender.com'
+DASHBOARD_URL = 'https://jeffhsu1216.github.io/ma-hunter-macro-dashboard/'
 # ══════════════════════════════════════════
 
 TZ = 8
@@ -84,6 +84,18 @@ def fetch_fed_rate():
         cb_res['boj'] = f'{boj[-1]:.2f}' if boj else '0.50'
     except:
         cb_res['boj'] = '0.50'
+
+    # CBC（台灣央行重貼現率 — CBC 官網爬蟲）
+    try:
+        _req = urllib.request.Request(
+            'https://www.cbc.gov.tw/tw/cp-534-4088-F0CAF-2.html',
+            headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(_req, timeout=10) as _r:
+            _html = _r.read().decode('utf-8')
+        _m = re.search(r'重貼現率.*?<em>([\d.]+)%</em>', _html, re.DOTALL)
+        cb_res['cbc'] = _m.group(1) if _m else '2.00'
+    except:
+        cb_res['cbc'] = '2.00'
 
 def fetch_crypto():
     """Binance 24hr ticker — 免費、無需 Key、穩定"""
@@ -431,7 +443,8 @@ def run(geopolitics_bullets=None):
     fed = cb_res.get('fed', '3.50–3.75')
     ecb = cb_res.get('ecb', '2.00')
     boj = cb_res.get('boj', '0.50')
-    A(f'🏦 <b>央行利率</b>  Fed {fed}% ｜ ECB {ecb}% ｜ BOJ {boj}% ｜ CBC 2.00%')
+    cbc = cb_res.get('cbc', '2.00')
+    A(f'🏦 <b>央行利率</b>  Fed {fed}% ｜ ECB {ecb}% ｜ BOJ {boj}% ｜ CBC {cbc}%')
 
     A('')
     A(f'🇹🇼 <b>三大法人</b>（{inst_res.get("date","N/A")}）')
@@ -539,7 +552,51 @@ def _fmt_val(v):
     except: pass
     return v
 
-GEO_PATH = os.path.join(SCRIPT_DIR, 'geopolitics.json')
+GEO_PATH  = os.path.join(SCRIPT_DIR, 'geopolitics.json')
+DOCS_DIR  = os.path.join(SCRIPT_DIR, 'docs')
+DOCS_HTML = os.path.join(DOCS_DIR,   'index.html')
+
+def _push_docs_html(geo_bullets=None):
+    """生成靜態 HTML → docs/index.html → git push → GitHub Pages 即時更新"""
+    try:
+        import sys, pytz, datetime as _dt
+        from jinja2 import Environment, FileSystemLoader
+        sys.path.insert(0, SCRIPT_DIR)
+        from data_fetcher import fetch_all
+
+        data = fetch_all()
+
+        # 注入地緣政治 bullets
+        if geo_bullets:
+            data.setdefault('geopolitics', {})['bullets'] = geo_bullets
+
+        taipei_tz = pytz.timezone('Asia/Taipei')
+        now = _dt.datetime.now(taipei_tz)
+        weekday_map = {0:'一',1:'二',2:'三',3:'四',4:'五',5:'六',6:'日'}
+
+        env      = Environment(loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')))
+        template = env.get_template('dashboard.html')
+        html     = template.render(
+            data=data,
+            today=now.strftime('%Y/%m/%d'),
+            weekday=weekday_map[now.weekday()],
+            is_weekend=now.weekday() >= 5,
+        )
+
+        os.makedirs(DOCS_DIR, exist_ok=True)
+        with open(DOCS_HTML, 'w', encoding='utf-8') as f:
+            f.write(html)
+
+        date_str = now_tw().strftime('%Y%m%d')
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'add', 'docs/'], check=True)
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'commit', '-m',
+                        f'[auto] 更新儀表板 {date_str}'], check=True)
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'push'], check=True)
+        print(f'✅ GitHub Pages 已更新：{DASHBOARD_URL}')
+    except subprocess.CalledProcessError as e:
+        print(f'⚠️  docs HTML git push 失敗（可能無異動）：{e}')
+    except Exception as e:
+        print(f'⚠️  docs HTML 生成失敗：{e}')
 
 def _push_geopolitics_json():
     """把 geopolitics.json git commit + push 供 Render 即時更新國際局勢區塊"""
@@ -556,7 +613,14 @@ def _push_geopolitics_json():
         print(f'⚠️  geopolitics.json 推送異常：{e}')
 
 if __name__ == '__main__':
-    # 推送 geopolitics.json → Render 即時更新國際局勢區塊
+    # 先同步遠端，避免後續 push 被 reject
+    try:
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'pull', '--rebase', '--autostash'],
+                       check=True, capture_output=True)
+    except Exception:
+        pass  # pull 失敗不阻斷主流程
+
+    # 推送 geopolitics.json → GitHub Pages 即時更新國際局勢區塊
     _push_geopolitics_json()
 
     # 讀取 Claude 預先寫入的 geopolitics.json（由 Claude WebSearch 層產生）
@@ -573,3 +637,6 @@ if __name__ == '__main__':
     ok, msg = run(geopolitics_bullets=geo_bullets)
     print('✅ 傳送成功' if ok else '❌ 傳送失敗')
     print(msg)
+
+    # 生成靜態 HTML → 推送至 GitHub Pages
+    _push_docs_html(geo_bullets=geo_bullets)
