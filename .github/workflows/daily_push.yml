@@ -2,17 +2,23 @@ name: Daily Macro Dashboard Push
 
 on:
   schedule:
-    # 每日台北時間 10:00 = UTC 02:00
-    - cron: '0 2 * * *'
+    # 台北時間 08:00 = UTC 00:00
+    - cron: '0 0 * * *'
+    # 台北時間 20:00 = UTC 12:00
+    - cron: '0 12 * * *'
   workflow_dispatch:
-    # 手動觸發（GitHub Actions 頁面按 Run workflow）
+
+permissions:
+  contents: write
 
 jobs:
-  push-telegram:
+  push-dashboard:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -22,5 +28,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Push to Telegram
-        run: python -c "from notifier import push_daily; result = push_daily(); exit(0 if result else 1)"
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run dashboard runner
+        run: python macro_dashboard_runner.py
