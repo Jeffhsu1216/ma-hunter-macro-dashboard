@@ -882,24 +882,38 @@ def fetch_geopolitics() -> dict:
 
 
 def fetch_cb_rates() -> dict:
-    """央行利率：Fed 從 FRED 動態抓 + 會議日期自動算"""
+    """央行利率：Fed 從 FRED 動態抓（失敗 fallback 4.25–4.50）+ ECB/BOJ hardcoded + CBC 會議日期自動算"""
     result = {}
 
-    # ── Fed ──
+    # ── Fed（FRED 動態抓，失敗 fallback hardcoded）──
+    FED_FALLBACK = "3.50–3.75"  # 最後已知值，FRED 失敗時使用
     try:
         lower_rows = _get_fred_csv("DFEDTARL", 3)
         upper_rows = _get_fred_csv("DFEDTARU", 3)
         if lower_rows and upper_rows:
             fed_rate = f"{lower_rows[-1][1]:.2f}–{upper_rows[-1][1]:.2f}"
         else:
-            fed_rate = "N/A"
+            fed_rate = FED_FALLBACK
+            logger.warning("FRED Fed rate: empty rows, using fallback")
     except Exception as e:
-        logger.warning(f"FRED Fed rate failed: {e}")
-        fed_rate = "N/A"
+        logger.warning(f"FRED Fed rate failed: {e}, using fallback")
+        fed_rate = FED_FALLBACK
 
     result["Fed"] = {
         "rate": fed_rate,
         "next": _next_meeting(FOMC_DATES_2026),
+    }
+
+    # ── ECB（手動更新，上次決策 2025-03）──
+    result["ECB"] = {
+        "rate": "2.50",
+        "next": "手動更新",
+    }
+
+    # ── BOJ（手動更新，上次決策 2025-01）──
+    result["BOJ"] = {
+        "rate": "0.50",
+        "next": "手動更新",
     }
 
     # ── CBC ──

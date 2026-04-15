@@ -48,7 +48,31 @@ TICKERS = {
     'comm':  ['GC=F','SI=F','CL=F','BZ=F','NG=F','HG=F'],
 }
 
-crypto_res = {}; fg_res = {}; inst_res = {}; cal_res = {}
+crypto_res = {}; fg_res = {}; inst_res = {}; cal_res = {}; cb_res = {}
+
+def fetch_fed_rate():
+    """從 FRED 動態抓 Fed 利率區間，失敗 fallback hardcoded"""
+    FED_FALLBACK = "3.50–3.75"  # 最後已知值，FRED 失敗時使用
+    try:
+        def _fred_csv(series_id):
+            url = f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}'
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                lines = r.read().decode().strip().split('\n')[1:]
+            rows = []
+            for line in lines[-3:]:
+                parts = line.split(',')
+                if len(parts) == 2 and parts[1] != '.':
+                    rows.append(float(parts[1]))
+            return rows
+        lower = _fred_csv('DFEDTARL')
+        upper = _fred_csv('DFEDTARU')
+        if lower and upper:
+            cb_res['fed'] = f'{lower[-1]:.2f}–{upper[-1]:.2f}'
+        else:
+            cb_res['fed'] = FED_FALLBACK
+    except:
+        cb_res['fed'] = FED_FALLBACK
 
 def fetch_crypto():
     """Binance 24hr ticker — 免費、無需 Key、穩定"""
@@ -235,7 +259,7 @@ def run(geopolitics_bullets=None):
     for g in TICKERS.values():
         th = threading.Thread(target=fetch_group, args=(g, 0.15))
         th.start(); threads.append(th); time.sleep(0.02)
-    for fn in [fetch_crypto, fetch_fg, fetch_inst, fetch_cal]:
+    for fn in [fetch_crypto, fetch_fg, fetch_inst, fetch_cal, fetch_fed_rate]:
         th = threading.Thread(target=fn); th.start(); threads.append(th)
     for th in threads: th.join(timeout=30)
 
@@ -341,7 +365,8 @@ def run(geopolitics_bullets=None):
         A(f'  Fear &amp; Greed  <code>{sc}</code>（{fg_lbl(sc)}）  前值 {pv}')
 
     A('')
-    A('🏦 <b>央行利率</b>  Fed 4.25–4.50% ｜ ECB 2.50% ｜ BOJ 0.50% ｜ CBC 2.00%')
+    fed = cb_res.get('fed', '3.50–3.75')
+    A(f'🏦 <b>央行利率</b>  Fed {fed}% ｜ ECB 2.50% ｜ BOJ 0.50% ｜ CBC 2.00%')
 
     A('')
     A(f'🇹🇼 <b>三大法人</b>（{inst_res.get("date","N/A")}）')
