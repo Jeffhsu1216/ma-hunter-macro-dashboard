@@ -98,6 +98,20 @@ FOMC_DATES_2026 = [
     date(2026, 11, 5), date(2026, 12, 17),
 ]
 
+# 2026 全年 ECB 理事會決策會議日程（結束日）
+ECB_DATES_2026 = [
+    date(2026, 1, 30), date(2026, 3,  6), date(2026, 4, 30),
+    date(2026, 6, 11), date(2026, 7, 23), date(2026, 9, 10),
+    date(2026, 10, 22), date(2026, 12, 3),
+]
+
+# 2026 全年 BOJ 金融政策決定會合日程（結束日）
+BOJ_DATES_2026 = [
+    date(2026, 1, 23), date(2026, 3, 19), date(2026, 4, 28),
+    date(2026, 6, 16), date(2026, 7, 31), date(2026, 9, 18),
+    date(2026, 10, 30), date(2026, 12, 18),
+]
+
 # 2026 全年 CBC（台灣央行）理監事會日程
 CBC_DATES_2026 = [
     date(2026, 3, 19), date(2026, 6, 18),
@@ -914,7 +928,7 @@ def fetch_cb_rates() -> dict:
         ecb_rate = ECB_FALLBACK
     result["ECB"] = {
         "rate": ecb_rate,
-        "next": "手動更新",
+        "next": _next_meeting(ECB_DATES_2026),
     }
 
     # ── BOJ（FRED IRSTJPN156N 動態抓，失敗 fallback）──
@@ -927,7 +941,7 @@ def fetch_cb_rates() -> dict:
         boj_rate = BOJ_FALLBACK
     result["BOJ"] = {
         "rate": boj_rate,
-        "next": "手動更新",
+        "next": _next_meeting(BOJ_DATES_2026),
     }
 
     # ── CBC（台灣央行重貼現率 — CBC 官網自動更新）──
