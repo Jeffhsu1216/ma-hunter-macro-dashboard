@@ -925,6 +925,66 @@ def fetch_cb_rates() -> dict:
     return result
 
 
+def fetch_spx_technical() -> dict:
+    """美股技術面：S&P 500 + Nasdaq  MA50/MA200/RSI(14)"""
+    def _rsi(closes, period=14):
+        deltas = [closes[i] - closes[i-1] for i in range(1, len(closes))]
+        gains  = [max(d, 0)      for d in deltas[-period:]]
+        losses = [abs(min(d, 0)) for d in deltas[-period:]]
+        avg_g = sum(gains)  / period
+        avg_l = sum(losses) / period
+        if avg_l == 0:
+            return 100.0
+        return round(100 - 100 / (1 + avg_g / avg_l), 1)
+
+    def _rsi_lbl(v):
+        if v < 30: return '超賣'
+        if v < 40: return '偏弱'
+        if v < 50: return '中性偏弱'
+        if v < 60: return '中性偏多'
+        if v < 70: return '偏多'
+        return '超買'
+
+    import urllib.request as _urlr, urllib.parse as _urlp
+
+    def _hist(symbol):
+        url = f'https://query1.finance.yahoo.com/v8/finance/chart/{_urlp.quote(symbol)}?interval=1d&range=1y'
+        req = _urlr.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with _urlr.urlopen(req, timeout=12) as r:
+            d = json.loads(r.read())
+        closes = d['chart']['result'][0]['indicators']['quote'][0]['close']
+        return [x for x in closes if x is not None]
+
+    result = {}
+    for key, sym, name in [('spx', '^GSPC', 'S&P 500'), ('ndq', '^IXIC', 'Nasdaq')]:
+        try:
+            closes = _hist(sym)
+            if len(closes) < 200:
+                result[key] = {'ok': False, 'name': name}
+                continue
+            price  = closes[-1]
+            ma50   = sum(closes[-50:])  / 50
+            ma200  = sum(closes[-200:]) / 200
+            rsi    = _rsi(closes)
+            result[key] = {
+                'ok':    True,
+                'name':  name,
+                'price': round(price, 2),
+                'ma50':  round(ma50,  2),
+                'ma200': round(ma200, 2),
+                'pct50':  round((price - ma50)  / ma50  * 100, 1),
+                'pct200': round((price - ma200) / ma200 * 100, 1),
+                'rsi':     rsi,
+                'rsi_lbl': _rsi_lbl(rsi),
+                'cross':    '黃金交叉' if ma50 > ma200 else '死亡交叉',
+                'cross_ok':  ma50 > ma200,
+            }
+        except Exception as e:
+            logger.warning(f"fetch_spx_technical {sym}: {e}")
+            result[key] = {'ok': False, 'name': name}
+    return result
+
+
 def fetch_fear_greed() -> dict:
     """Alternative.me Fear & Greed（取代 CNN，無反爬限制，Render 可用）"""
     try:
@@ -1336,9 +1396,9 @@ def fetch_all() -> dict:
 
     logger.info("Fetching fresh data...")
 
-    fx_data     = fetch_fx_data();      fx_ts       = _now_taipei()
-    yields_data = fetch_yield_curve();  yields_ts   = _now_taipei()
-    cb_data     = fetch_cb_rates();     cb_ts       = _now_taipei()
+    fx_data     = fetch_fx_data();         fx_ts    = _now_taipei()
+    tech_data   = fetch_spx_technical();  tech_ts   = _now_taipei()
+    cb_data     = fetch_cb_rates();        cb_ts    = _now_taipei()
     indices     = fetch_index_data();   indices_ts  = _now_taipei()
     fg          = fetch_fear_greed();   fg_ts       = _now_taipei()
     comm_data   = fetch_commodity_data(); comm_ts   = _now_taipei()
@@ -1356,14 +1416,6 @@ def fetch_all() -> dict:
     all_comm_sorted = sorted(all_comm, key=lambda x: x.get("change_pct") or -999, reverse=True)
     combined_commentary = _commodity_commentary(all_comm_sorted)
 
-    # 殖利率：優先用 FRED 資料日期（格式 YYYY-MM-DD → YYYY/MM/DD）
-    fred_date = yields_data.get("10Y", {}).get("date") or yields_data.get("2Y", {}).get("date")
-    if fred_date:
-        try:
-            yields_ts = datetime.strptime(fred_date, "%Y-%m-%d").strftime("%Y/%m/%d") + "（FRED）"
-        except:
-            pass
-
     # 台灣三大法人：用 TWSE 資料日期
     if tw_data and tw_data.get("date"):
         d = tw_data["date"]
@@ -1376,9 +1428,8 @@ def fetch_all() -> dict:
         "fx":            fx_data["items"],
         "fx_commentary": fx_data["commentary"],
         "fx_updated_at": fx_ts,
-        "yields":        yields_data,
-        "yields_commentary": yields_data.pop("commentary", ""),
-        "yields_updated_at": yields_ts,
+        "spx_tech":          tech_data,
+        "spx_tech_updated_at": tech_ts,
         "cb_rates":      cb_data,
         "cb_rates_updated_at": cb_ts,
         "indices":            indices,
