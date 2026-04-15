@@ -886,7 +886,7 @@ def fetch_cb_rates() -> dict:
     result = {}
 
     # ── Fed（FRED 動態抓，失敗 fallback hardcoded）──
-    FED_FALLBACK = "3.50–3.75"  # 最後已知值，FRED 失敗時使用
+    FED_FALLBACK = "4.25–4.50"  # 最後已知值，FRED 失敗時使用
     try:
         lower_rows = _get_fred_csv("DFEDTARL", 3)
         upper_rows = _get_fred_csv("DFEDTARU", 3)
@@ -905,7 +905,7 @@ def fetch_cb_rates() -> dict:
     }
 
     # ── ECB（FRED ECBDFR 動態抓，失敗 fallback）──
-    ECB_FALLBACK = "2.00"  # 2026-04 確認值（已連續降息至 2.00%）
+    ECB_FALLBACK = "2.50"  # 2026-04 確認值（FRED ECBDFR 成功時回傳 2.50）
     try:
         ecb_rows = _get_fred_csv("ECBDFR", 3)
         ecb_rate = f"{ecb_rows[-1][1]:.2f}" if ecb_rows else ECB_FALLBACK
