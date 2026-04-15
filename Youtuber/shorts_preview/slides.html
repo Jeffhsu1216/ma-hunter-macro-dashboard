@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>M&A Hunter Story</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #0d0d0d;
+  font-family: -apple-system, 'PingFang TC', 'Helvetica Neue', sans-serif;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; gap: 0; padding: 20px 0;
+}
+
+/* ── 純內容區 405×720（9:16）── */
+#slide {
+  width: 405px; height: 720px;
+  position: relative; overflow: hidden;
+  border-radius: 4px;
+}
+
+/* ───── 背景系統 ───── */
+.bg-hook   { background: radial-gradient(ellipse at 50% 35%, #0d1535 0%, #020408 100%); }
+.bg-table  { background: radial-gradient(ellipse at 50% 30%, #0a1020 0%, #010306 100%); }
+.bg-intl1  { background: radial-gradient(ellipse at 40% 30%, #1a0e2e 0%, #060008 100%); }
+.bg-intl2  { background: radial-gradient(ellipse at 50% 35%, #0e1a1a 0%, #020c10 100%); }
+.bg-intl3  { background: radial-gradient(ellipse at 50% 40%, #1a1200 0%, #080600 100%); }
+.bg-tw1    { background: radial-gradient(ellipse at 50% 35%, #001a08 0%, #000802 100%); }
+.bg-tw2    { background: radial-gradient(ellipse at 50% 30%, #001510 0%, #000605 100%); }
+.bg-tw3    { background: radial-gradient(ellipse at 50% 35%, #001a12 0%, #000a06 100%); }
+.bg-cta    { background: radial-gradient(ellipse at 50% 50%, #0f0f0f 0%, #000000 100%); }
+
+/* ───── 공통 컨테이너 ───── */
+.cnt {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 44px 30px; z-index: 5;
+}
+.cnt-top {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: flex-start;
+  padding: 40px 28px; z-index: 5;
+}
+
+/* ───── 通用文字元件 ───── */
+.week-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+  color: #C9A84C; margin-bottom: 8px; text-align: center;
+  text-transform: uppercase;
+}
+.section-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  color: rgba(201,168,76,.7); margin-bottom: 14px;
+  text-align: left;
+}
+.divider { width: 36px; height: 2px; background: #C9A84C; border-radius: 2px; margin: 14px 0; }
+.g  { color: #C9A84C; font-weight: 800; }
+.tw { color: #69DB7C; font-weight: 800; }
+.r  { color: #FF6B6B; font-weight: 700; }
+
+/* 浮水印 */
+.wm {
+  position: absolute; bottom: 16px; right: 18px;
+  font-size: 9px; font-weight: 700; color: rgba(201,168,76,.4);
+  letter-spacing: 1.5px; z-index: 10;
+}
+/* 頁碼 */
+.pg {
+  position: absolute; bottom: 16px; left: 18px;
+  font-size: 9px; font-weight: 600; color: rgba(255,255,255,.2);
+  letter-spacing: 1px; z-index: 10;
+}
+
+/* ───── P1 Hook ───── */
+.brand-logo {
+  font-size: 42px; font-weight: 900; color: #fff;
+  text-align: center; letter-spacing: -1px;
+  line-height: 1.05;
+}
+.brand-logo .amp { color: #C9A84C; }
+.brand-sub {
+  font-size: 11px; font-weight: 700; letter-spacing: 4px;
+  color: rgba(255,255,255,.4); text-align: center; margin-top: 6px;
+}
+.stat-row {
+  display: flex; gap: 12px; margin-top: 24px;
+}
+.stat-chip {
+  background: rgba(201,168,76,.12);
+  border: 1px solid rgba(201,168,76,.25);
+  border-radius: 20px; padding: 9px 14px;
+  text-align: center; flex: 1;
+}
+.stat-num { font-size: 22px; font-weight: 900; color: #C9A84C; line-height: 1; }
+.stat-lbl { font-size: 9px; color: rgba(255,255,255,.45); margin-top: 3px; letter-spacing: .5px; }
+.tagline {
+  font-size: 14px; color: rgba(255,255,255,.55);
+  text-align: center; margin-top: 22px; line-height: 1.75;
+}
+.pulse-ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(201,168,76,.08);
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+}
+
+/* ───── P2 Table ───── */
+.tbl-title {
+  font-size: 15px; font-weight: 800; color: #fff;
+  margin-bottom: 14px; text-align: left;
+}
+.tbl-section {
+  font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  color: rgba(201,168,76,.6); margin: 10px 0 6px 0;
+  text-transform: uppercase;
+}
+.tbl-section.tw-sec { color: rgba(105,219,124,.6); }
+.tbl-row {
+  display: flex; align-items: center;
+  padding: 7px 10px;
+  background: rgba(255,255,255,.055);
+  border-radius: 8px; margin-bottom: 5px;
+  border-left: 2px solid rgba(201,168,76,.3);
+}
+.tbl-row.tw-row { border-left-color: rgba(105,219,124,.4); }
+.tbl-icon { font-size: 13px; flex-shrink: 0; width: 22px; }
+.tbl-main { flex: 1; min-width: 0; }
+.tbl-name { font-size: 11.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tbl-type { font-size: 9.5px; color: rgba(255,255,255,.4); margin-top: 1px; }
+.tbl-amt  { font-size: 11px; font-weight: 800; color: #C9A84C; flex-shrink: 0; margin-left: 8px; }
+.tbl-row.tw-row .tbl-amt { color: #69DB7C; }
+
+/* ───── P2 Clean Table ───── */
+.ct-header { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 2px; }
+.ct-sub    { font-size: 9px; color: rgba(255,255,255,.28); letter-spacing: 1px; margin-bottom: 10px; }
+.ct-rule   { width: 100%; height: 1px; background: rgba(255,255,255,.12); margin: 6px 0; }
+.ct-col    { display: flex; align-items: center; padding: 0 0 5px 24px; font-size: 8px; font-weight: 700; letter-spacing: 1.2px; color: rgba(255,255,255,.22); text-transform: uppercase; }
+.ct-col-n  { flex: 1; }
+.ct-col-a  { width: 70px; text-align: right; }
+.ct-col-s  { width: 38px; text-align: right; }
+.ct-sec    { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: rgba(201,168,76,.65); margin: 7px 0 2px; }
+.ct-sec.tw { color: rgba(105,219,124,.65); }
+.ct-row    { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.065); }
+.ct-ico    { font-size: 11px; width: 20px; flex-shrink: 0; }
+.ct-n      { flex: 1; padding: 0 5px; min-width: 0; }
+.ct-nm     { font-size: 11.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ct-tp     { font-size: 9px; color: rgba(255,255,255,.3); margin-top: 1px; }
+.ct-a      { font-size: 9.5px; font-weight: 800; color: #C9A84C; width: 74px; flex-shrink: 0; text-align: right; white-space: nowrap; overflow: hidden; }
+.ct-s      { font-size: 8px; color: rgba(255,255,255,.25); width: 36px; flex-shrink: 0; text-align: right; white-space: nowrap; }
+.ct-col-a  { width: 74px; text-align: right; flex-shrink: 0; }
+.ct-col-s  { width: 36px; text-align: right; flex-shrink: 0; }
+.ct-row.tw .ct-a { color: #69DB7C; }
+
+/* ───── P9 Summary ───── */
+.bg-summary { background: radial-gradient(ellipse at 50% 30%, #100820 0%, #020108 100%); }
+.sum-hd    { font-size: 10px; font-weight: 700; letter-spacing: 2.5px; color: rgba(201,168,76,.7); margin-bottom: 12px; text-align: center; text-transform: uppercase; }
+.sum-item  { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+.sum-ico   { font-size: 20px; flex-shrink: 0; line-height: 1.3; }
+.sum-body  { flex: 1; }
+.sum-title { font-size: 13px; font-weight: 800; color: #fff; line-height: 1.2; }
+.sum-deal  { font-size: 10px; color: rgba(255,255,255,.38); margin-top: 2px; }
+.sum-amt   { font-size: 14px; font-weight: 900; color: #C9A84C; margin: 3px 0 2px; line-height: 1; }
+.sum-amt.tw-s { color: #69DB7C; font-size: 12px; letter-spacing: .3px; }
+.sum-desc  { font-size: 10.5px; color: rgba(255,255,255,.45); line-height: 1.45; }
+.sum-close { margin-top: 14px; text-align: center; font-size: 13.5px; font-weight: 700; color: rgba(255,255,255,.85); line-height: 1.85; }
+
+/* ───── P1 Editorial ───── */
+.p1-brand   { font-size: 44px; font-weight: 900; color: #fff; text-align: center; letter-spacing: -1px; line-height: 1.05; }
+.p1-brand .amp { color: #C9A84C; }
+.p1-news    { font-size: 12px; font-weight: 700; letter-spacing: 5px; color: rgba(255,255,255,.32); text-align: center; margin-top: 5px; text-transform: uppercase; }
+.p1-issue   { display: inline-block; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3); border-radius: 4px; padding: 4px 12px; font-size: 13px; font-weight: 900; color: #C9A84C; letter-spacing: 1px; }
+.p1-rule    { width: 100%; height: 1px; background: rgba(255,255,255,.12); margin: 16px 0; }
+.p1-stat    { font-size: 13.5px; color: rgba(255,255,255,.55); text-align: center; line-height: 2.1; }
+.p1-stat .hl { color: #C9A84C; font-weight: 800; }
+.p1-tag     { font-size: 12.5px; color: rgba(255,255,255,.38); text-align: center; line-height: 1.9; }
+
+/* ───── P2 HTML Table ───── */
+.cnt-tbl    { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 36px 26px; z-index: 5; }
+.deal-tbl   { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.deal-tbl thead th { font-size: 8.5px; font-weight: 700; letter-spacing: 1.2px; color: rgba(255,255,255,.22); text-transform: uppercase; padding: 5px 8px 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,.15); }
+.deal-tbl thead th.r { text-align: right; }
+.deal-tbl tbody td { padding: 9px 8px; border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: middle; }
+.td-ico  { width: 22px; font-size: 12px; padding-left: 2px !important; }
+.td-nm   { font-size: 12px; font-weight: 700; color: #fff; }
+.td-tp   { font-size: 9px; color: rgba(255,255,255,.32); margin-top: 2px; }
+.td-amt  { width: 82px; text-align: right; font-size: 10px; font-weight: 800; color: #C9A84C; white-space: nowrap; }
+.td-sts  { width: 36px; text-align: right; font-size: 8.5px; color: rgba(255,255,255,.28); white-space: nowrap; }
+.sec-hd td { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; padding: 11px 8px 3px !important; border-bottom: none !important; }
+.intl-hd td { color: rgba(201,168,76,.65); }
+.tw-hd   td { color: rgba(105,219,124,.65); }
+.tw-row  .td-amt { color: #69DB7C; }
+
+/* ───── Story Page (P3-P8) ───── */
+.story-cat {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  color: rgba(201,168,76,.7); margin-bottom: 10px;
+}
+.story-cat.tw-cat { color: rgba(105,219,124,.7); }
+.story-buyer {
+  font-size: 13px; font-weight: 600; color: rgba(255,255,255,.6);
+  margin-bottom: 4px;
+}
+.story-target {
+  font-size: 26px; font-weight: 900; color: #fff;
+  line-height: 1.15; margin-bottom: 6px;
+}
+.story-amt {
+  font-size: 38px; font-weight: 900; color: #C9A84C;
+  line-height: 1; margin-bottom: 4px;
+}
+.story-amt.tw-amt { color: #69DB7C; }
+.story-amt-sub {
+  font-size: 12px; color: rgba(255,255,255,.45);
+  margin-bottom: 16px;
+}
+.story-pts { width: 100%; }
+.story-pt {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: rgba(255,255,255,.06);
+  border-radius: 10px; padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.story-pt-ico { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.story-pt-txt { font-size: 11.5px; color: rgba(255,255,255,.82); line-height: 1.5; }
+.story-insight {
+  margin-top: 14px;
+  font-size: 14px; font-weight: 700; color: #fff;
+  text-align: center; line-height: 1.7;
+  padding: 12px 16px;
+  background: rgba(201,168,76,.1);
+  border-radius: 10px;
+  border: 1px solid rgba(201,168,76,.2);
+  width: 100%;
+}
+.story-insight.tw-insight {
+  background: rgba(105,219,124,.08);
+  border-color: rgba(105,219,124,.2);
+}
+
+/* multi-story (P5 生技雙彈) */
+.dual-card {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border-radius: 12px; padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.dual-tag { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: #C9A84C; margin-bottom: 5px; }
+.dual-title { font-size: 15px; font-weight: 800; color: #fff; }
+.dual-amt { font-size: 20px; font-weight: 900; color: #C9A84C; margin: 2px 0 5px 0; }
+.dual-desc { font-size: 11px; color: rgba(255,255,255,.5); line-height: 1.5; }
+
+/* ───── P9 CTA ───── */
+.cta-logo { font-size: 50px; font-weight: 900; color: #fff; text-align: center; line-height: 1.05; }
+.cta-logo .amp { color: #C9A84C; }
+.cta-desc { font-size: 13px; color: rgba(255,255,255,.5); text-align: center; margin-top: 12px; line-height: 1.8; }
+.cta-btn {
+  margin-top: 28px;
+  background: #C9A84C; color: #000;
+  border-radius: 30px; padding: 14px 40px;
+  font-size: 15px; font-weight: 900; letter-spacing: .5px;
+  display: inline-block; text-align: center;
+}
+.cta-handles {
+  margin-top: 18px; display: flex; gap: 16px;
+}
+.cta-h {
+  font-size: 11px; color: rgba(255,255,255,.3);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px; padding: 6px 14px;
+}
+.cta-insight {
+  margin-top: 20px;
+  font-size: 13px; color: rgba(255,255,255,.6);
+  text-align: center; line-height: 1.8;
+  font-style: italic;
+}
+
+/* ───── 導航（不進截圖）───── */
+.nav { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+.nb {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+  color: #fff; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.nb:disabled { opacity: .3; cursor: default; }
+.nlbl { font-size: 12px; color: rgba(255,255,255,.4); min-width: 60px; text-align: center; }
+.hint { margin-top: 6px; font-size: 10px; color: rgba(255,255,255,.2); text-align: center; }
+
+.export-bar { display: flex; gap: 10px; margin-top: 12px; }
+.eb {
+  padding: 10px 22px; border-radius: 22px;
+  font-size: 13px; font-weight: 700; cursor: pointer; border: none;
+}
+.eb-one { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); }
+.eb-all { background: #C9A84C; color: #000; }
+.eb:disabled { opacity: .4; cursor: default; }
+.pmsg { margin-top: 6px; font-size: 11px; color: #C9A84C; text-align: center; min-height: 16px; }
+</style>
+</head>
+<body>
+
+<div id="slide"></div>
+
+<div class="nav">
+  <button class="nb" id="prev" onclick="go(-1)">‹</button>
+  <span class="nlbl" id="lbl">1 / 9</span>
+  <button class="nb" id="next" onclick="go(1)">›</button>
+</div>
+<div class="hint">← → 切換頁面</div>
+<div class="export-bar">
+  <button class="eb eb-one" onclick="exportOne()">📥 下載此頁</button>
+  <button class="eb eb-all" id="btn-all" onclick="exportAll()">⬇️ 下載全部 10 張</button>
+</div>
+<div class="pmsg" id="pmsg"></div>
+
+<script>
+const N = 10;
+let cur = 0;
+
+// ─── 每週更換這裡 ───────────────────────────────────────────────
+const WEEK = '04/07 – 04/12';
+const WEEK_NUM = '1';
+const TOTAL_DEALS = 7;
+const INDUSTRIES = 4;
+const TOP_DEAL = 'US$640億美元';
+// ─────────────────────────────────────────────────────────────────
+
+const SCENES = [
+
+  // ── P1：Editorial Brand Hook ──
+  {
+    bg: 'bg-hook',
+    content: `
+      <div class="pulse-ring" style="width:280px;height:280px;"></div>
+      <div class="pulse-ring" style="width:480px;height:480px;border-color:rgba(201,168,76,.04);"></div>
+      <div class="cnt">
+        <div style="font-size:9px;font-weight:700;letter-spacing:3px;color:rgba(201,168,76,.45);margin-bottom:14px;text-align:center;">📡 M&amp;A HUNTER</div>
+        <div class="p1-brand">M&amp;<span class="amp">A</span><br>Hunter</div>
+        <div class="p1-news">Weekly News</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:16px;justify-content:center;">
+          <div class="p1-issue"># ${WEEK_NUM}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.38);letter-spacing:.5px;">${WEEK}</div>
+        </div>
+        <div class="p1-rule"></div>
+        <div class="p1-stat">
+          ${TOTAL_DEALS} 筆交易　·　${INDUSTRIES} 大產業<br>
+          最大單筆　<span class="hl">${TOP_DEAL}</span>
+        </div>
+        <div class="p1-rule"></div>
+        <div class="p1-tag">
+          追蹤全球資本最重要的移動<br>每週日更新，不錯過任何大交易
+        </div>
+      </div>
+      <div class="wm">M&A HUNTER</div>
+      <div class="pg">01 / 10</div>`
+  },
+
+  // ── P2：本週彙總表（HTML Table）──
+  {
+    bg: 'bg-table',
+    content: `
+      <div class="cnt-tbl">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(201,168,76,.65);margin-bottom:8px;">📊 本週交易總覽 · ${WEEK}</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:2px;">7 筆交易，橫跨 4 大產業</div>
+        <div style="font-size:8.5px;color:rgba(255,255,255,.25);letter-spacing:1.5px;margin-bottom:14px;">7 DEALS · 4 SECTORS · WEEK #${WEEK_NUM}</div>
+        <div style="width:100%;height:1px;background:rgba(255,255,255,.12);margin-bottom:4px;"></div>
+        <table class="deal-tbl">
+          <thead>
+            <tr>
+              <th colspan="2">交易方</th>
+              <th class="r">金額</th>
+              <th class="r">進度</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="sec-hd intl-hd"><td colspan="4">🌐 國際</td></tr>
+            <tr>
+              <td class="td-ico">📕</td>
+              <td><div class="td-nm">Pershing × Universal Music</div><div class="td-tp">音樂版權 · 策略收購</div></td>
+              <td class="td-amt">US$640億</td>
+              <td class="td-sts">談判中</td>
+            </tr>
+            <tr>
+              <td class="td-ico">📙</td>
+              <td><div class="td-nm">TPG + Blackstone × Hologic</div><div class="td-tp">醫療科技 · PE 私有化</div></td>
+              <td class="td-amt">US$183億</td>
+              <td class="td-sts">完成✓</td>
+            </tr>
+            <tr>
+              <td class="td-ico">📒</td>
+              <td><div class="td-nm">Gilead × Tubulis</div><div class="td-tp">生技 ADC · 平台收購</div></td>
+              <td class="td-amt">US$50億</td>
+              <td class="td-sts">完成✓</td>
+            </tr>
+            <tr>
+              <td class="td-ico">📗</td>
+              <td><div class="td-nm">Neurocrine × Soleno</div><div class="td-tp">罕病藥 · 管線卡位</div></td>
+              <td class="td-amt">US$29億</td>
+              <td class="td-sts">完成✓</td>
+            </tr>
+            <tr class="sec-hd tw-hd"><td colspan="4">🇹🇼 台灣</td></tr>
+            <tr class="tw-row">
+              <td class="td-ico">📕</td>
+              <td><div class="td-nm">藥華藥 × FORUS Therapeutics</div><div class="td-tp">生技 · 北美版圖</div></td>
+              <td class="td-amt">NT$11.5億</td>
+              <td class="td-sts">完成✓</td>
+            </tr>
+            <tr class="tw-row">
+              <td class="td-ico">📙</td>
+              <td><div class="td-nm">玉山金 × 三商美邦人壽</div><div class="td-tp">壽險 · 整合案</div></td>
+              <td class="td-amt">NT$467億</td>
+              <td class="td-sts">放行✓</td>
+            </tr>
+            <tr class="tw-row">
+              <td class="td-ico">📒</td>
+              <td><div class="td-nm">台新證券 × 元富證券</div><div class="td-tp">券商 · 版圖重組</div></td>
+              <td class="td-amt">換股合併</td>
+              <td class="td-sts">完成✓</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="wm">M&A HUNTER</div>
+      <div class="pg">02 / 10</div>`
+  },
+
+  // ── P3：國際 #1｜Pershing × Universal Music ──
+  {
+    bg: 'bg-intl1',
+    content: `
+      <div class="cnt-top" style="justify-content:center;padding:52px 28px;">
+        <div class="story-cat">📕 全球最大 · 音樂版權</div>
+        <div class="story-buyer">Pershing Square × Universal Music Group</div>
+        <div class="story-target">音樂版權帝國</div>
+        <div class="story-amt">US$640億</div>
+        <div class="story-amt-sub">2026 年全球最大宗併購案</div>
+        <div class="story-pts">
+          <div class="story-pt">
+            <div class="story-pt-ico">🎯</div>
+            <div class="story-pt-txt">Bill Ackman 旗下 Pershing Square 管理逾 <strong style="color:#C9A84C;">US$160億</strong>，出手史上最大媒體版權交易</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">🌐</div>
+            <div class="story-pt-txt">Universal Music Group 掌控全球 <strong style="color:#C9A84C;">33%</strong> 音樂版權，Taylor Swift、Drake、The Beatles 均在旗下</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">🤖</div>
+            <div class="story-pt-txt">AI 訓練資料與串流每次播放均需付版稅，版權資產估值邏輯在 AI 時代全面改寫</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">📈</div>
+            <div class="story-pt-txt">計畫讓 UMG 從阿姆斯特丹 <strong style="color:#C9A84C;">遷至紐交所掛牌</strong>，打開美國機構投資人市場，估值空間更大</div>
+          </div>
+        </div>
+      </div>
+      <div class="wm">M&A HUNTER</div>
+      <div class="pg">03 / 10</div>`
+  },
+
+  // ── P4：國際 #2｜TPG + Blackstone × Hologic ──
+  {
+    bg: 'bg-intl2',
+    content: `
+      <div class="cnt-top" style="justify-content:center;padding:52px 28px;">
+        <div class="story-cat">📙 PE 聯手 · 醫療私有化</div>
+        <div class="story-buyer">TPG + Blackstone × Hologic</div>
+        <div class="story-target">醫療科技 LBO</div>
+        <div class="story-amt">US$183億</div>
+        <div class="story-amt-sub">兩大 PE 史無前例聯手出手</div>
+        <div class="story-pts">
+          <div class="story-pt">
+            <div class="story-pt-ico">🏦</div>
+            <div class="story-pt-txt">Blackstone AUM 逾 <strong style="color:#C9A84C;">US$1兆</strong>，TPG AUM <strong style="color:#C9A84C;">US$2,250億</strong>，雙強聯手分攤收購風險</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">🔬</div>
+            <div class="story-pt-txt">Hologic 女性健康醫療設備龍頭，年營收約 <strong style="color:#C9A84C;">US$40億</strong>，EBITDA 利潤率高達 34%</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">📊</div>
+            <div class="story-pt-txt">私有化後精簡業務、優化資本結構，目標 <strong style="color:#C9A84C;">IRR 20%以上</strong>，符合 PE 標準回報門檻</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">🚀</div>
+            <div class="story-pt-txt">整頓完成後再次上市或出售，PE 標準三階段退場路徑：買入→重組→再上市</div>
+          </div>
+        </div>
+      </div>
+      <div class="wm">M&A HUNTER</div>
+      <div class="pg">04 / 10</div>`
+  },
+
+  // ── P5：國際 #3｜生技雙彈 ──
+  {
+    bg: 'bg-intl3',
+    content: `
+      <div class="cnt-top" style="justify-content:center;padding:52px 28px;">
+        <div class="story-cat">📒📗 生技雙彈 · 管線卡位</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:14px;line-height:1.5;">大藥廠搶管線，這週沒有暫停鍵</div>
+        <div class="dual-card">
+          <div class="dual-tag">📒 次世代 ADC 平台</div>
+          <div class="dual-title">Gilead × Tubulis</div>
+          <div class="dual-amt">US$50億</div>
+          <div class="dual-desc">Gilead 旗艦 ADC 藥 Trodelvy 年銷 US$7億，收購 Tubulis 下一代連接技術，讓毒殺效果更精準、副作用更低，強化腫瘤管線護城河</div>
+        </div>
+        <div class="dual-card">
+          <div class="dual-tag">📗 小胖威利症 · 罕病卡位</div>
+          <div class="dual-title">Neurocrine × Soleno</div>
+          <div class="dual-amt">US$29億</div>
+          <div class="dual-desc">Soleno 旗艦藥 DCCR 已完成 Phase 3 臨床試驗，治療罕病小胖威利症（PWS），美國每位患者年費逾 <strong style="color:#C9A84C;">US$10萬</strong>，超高毛利罕病市場</div>
+        </div>
+      </div>
+      <div class="wm">M&A HUNTER</div>
+      <div class="pg">05 / 10</div>`
+  },
+
+  // ── P6：台灣 #1｜藥華藥 × FORUS ──
+  {
+    bg: 'bg-tw1',
+    content: `
+      <div class="cnt-top" style="justify-content:center;padding:52px 28px;">
+        <div class="story-cat tw-cat">🇹🇼 台灣 · 生技北美布局</div>
+        <div class="story-buyer">藥華藥 × FORUS Therapeutics</div>
+        <div class="story-target">補齊北美版圖</div>
+        <div class="story-amt tw-amt">NT$11.5億</div>
+        <div class="story-amt-sub">新台幣 · 強化加拿大直銷通路</div>
+        <div class="story-pts">
+          <div class="story-pt">
+            <div class="story-pt-ico">💊</div>
+            <div class="story-pt-txt">旗艦藥 P1101 已獲 <strong style="color:#69DB7C;">FDA 與 EMA 雙核准</strong>，治療真性紅血球增多症（PV），罕病市場高定價</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">🇨🇦</div>
+            <div class="story-pt-txt">FORUS 在加拿大建有完整 <strong style="color:#69DB7C;">12 省通路網絡</strong>，直接接觸血液科醫師，省去代理商層層抽成</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">📈</div>
+            <div class="story-pt-txt">自有通路取代代理商，毛利率可提升 <strong style="color:#69DB7C;">25–35 個百分點</strong>，3–5 年回本</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">🌍</div>
+            <div class="story-pt-txt">藥華藥已進歐洲 12 國，北美是最大收入缺口，加拿大拿下後直指美國市場</div>
+          </div>
+        </div>
+      </div>
+      <div class="wm">M&A HUNTER</div>
+      <div class="pg">06 / 10</div>`
+  },
+
+  // ── P7：台灣 #2｜玉山金 × 三商美邦 ──
+  {
+    bg: 'bg-tw2',
+    content: `
+      <div class="cnt-top" style="justify-content:center;padding:52px 28px;">
+        <div class="story-cat tw-cat">🇹🇼 台灣 · 壽險整合</div>
+        <div class="story-buyer">玉山金控 × 三商美邦人壽</div>
+        <div class="story-target">壽險整合放行</div>
+        <div style="font-size:32px;font-weight:900;color:#69DB7C;line-height:1;margin-bottom:4px;">公平會放行</div>
+        <div class="story-amt-sub" style="margin-bottom:14px;">金融監理主要障礙排除</div>
+        <div class="story-pts">
+          <div class="story-pt">
+            <div class="story-pt-ico">🏦</div>
+            <div class="story-pt-txt">玉山金為台灣第六大金控，旗下玉山銀行存款逾 <strong style="color:#69DB7C;">NT$3兆</strong>，壽險規模擴張需求迫切</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">👥</div>
+            <div class="story-pt-txt">取得三商美邦逾 <strong style="color:#69DB7C;">200 萬保戶</strong>，壽險資產規模一舉躍升，銀保協同效應顯著</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">📋</div>
+            <div class="story-pt-txt">公平會已正式放行，金管會審查為最後關卡，預計 2026 年底前完成整合</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">🌊</div>
+            <div class="story-pt-txt">IFRS 17 新制上路，中小型壽險資本壓力大，台灣壽險整合浪潮持續加速</div>
+          </div>
+        </div>
+      </div>
+      <div class="wm">M&A HUNTER</div>
+      <div class="pg">07 / 10</div>`
+  },
+
+  // ── P8：台灣 #3｜台新證 × 元富證 ──
+  {
+    bg: 'bg-tw3',
+    content: `
+      <div class="cnt-top" style="justify-content:center;padding:52px 28px;">
+        <div class="story-cat tw-cat">🇹🇼 台灣 · 券商版圖重組</div>
+        <div class="story-buyer">台新證券 × 元富證券</div>
+        <div class="story-target">躍升第 4 大</div>
+        <div style="font-size:30px;font-weight:900;color:#69DB7C;line-height:1;margin-bottom:4px;">合併後</div>
+        <div class="story-amt-sub" style="margin-bottom:14px;">台灣券商排名大洗牌</div>
+        <div class="story-pts">
+          <div class="story-pt">
+            <div class="story-pt-ico">📈</div>
+            <div class="story-pt-txt">兩家互補合併，市占急升，<strong style="color:#69DB7C;">躍升全台第 4 大券商</strong>，僅次於元大、富邦、凱基</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">💰</div>
+            <div class="story-pt-txt">整合重複據點與後台系統，預估每年省下 <strong style="color:#69DB7C;">NT$20億以上</strong> 成本，規模效益立即顯現</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">💻</div>
+            <div class="story-pt-txt">共用交易系統與客戶帳戶，整合超過 <strong style="color:#69DB7C;">60 家</strong> 分支機構，客戶資產無縫轉移</div>
+          </div>
+          <div class="story-pt">
+            <div class="story-pt-ico">🔮</div>
+            <div class="story-pt-txt">台灣現有 60 家以上券商仍在整合淘汰，下一波出手的是誰？市場持續觀望</div>
+          </div>
+        </div>
+      </div>
+      <div class="wm">M&A HUNTER</div>
+      <div class="pg">08 / 10</div>`
+  },
+
+  // ── P9：本週重點回顧 ──
+  {
+    bg: 'bg-summary',
+    content: `
+      <div class="cnt" style="padding:52px 28px;">
+        <div class="sum-hd">📌 本週重點回顧</div>
+
+        <div class="sum-item">
+          <div class="sum-ico">🎵</div>
+          <div class="sum-body">
+            <div class="sum-title">版權資產重新定價</div>
+            <div class="sum-deal">Pershing Square × Universal Music Group</div>
+            <div class="sum-amt">US$640億</div>
+            <div class="sum-desc">AI 時代版稅現金流最穩定，UMG 掌控全球 33% 版權。計劃遷至紐交所掛牌，打開美國估值空間</div>
+          </div>
+        </div>
+
+        <div class="sum-item">
+          <div class="sum-ico">🏥</div>
+          <div class="sum-body">
+            <div class="sum-title">PE 大型 LBO 強勢歸來</div>
+            <div class="sum-deal">TPG + Blackstone × Hologic</div>
+            <div class="sum-amt">US$183億</div>
+            <div class="sum-desc">兩大 PE 聯手分攤風險，Hologic EBITDA 34%、現金流強勁，私有化→整頓→再上市標準路徑</div>
+          </div>
+        </div>
+
+        <div class="sum-item">
+          <div class="sum-ico">💊</div>
+          <div class="sum-body">
+            <div class="sum-title">生技管線大戰持續</div>
+            <div class="sum-deal">Gilead × Tubulis ＋ Neurocrine × Soleno</div>
+            <div class="sum-amt">US$50億 ＋ US$29億</div>
+            <div class="sum-desc">ADC 次世代技術 + 罕病 PWS 藥雙線出擊，大藥廠不看景氣，只看管線是否夠強</div>
+          </div>
+        </div>
+
+        <div class="sum-item">
+          <div class="sum-ico">🇹🇼</div>
+          <div class="sum-body">
+            <div class="sum-title">台灣金融板塊重組</div>
+            <div class="sum-deal">玉山金×三商美邦 ＋ 台新×元富 ＋ 藥華藥×FORUS</div>
+            <div class="sum-amt tw-s">壽險＋券商＋生技三箭齊發</div>
+            <div class="sum-desc">公平會放行、第 4 大券商誕生、北美通路補齊，台灣資本版圖全面重寫</div>
+          </div>
+        </div>
+
+        <div class="sum-close">
+          最聰明的資本，永遠提前佈局<br>
+          <span style="color:#C9A84C;font-weight:900;">下一週，我們繼續追</span>
+        </div>
+      </div>
+      <div class="wm">M&A HUNTER</div>
+      <div class="pg">09 / 10</div>`
+  },
+
+  // ── P10：CTA ──
+  {
+    bg: 'bg-cta',
+    content: `
+      <div class="pulse-ring" style="width:250px;height:250px;"></div>
+      <div class="pulse-ring" style="width:440px;height:440px;border-color:rgba(201,168,76,.05);"></div>
+      <div class="cnt" style="z-index:6;">
+        <div class="cta-logo">M&amp;<span class="amp">A</span><br>Hunter</div>
+        <div class="cta-insight">
+          這週資本押注<span class="g">音樂、醫療、生技</span><br>
+          台灣金融版圖也在悄悄重組<br>
+          <span style="color:rgba(255,255,255,.3);font-size:12px;">你跟上了嗎？</span>
+        </div>
+        <div class="cta-btn">👆 追蹤 M&A Hunter</div>
+        <div class="cta-handles">
+          <div class="cta-h">📷 Instagram</div>
+          <div class="cta-h">▶️ YouTube</div>
+        </div>
+        <div style="margin-top:16px;font-size:10px;color:rgba(255,255,255,.2);letter-spacing:1px;">每週日更新 · 不錯過任何大交易</div>
+      </div>
+      <div class="pg">10 / 10</div>`
+  }
+
+];
+
+function render() {
+  const s = SCENES[cur];
+  const el = document.getElementById('slide');
+  el.className = s.bg;
+  el.innerHTML = s.content;
+  document.getElementById('lbl').textContent = `${cur + 1} / ${N}`;
+  document.getElementById('prev').disabled = cur === 0;
+  document.getElementById('next').disabled = cur === N - 1;
+}
+
+function go(d) {
+  cur = Math.max(0, Math.min(N - 1, cur + d));
+  render();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') go(1);
+  if (e.key === 'ArrowLeft')  go(-1);
+});
+
+// ── Export ──
+const SCALE = 1080 / 405;
+
+async function captureSlide(i) {
+  cur = i; render();
+  await new Promise(r => setTimeout(r, 220));
+  return html2canvas(document.getElementById('slide'), {
+    scale: SCALE,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: null,
+    logging: false,
+    width: 405,
+    height: 720
+  });
+}
+
+async function exportOne() {
+  const c = await captureSlide(cur);
+  dl(c, `MA_Hunter_S${String(cur+1).padStart(2,'0')}.png`);
+}
+
+async function exportAll() {
+  const btn = document.getElementById('btn-all');
+  const msg = document.getElementById('pmsg');
+  btn.disabled = true;
+  const orig = cur;
+  for (let i = 0; i < N; i++) {
+    msg.textContent = `產生中 ${i+1} / ${N}…`;
+    const c = await captureSlide(i);
+    dl(c, `${String(i+1).padStart(2,'0')}_MA_Hunter_Story.png`);
+    await new Promise(r => setTimeout(r, 350));
+  }
+  cur = orig; render();
+  msg.textContent = `✅ 全部 ${N} 張完成`;
+  btn.disabled = false;
+  setTimeout(() => msg.textContent = '', 5000);
+}
+
+function dl(canvas, name) {
+  const a = document.createElement('a');
+  a.download = name;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+render();
+</script>
+</body>
+</html>

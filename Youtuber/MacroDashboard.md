@@ -295,4 +295,4 @@
 
 ---
 
-*最後更新：2026-04-14（v6 已優化 — 匯率統一 XXX/USD 格式並按漲跌幅排序、本週數據僅抓 USD+TWD、國際局勢必含台灣板塊、geopolitics.json 執行時自動 git push 至 Render）*
+*最後更新：2026-04-14（v7 已優化 — 匯率統一 XXX/USD 格式並按漲跌幅排序、本週數據僅抓 USD+TWD、事件名稱英中對照（English（中文））、大數值自動換算 K/M/B/T、國際局勢必含台灣板塊、geopolitics.json 執行時自動 git push 至 Render）*

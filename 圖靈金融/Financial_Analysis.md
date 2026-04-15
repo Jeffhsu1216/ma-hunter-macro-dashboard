@@ -94,35 +94,31 @@
 
 ---
 
-## 六、數據來源 API（five91.onrender.com）
+## 六、數據來源 API
 
-> 使用者自建財報網站，涵蓋台灣所有上市櫃公司，每日更新。
+---
 
-### 核心原則：先鎖定股票代號，再查詢
+### 6.1 五九一財報 API（five91.onrender.com）— 主要財務數據
 
-**絕對不要**先載入全部公司再篩選（耗費大量 Token）。
-正確做法：取得股票代號 → 直接用代號查詢對應端點。
+> 涵蓋台灣所有上市櫃公司，每日更新。股價、財務指標、估值倍數全部串接此處。
 
-### 端點列表
+**核心原則：先鎖定股票代號，再查詢。絕對不要先載入全部公司再篩選。**
 
-#### 個股完整財務資料（主要使用）
+#### ✅ 確認可用端點
 
-| 用途 | URL |
-|------|-----|
-| 個股概覽（EV、EV/EBITDA、股價、市值） | `GET https://five91.onrender.com/stock/{代號}` |
-| 損益表（6季） | `GET https://five91.onrender.com/stock/{代號}?tab=income_statement` |
-| 資產負債表（6季） | `GET https://five91.onrender.com/stock/{代號}?tab=balance_sheet` |
-| 現金流量表（含D&A，6季） | `GET https://five91.onrender.com/stock/{代號}?tab=cash_flow` |
-
-#### 全市場指標（次要使用）
-
-| 方法 | 端點 | 說明 |
+| 用途 | 端點 | 說明 |
 |------|------|------|
-| GET | `/api/metrics` | 全部股票51個欄位，以股票代號為 key |
-| GET | `/api/valuation/categories` | 27個產業分類清單 |
-| POST | `/api/valuation/calculate` | 估值計算（傳入 JSON body） |
+| **單股所有財務指標**（主要使用） | `GET https://five91.onrender.com/api/metrics?stock_id={代號}` | 回傳 51 欄位完整 JSON |
+| 全市場所有股票指標 | `GET https://five91.onrender.com/api/metrics` | 勿輕易呼叫（高 token） |
+| 產業分類清單 | `GET https://five91.onrender.com/api/valuation/categories` | 27 個產業 |
+| 估值計算 | `POST https://five91.onrender.com/api/valuation/calculate` | 傳入 JSON body |
+| 個股概覽頁 | `GET https://five91.onrender.com/stock/{代號}` | 含 EV、EV/EBITDA |
+| 損益表（6季） | `GET https://five91.onrender.com/stock/{代號}?tab=income_statement` | 季度損益明細 |
+| 資產負債表（6季） | `GET https://five91.onrender.com/stock/{代號}?tab=balance_sheet` | 季度資產負債 |
+| 現金流量表（6季） | `GET https://five91.onrender.com/stock/{代號}?tab=cash_flow` | 含 D&A |
 
-**`/api/metrics` 51個欄位：**
+#### `/api/metrics?stock_id={代號}` 回傳欄位（51欄）
+
 ```
 id, name, category, quarter,
 revenue, gross_margin, operating_margin, net_margin,
@@ -136,18 +132,76 @@ price, change, market_cap, ev, ev_ebitda,
 ps, pb, p_ebitda, cash_ratio, ebitda_yield, dividend_yield, pe
 ```
 
-### 查詢策略（節省 Token）
+#### 欄位與 Company_Tracking.md 欄位對應
+
+| Excel 欄 | 欄位名稱 | five91 欄位 |
+|----------|---------|------------|
+| D | 2025 全年營收 | `revenue_ttm`（TTM）或取全年加總 |
+| E | 2025 全年毛利率 | `gross_margin_12q` |
+| F | 2025 全年營益率 | `operating_margin_12q` |
+| G | 2025 全年淨利率 | `net_margin_12q` |
+| H | 2025 全年稅後淨利 | `net_income_ttm` |
+| I | 最新資本額 | `share_capital` |
+| J | 2025 全年 EPS | `eps`（最新季度；TTM需累加） |
+| L | 產業分類 | `category` |
+| — | 最新股價 | `price` |
+| — | 市值 | `market_cap` |
+| — | EV/EBITDA | `ev_ebitda` |
+
+#### 查詢策略（節省 Token）
 
 ```
-使用者提供股票代號（如 6257）
+使用者提供股票代號（如 4906）
     ↓
-需要 EV/估值/股價  → GET /api/metrics → filter by id（~2,000 tokens）
-需要季度損益      → GET /stock/6257?tab=income_statement
-需要季度 D&A      → GET /stock/6257?tab=cash_flow
-需要資產負債      → GET /stock/6257?tab=balance_sheet
+需要股價/估值/利潤率 → GET /api/metrics?stock_id=4906   (~500 tokens)
+需要季度損益明細     → GET /stock/4906?tab=income_statement
+需要資產負債詳情     → GET /stock/4906?tab=balance_sheet
+需要 D&A / FCF      → GET /stock/4906?tab=cash_flow
 ```
 
-> 每次查詢約 2,000–3,000 tokens（vs 全量掃描 100,000+ tokens，效率提升 30-50x）
+---
+
+### 6.2 公開資訊觀測站 MOPS — 法說會簡報 PDF（產品別佔比來源）
+
+> 用途：取得 K 欄「產品別佔比」，來源為公司法說會簡報 PDF。
+
+#### 查詢步驟
+
+**Step 1：取得法說會列表**
+
+```
+POST https://mopsov.twse.com.tw/mops/web/ajax_t100sb07_1
+Content-Type: application/x-www-form-urlencoded
+
+co_id={股票代號}&step=1&firstin=1&off=1&keyword4=&code1=&TYPEK=sii
+```
+
+回傳 HTML 表格，解析找到最新一筆的中文 PDF 檔名（格式：`{代號}{YYYYMMDD}M{序號}.pdf`）。
+
+**Step 2：下載 PDF**
+
+```
+https://mopsov.twse.com.tw/server-java/FileDownLoad?step=1&fileName={檔名}&filePath=/t100/
+```
+
+範例（4906 正文 2025/12/11 法說會）：
+```
+https://mopsov.twse.com.tw/server-java/FileDownLoad?step=1&fileName=490620251211M001.pdf&filePath=/t100/
+```
+
+**Step 3：讀取 PDF，擷取產品別佔比**
+
+用 `pypdf` 或 `pdfplumber` 讀取，搜尋關鍵字「產品」「佔比」「Revenue Mix」等段落，整理格式：
+```
+產品A XX%；產品B XX%；產品C XX%
+```
+
+若 PDF 無法取得或無產品佔比資訊，填入「待補充」。
+
+#### MOPS 查詢網址
+
+- 法說會查詢頁：`https://mopsov.twse.com.tw/mops/web/t100sb07_1`
+- AJAX 端點：`https://mopsov.twse.com.tw/mops/web/ajax_t100sb07_1`
 
 ---
 
@@ -185,13 +239,18 @@ ps, pb, p_ebitda, cash_ratio, ebitda_yield, dividend_yield, pe
 
 ---
 
-## 九、未來 API 串接計劃
+## 九、數據來源優先順序（速查表）
 
-| 數據類型 | 計劃來源 | 用途 |
-|---------|---------|------|
-| 法說會資料 | MOPS 電子書 / 公司 IR 網站 | 管理層展望自動摘要 |
-| 新聞監控 | Google News API / 財經新聞 RSS | 重大事件觸發報告更新 |
-| 海外股票 | Alpha Vantage / Polygon.io | 港股、美股 ADR 分析擴展 |
+| 需求 | 優先來源 | 備用 |
+|------|---------|------|
+| 股價、市值、EV/EBITDA | `five91 /api/metrics?stock_id=` | TWSE API |
+| 毛利率、營益率、淨利率 | `five91 /api/metrics?stock_id=` (`_12q` 欄位) | WebSearch |
+| EPS、資本額、稅後淨利 | `five91 /api/metrics?stock_id=` | 公開財報 |
+| 季度損益明細 | `five91 /stock/{代號}?tab=income_statement` | — |
+| 產品別佔比 | MOPS 法說會 PDF（見 6.2 節） | 公司官網 IR |
+| 歷史收盤價 | TWSE `STOCK_DAY` API | — |
+| 三大法人買賣超 | TWSE T86 API（`?date=YYYYMMDD`） | — |
+| 近期新聞題材 | WebSearch | — |
 
 ---
 

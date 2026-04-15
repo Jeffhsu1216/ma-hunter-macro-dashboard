@@ -103,9 +103,9 @@
 
 ## 四、網址處理
 
-- 使用 pse.is（picsee.io）或原始短網址
-- 若原始網址過長，使用 WebSearch 找到該新聞的短網址版本
-- 優先使用 ctee.com.tw、money.udn.com 的原始連結（通常不太長）
+- URL 超過 50 字元 → 必須到 https://picsee.io/ 縮短為短網址
+- URL 在 50 字元以內 → 直接使用原始連結（ctee.com.tw、money.udn.com 的原始連結通常不太長）
+- **嚴禁**使用原始超長 URL，讀者體驗差
 
 ---
 
@@ -114,38 +114,72 @@
 ### 🌎 台灣
 - **預期數量**：通常 2-4 則，很少到 5 則
 - **金額門檻**：1 億新台幣以上，但數量不足時可放寬
+- **幣種標注**：金額後面必須加幣種（如：14億元新台幣、4,000萬美元）
 - **注意事項**：台灣交易常以換股、合併核准等形式出現，不一定有明確金額。當有金額的交易過少時，應搜尋「換股」「合併核准」「股份轉換」等關鍵詞
+- **⚠️ 排除原則**：只收錄**本週內宣布**的交易，前幾週宣布但本週仍在討論的交易不列入
 - **優先搜尋來源**：
-  1. ctee.com.tw（工商時報）— 最完整的台灣 M&A 報導
+  1. ctee.com.tw（工商時報）— 最完整的台灣 M&A 報導，**必須逐日搜尋週期內每一天**
   2. money.udn.com（經濟日報）— 第二優先
-  3. Google Search：`台灣 併購 收購 {年月}`，翻到第 15-20 頁
-- **搜尋關鍵詞**：併購、收購、合併、股權交易、股份轉換、公開收購、私有化
+  3. Google Search：`台灣 併購 收購 {年月日範圍}`，翻到第 15-20 頁
+- **搜尋關鍵詞**：併購、收購、合併、股權交易、股份轉換、公開收購、私有化、生技收購、藥廠收購
 
 ### 🌏 大陸
 - **預期數量**：通常 3-5 則
+- **關鍵技巧**：大陸交易很多是**港股上市公司（HK$計價）**，一定要用 AASTOCKS / 富途搜到，單靠 A 股新聞會漏掉大量港股交易
+- **⚠️ 排除原則**：金額未明確揭露的交易（如「籌劃收購，金額待議」）不列入
 - **優先搜尋來源**：
-  1. cnyes.com（鉅亨網）— 中國 M&A 繁中報導最多
-  2. Google Search：`中國 收購 併購 {年月}`
-- **搜尋關鍵詞**：收購、併購、合併、股權轉讓、私有化、借殼上市
+  1. AASTOCK（阿斯達克財經）— 港股上市中資公司 M&A **首選且必跑**
+     - ⚠️ 搜尋首頁 403 封鎖，但**直接文章 URL** 可用 WebFetch 讀取
+     - 文章 URL 格式：`http://www.aastocks.com/tc/stocks/news/aafn-news/NOW.{newsid}`
+     - 先用 `WebSearch: site:aastocks.com 收購 OR 併購 {YYYY年MM月}` 找到多條文章 URL，逐一 WebFetch
+     - ✅ 確認可找到：西部水泥(02233.HK)類型的港股交易（歷史案例 NOW.1515989）
+  2. 富途牛牛（Futu）— 港股 / A 股併購新聞第二優先
+     - 同樣用 `WebSearch: site:news.futunn.com 收購 {YYYY年MM月}` 找文章 URL
+  3. hk.investing.com — 港股中資公司併購補充來源
+  4. cnyes.com（鉅亨網）— 搜尋關鍵詞補充
+  5. Google Search：`中國 收購 併購 {年月}`，翻到第 25 頁
+- **搜尋關鍵詞**：收購、併購、合併、股權轉讓、私有化、借殼上市、全面要約、建議收購
 
 ### 🌐 全球
-- **預期數量**：通常至少 5 則，容易找滿
-- **優先搜尋來源**：
-  1. ctee.com.tw（工商時報國際版）— 繁中報導全球大型 M&A
-  2. money.udn.com（經濟日報國際版）
-  3. Google Search：`global M&A deal {month} {year} billion`
-- **搜尋關鍵詞**：acquisition, merger, buyout, takeover, billion
+- **預期數量**：通常 5 則，先廣泛搜集所有候選，再**取金額最大的 5 筆**
+- **金額認定**：若有「最高 XX 億」里程碑結構，標題統一用最高值
+- **⚠️ 最重要限制：只收錄週報區間內（MM/DD–MM/DD）宣布的交易。前幾週宣布但本週仍在媒體討論的交易絕對不列入，即使金額再大也不收錄**
+- **⚠️ 排序規則：依交易金額由大到小排列。「找到5則」≠「找到最大的5則」，必須先建立完整候選池再排序**
+- **優先搜尋來源（依序全部執行，不可跳過）**：
+  1. Google Search：`largest M&A deals "April 7" OR "April 8" OR "April 9" OR "April 10" OR "April 11" 2026 billion` — **先跑這個掌握本週最大交易**
+  2. Google Search：`PE buyout LBO acquisition billion announced "April 2026"` — **⚠️ PE槓桿收購是金額最大且最容易漏的類別（如 TPG+黑石/Hologic 183億）**
+  3. Google Search：`pharma biotech oncology acquisition billion "April 7" OR "April 8" OR "April 9" OR "April 10" OR "April 11" 2026` — **生技/製藥每週最多交易（如 Gilead/Tubulis、Neurocrine/Soleno）**
+  4. Google Search：`technology software acquisition billion announced April 2026` — 科技/IT（如 Wipro/Olam IT）
+  5. ctee.com.tw（工商時報國際版）
+  6. money.udn.com（經濟日報國際版）
+  7. cnyes.com（鉅亨網）
+- **搜尋關鍵詞**：acquisition, merger, buyout, LBO, takeover, deal announced, billion, private equity
+- **必搜產業類別（缺一不可）**：
+  - 🏦 PE大型槓桿收購（private equity buyout/LBO）— 金額通常最大，**歷史上最容易漏**
+  - 💊 生技/製藥（pharma/biotech/oncology/ADC/rare disease）— 每週最多交易筆數
+  - 💻 科技/軟體/IT服務
+  - 🏗️ 基礎設施/能源/REITs
+  - 🛒 消費品/零售
 
 ---
 
 ## 六、品質檢查
 
 完成搜尋後，自我檢查：
-1. 是否搜尋了所有優先來源（ctee、money.udn、Google 深頁）？
-2. 台灣部分是否包含非現金交易（換股、合併核准）？
-3. 全球部分是否達到 5 則？
-4. 金額排序是否正確？
-5. 標題是否符合格式（買方+金額+標的+補充）？
+1. 是否搜尋了所有優先來源（ctee、money.udn、AASTOCK、富途牛牛、hk.investing.com、Google 深頁）？
+2. 台灣部分金額後面是否加了幣種？
+3. 台灣部分是否包含非現金交易（換股、合併核准）？
+4. 大陸部分是否翻了 Google 深頁（前 25 頁）？大陸是否有搜尋 hk.investing.com？
+5. 全球部分是否先廣泛收集，再取最大 5 筆？
+6. **⚠️ 所有交易是否都在週報區間內宣布？不是本週宣布的一律排除，不論金額多大**
+7. **⚠️ 全球是否有搜尋 PE大型槓桿收購（LBO/buyout）？這是金額最大且最常漏掉的類別**
+8. **⚠️ 全球是否有搜尋 生技/製藥（pharma/biotech/oncology）？這是筆數最多的類別**
+9. **⚠️ 全球最終5則是否為「本週宣布的交易中金額最大的5筆」？找到5則就停是錯的，要確認沒有更大的漏掉**
+10. 大陸是否有用 aastocks.com WebFetch 讀取港股交易？（西部水泥類型交易只在此可找到）
+7. 金額排序是否正確（由大到小）？
+8. 標題是否符合格式（買方+金額+幣種+標的+補充）？
+9. 是否排除了「傳言」與「金額未揭露」的交易？
+10. URL 超過 50 字元是否已到 picsee.io 縮短？
 
 ---
 

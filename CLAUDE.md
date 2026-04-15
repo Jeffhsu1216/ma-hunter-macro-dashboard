@@ -62,7 +62,7 @@
 **觸發詞**：「研究 XXXX」、「查 XXXX」、「幫我看 XXXX」
 
 **執行流程：**
-1. 讀取 `/Users/jeffhsu/Desktop/Claude/圖靈金融/Company_Tracking.md`（取得欄位規格與更新規則）
+1. 讀取 `/Users/jeffhsu/Desktop/Claude/投資分析/CompanyOverview_AutoAppend.md`（取得欄位規格、API流程、更新規則）
 2. 從 `five91.onrender.com` 依需求查詢對應端點（見 Financial_Analysis.md）
 3. 搜尋公開資訊觀測站（MOPS）法說會簡報，取得產品別佔比
 4. 寫入 `Company Overview_YYYYMMDD.xlsx`（自動以當天日期更新檔名）
@@ -102,11 +102,11 @@
 **觸發詞**：`客戶名稱` + 交易截圖（直接傳截圖即觸發）
 
 **執行流程：**
-1. 讀取 `/Users/jeffhsu/Desktop/Claude/個人基金/AutoTradeBookkeeper.md`（取得欄位規格、C19 現金餘額更新規則）
+1. 讀取 `/Users/jeffhsu/Desktop/Claude/個人基金/AutoTradeBookkeeper.md`（取得欄位規格、C25 現金餘額更新規則）
 2. 從截圖辨識：股票名稱、代號、交易類型、張數、價格、日期、手續費、交易稅
 3. 開啟對應客戶 Excel（`~/Desktop/Clients/客戶名稱_最新更新日期.xlsx`）
-4. 依買入／賣出規則插入新列，並更新 C19 現金餘額
-5. 儲存檔案，回報異動摘要與 C19 更新前後數值
+4. 依買入／賣出規則插入新列，並更新 C25 現金餘額
+5. 儲存檔案，回報異動摘要與 C25 更新前後數值
 
 ---
 
@@ -128,13 +128,11 @@
 **觸發詞**：「個人投資回報分析」
 
 **執行流程：**
-1. 讀取 `/Users/jeffhsu/Desktop/Claude/投資分析/PersonalInvestment.md`（取得欄位規格、圖表規範）
-2. 以**唯讀方式**開啟 `~/Desktop/Investment/Personal Financial Management.xlsx`，讀取 `Investment` 工作表
-3. 分離已實現（出售日期不為空）vs 未實現（持有中）部位
-4. 產出三張圖檔：年度績效長條圖、持有期間散佈圖、當前持倉水平圖
-5. 產出一頁式 PDF 報告，存至 `~/Desktop/Investment/Reports/`
-6. 輸出文字摘要：總覽、交易特性、年度最佳、最佳/最差單筆
-7. ⚠️ **嚴禁對 Excel 進行任何寫入或修改**
+1. 讀取 `/Users/jeffhsu/Desktop/Claude/投資分析/PersonalInvestment.md`（取得欄位規格、腳本路徑）
+2. Step 1 — 同步 Jeff 基金持倉（讀取 JeffFundSync.md → APPEND 至 Personal Financial Management.xlsx）
+3. Step 2 — 執行 `personal_inv.py`，腳本自動讀取 `~/Desktop/Personal Financial Management/Personal Financial Management.xlsx`
+4. 產出 4 頁 PDF，存至 `~/Desktop/Personal Financial Management/`
+5. ⚠️ **嚴禁對 Excel 進行任何寫入或修改（personal_inv.py 為唯讀）**
 
 ---
 
@@ -144,7 +142,7 @@
 
 **執行流程：**
 1. 讀取 `/Users/jeffhsu/Desktop/Claude/投資分析/Screening.md`（取得欄位規格、API查詢策略、選股輔助提示）
-2. 開啟 `~/Desktop/Investment/Jeff_Stock Analysis_Draft.xlsx`（預設，除非明確指定正式檔案）
+2. 開啟 `~/Desktop/Stock Analysis/Jeff_Stock Analysis_Draft.xlsx`（預設，除非明確指定正式檔案）
 3. 新增工作表 `YYYYMM`，複製上月格式
 4. 一次呼叫 `/api/metrics` 批次取得 40 支股票：名稱、產業、股價、EPS、PE、市值
 5. 寫入工作表，公式欄位用 Excel 公式（漲幅、排名）
@@ -156,9 +154,19 @@
 **觸發詞**：`短線分析 {代號}`
 
 **執行流程：**
-1. 讀取 `/Users/jeffhsu/Desktop/Claude/投資分析/SwingTrade.md`（取得進場條件、風險規則）
-2. 從 API 取基本面 + TWSE 取近 60 日收盤價計算均線與量能 + WebSearch 查近期新聞
-3. 輸出短線評估報告（技術面、基本面、風險提示）
+1. 同時發出兩個 WebSearch（**禁止 WebFetch TWSE 數據，腳本自動並行抓**）：
+   - WebSearch A：近 7 日催化劑新聞 → 決定 `catalyst`、`catalyst_quality`、`sector_name`
+   - WebSearch B：產品別佔比 → 決定 `product_mix`（法說會/研究報告）
+2. 直接執行腳本（NAME 傳空字串，腳本自動從 five91 填入）：
+   ```python
+   run(CODE, '', TODAY,
+       sector_name="...",
+       catalyst="...",
+       catalyst_quality="強/中/弱",
+       product_mix="產品A ~X%；產品B ~X%")
+   ```
+3. 腳本自動完成：股價/法人數據抓取（~1s）→ 評分 → PDF → Company Overview Append（含產品佔比）
+4. 更新 skill_proficiency.md SwingTrade 次數 +1
 
 ---
 
@@ -184,6 +192,51 @@
 3. WebSearch 搜尋當日重大國際地緣政治事件（戰爭、制裁、貿易摩擦）
 4. 依模板格式輸出四大區塊，週末標注休市
 5. **直接輸出完整儀表板，不加任何前言說明**
+
+---
+
+### 月選股資金配置
+**觸發詞**：`月選股配置 YYYYMM`
+
+**執行流程：**
+1. 讀取 `/Users/jeffhsu/Desktop/Claude/個人基金/MonthlyAllocation.md`（取得配置邏輯、輸出格式）
+2. 開啟月選股 Excel（`~/Desktop/Stock Analysis/Jeff_Stock Analysis_Draft.xlsx`），讀取 `YYYYMM` 工作表
+3. 掃描 N 欄 = `"是"` → 取代號（B）、名稱（C）、收盤價（H）
+4. 逐一讀取 4 位客戶最新 Excel → 取 C25 現金餘額（唯讀）
+5. 計算：月選股 80% equal weight / 短線備用 20% / 每支建議張數
+6. 依格式逐客戶輸出配置建議 + 彙總表
+
+---
+
+### 會前Q&A準備
+**觸發詞**：`開會 {股票代號} {日期}`
+**範例**：「開會 3026 4/15」、「開會 2330 2026-05-20」
+
+**執行流程：**
+1. 讀取 `/Users/jeffhsu/Desktop/Claude/圖靈金融/MeetingPrep.md`（取得輸出規格、提問生成邏輯）
+2. WebSearch：搜尋「{公司名} OR {代號} 新聞」近 90 天，抓取 3–5 則（標題、來源、日期）
+3. 日期格式統一轉為 `YYYY-MM-DD`（`4/15` → `2026-04-15`，省略 → 今日）
+4. 執行腳本（news_items 以 JSON 格式傳入第三參數）：
+   ```bash
+   python3 /Users/jeffhsu/Desktop/Claude/圖靈金融/scripts/meeting_prep.py {代號} {YYYY-MM-DD} '{news_json}'
+   ```
+5. PDF 自動儲存至 `~/Desktop/Turing/上市櫃公司/{代號}TT {公司名稱}/` 並開啟預覽
+   - 資料夾已存在 → 直接放入；不存在 → 自動建立
+6. 更新 skill_proficiency.md MeetingPrep 次數 +1
+
+---
+
+### 製作 Shorts 內容
+**觸發詞**：`製作shorts [MM/DD-MM/DD]`（省略日期 → 自動讀最新一週）
+
+**執行流程：**
+1. 讀取 `/Users/jeffhsu/Desktop/Claude/Youtuber/MAContentCreator.md`（取得解析規則、Scene 設計、配色系統）
+2. 讀取 `~/Desktop/Claude/併購新聞整理.txt` 末尾 200 行，解析最新一週交易
+3. 篩選台灣（📘）+ 全球（📕📙📒），略過大陸，依金額排序，選出 5–8 個 Scenes
+4. 生成 HTML → 覆寫 `~/Desktop/Claude/Youtuber/shorts_preview/slides.html`
+5. 執行 `python3 ~/Desktop/Claude/Youtuber/shorts_preview/export_scenes.py` → 自動產出 PNG 至 `~/Desktop/Youtuber/Shorts/`
+6. 回報：產出幾張、存放路徑、預覽第 1 張圖
+7. 更新 skill_proficiency.md MAContentCreator 次數 +1
 
 ---
 
@@ -217,6 +270,9 @@
 | 10 | 短線標的評估 | `短線分析 {代號}` | `短線分析 2330` |
 | 11 | 每週併購新聞 | `併購週報` / `併購新聞 MM/DD-MM/DD` | `併購週報` |
 | 12 | 每日總經儀表板 | `總經日報` / `macro dashboard` | `總經日報` |
+| 13 | 月選股資金配置 | `月選股配置 YYYYMM` | `月選股配置 202604` |
+| 14 | 會前Q&A準備 | `開會 {代號} {日期}` | `開會 3026 4/15` |
+| 15 | 製作 Shorts 內容 | `製作shorts [MM/DD-MM/DD]` | `製作shorts 04/07-04/12` |
 
 文件類型選項：`簡報` / `DCF` / `研究報告` / `同業比較` / `盡調` / `LBO` / `盈餘分析`
 
@@ -229,33 +285,40 @@
 | 文件 | 用途 | 觸發時機 |
 |------|------|---------|
 | `Financial_Analysis.md` | 檔案命名、配色、API端點、交付物清單 | 製作任何財務文件時 |
-| `Company_Tracking.md` | 追蹤清單欄位規格與自動更新規則 | 研究上市櫃公司時 |
+| `CompanyOverview_AutoAppend.md` | → 見投資分析模組（唯一來源） | 研究上市櫃公司時 |
 | `Thank_You_Letter.md` | 法說會感謝信模板、變數規則、固定段落 | 撰寫感謝信時 |
 | `Meeting_Minutes.md` | 投審會會議紀錄格式規範、藍色字體規則、固定段落 | 撰寫投審會會議紀錄時 |
 | `MA_Weekly.md` | 每週併購新聞搜尋策略、輸出格式、emoji排序規則 | 輸入「併購週報」時 |
+| `MeetingPrep.md` | 會前Q&A準備規格、提問生成邏輯、腳本呼叫方式 | 輸入「開會 {代號}」時 |
 
 ### 🏦 個人基金／`Claude/個人基金/`
 
 | 文件 | 用途 | 觸發時機 |
 |------|------|---------|
-| `AutoTradeBookkeeper.md` | 客戶投資組合記帳規則、欄位對應、C19 現金餘額更新邏輯 | 收到交易截圖自動記帳時 |
+| `AutoTradeBookkeeper.md` | 客戶投資組合記帳規則、欄位對應、C25 現金餘額更新邏輯 | 收到交易截圖自動記帳時 |
 | `ClientPortfolio.md` | 基金客戶清單、Excel 路徑、個別客戶圖表規範 | 分析個別客戶資產現況時 |
 | `AUM_Overview.md` | 全客戶 AUM 彙總規範、圓餅圖、報酬率排名、PDF 報告 | 輸入「客戶總覽」時 |
+| `MonthlyAllocation.md` | 月選股資金配置規範、80/20分配邏輯、建議張數計算 | 輸入「月選股配置 YYYYMM」時 |
 
 ### 📈 投資分析／`Claude/投資分析/`
 
 | 文件 | 用途 | 觸發時機 |
 |------|------|---------|
-| `PersonalInvestment.md` | 個人投資回報分析規範、欄位對應、圖表規範 | 個人投資回報分析時 |
+| `PersonalInvestment.md` | 個人投資回報分析規範（Slim v2，~1.5k token）| 個人投資回報分析時 |
+| `JeffFundSync.md` | Jeff 基金持倉 → 個人財務管理轉換規範（比例計算、APPEND、公式格式、月度統計）| 個人投資回報分析 Step 1 |
+| `refs/PersonalInvestment_Script.md` | 版面規格、配色、腳本邏輯、已知陷阱（僅 debug 時讀）| 腳本維護 / PDF 格式 debug 時 |
 | `Screening.md` | 月初選股工作表自動建立、API 填入、欄位規格、選股輔助提示 | 月初選股分析時 |
-| `SwingTrade.md` | 短線交易進出場紀錄、週線技術面篩選、勝率追蹤、風險控管 | 短線分析 / 進出場 / 週報 / 績效時 |
+| `SwingTrade.md` | 短線交易進出場紀錄、勝率追蹤、風險控管（Slim v10，~1.5k token）| 短線分析 / 進出場 / 週報 / 績效時 |
+| `refs/SwingTrade_Scoring.md` | 完整評分方法論（Steps 1–7）、PDF 版面規格（僅 debug 時讀）| 評分邏輯 debug / 腳本維護時 |
+| `CompanyOverview_AutoAppend.md` | 欄位規格、API流程、PDF智慧掃描、自動更新規則（唯一來源） | 短線分析 / 月初選股 / 研究上市櫃公司時 |
 
 ### 📺 Youtuber（M&A Hunter）／`Claude/Youtuber/`
 
 | 文件 | 用途 | 觸發時機 |
 |------|------|---------|
 | `MacroDashboard.md` | 每日總經儀表板模板、數據來源、格式規則 | 輸入「總經日報」或每日 08:00 自動執行 |
+| `MAContentCreator.md` | 每週併購新聞 → Shorts/Podcast 內容製作規範、Scene 設計、HTML 配色系統 | 輸入「製作shorts」時 |
 
 ---
 
-*最後更新：2026-03-29（v9 — 新增 Youtuber 類別 + MacroDashboard 總經儀表板，模組數 12）*
+*最後更新：2026-04-12（v12 — 新增 MAContentCreator 模組，模組數 17）*
