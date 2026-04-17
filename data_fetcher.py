@@ -232,30 +232,43 @@ def _fetch_tv_actuals(date_from: str, date_to: str) -> dict:
 def _match_tv_actual(ff_title: str, tv_actuals: dict) -> str:
     """
     把 ForexFactory 的事件標題對應到 TradingView 的實際值
-    策略：先完全比對（lower），再關鍵詞比對
+    ⚠️ 關鍵：MoM / YoY / QoQ 期間必須嚴格匹配，不可跨期間互相汙染
+    （例：FF "PPI m/m" 不可匹配 TV "PPI YoY"）
     """
-    title_l = ff_title.lower().strip()
-
-    # 1. 直接比對
-    if title_l in tv_actuals:
-        return tv_actuals[title_l]
-
-    # 2. 去除常見後綴再比對（m/m, q/q, y/y, final, preliminary, flash）
     import re
-    clean = re.sub(r'\s*(m/m|q/q|y/y|mom|qoq|yoy|final|preliminary|flash|revised)\s*$',
-                   '', title_l).strip()
+
+    def _normalize(t: str):
+        """回傳 (base, period) 兩部分。period ∈ {mom, yoy, qoq, none}"""
+        s = t.lower().strip()
+        # 拿掉修訂詞（不影響期間辨識）
+        s = re.sub(r'\s*(final|preliminary|prelim|flash|revised|advance)\s*$', '', s).strip()
+        # 偵測期間後綴並拿掉
+        m = re.search(r'\s*(m/m|mom|q/q|qoq|y/y|yoy)\s*$', s)
+        if m:
+            tag = m.group(1).replace('/', '')
+            period = {'mm': 'mom', 'qq': 'qoq', 'yy': 'yoy'}.get(tag, tag)
+            base = s[:m.start()].strip()
+        else:
+            period, base = 'none', s
+        return base, period
+
+    ff_base, ff_period = _normalize(ff_title)
+
+    # 1. 直接比對（期間必須相同）
     for tv_title, val in tv_actuals.items():
-        tv_clean = re.sub(r'\s*(m/m|q/q|y/y|mom|qoq|yoy|final|preliminary|flash|revised)\s*$',
-                          '', tv_title).strip()
-        if clean == tv_clean:
+        tv_base, tv_period = _normalize(tv_title)
+        if ff_base == tv_base and ff_period == tv_period:
             return val
 
-    # 3. 關鍵詞包含比對（取最長匹配）
+    # 2. 關鍵詞包含比對（同期間、取最長匹配）
     best_match, best_len = "", 0
     for tv_title, val in tv_actuals.items():
-        if clean in tv_title or tv_title in clean:
-            if len(tv_title) > best_len:
-                best_match, best_len = val, len(tv_title)
+        tv_base, tv_period = _normalize(tv_title)
+        if ff_period != tv_period:   # 期間不同絕對不匹配
+            continue
+        if ff_base and (ff_base in tv_base or tv_base in ff_base):
+            if len(tv_base) > best_len:
+                best_match, best_len = val, len(tv_base)
     return best_match
 
 
