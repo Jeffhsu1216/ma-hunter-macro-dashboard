@@ -37,3 +37,11 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python macro_dashboard_runner.py
+
+      # 修正：GITHUB_TOKEN push 的 commit 不會觸發 pages.yml 的 on:push
+      # → 主動用 workflow_dispatch 呼叫 Pages 部署
+      - name: Trigger Pages deployment
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run pages.yml --ref main
