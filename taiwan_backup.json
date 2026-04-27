@@ -1,13 +1,13 @@
 {
-  "foreign": 43907871828,
-  "foreign_yi": 439.1,
-  "inv_trust": 2217080841,
-  "inv_trust_yi": 22.2,
-  "dealer": 8878366186,
-  "dealer_yi": 88.8,
-  "total": 55003318855,
-  "total_yi": 550.0,
-  "date": "20260424",
+  "foreign": -51196158919,
+  "foreign_yi": -512.0,
+  "inv_trust": 14501538803,
+  "inv_trust_yi": 145.0,
+  "dealer": -10542927790,
+  "dealer_yi": -105.4,
+  "total": -47237547906,
+  "total_yi": -472.4,
+  "date": "20260427",
   "unit": "億元",
   "source": "runner_backup"
 }
