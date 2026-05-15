@@ -177,21 +177,101 @@ def _fmt(price, decimals=2):
     return f"{price:,.{decimals}f}"
 
 
-def _get_fred_csv(series_id: str, n_rows: int = 10) -> list:
-    """從 FRED 抓 CSV，回傳最後 n 筆 [(date_str, value_float), ...]"""
+def _get_fred_csv(series_id: str, n_rows: int = 10, retries: int = 2) -> list:
+    """從 FRED 抓 CSV，回傳最後 n 筆 [(date_str, value_float), ...]；含 retry"""
+    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+    last_err = None
+    for attempt in range(retries + 1):
+        try:
+            resp = requests.get(url, timeout=(10, 30), headers={"User-Agent": "Mozilla/5.0"})
+            if resp.status_code != 200:
+                last_err = f"HTTP {resp.status_code}"
+                continue
+            lines = resp.text.strip().split("\n")[1:]
+            results = []
+            for line in lines[-n_rows:]:
+                parts = line.split(",")
+                if len(parts) == 2 and parts[1] != ".":
+                    results.append((parts[0], float(parts[1])))
+            if results:
+                return results
+        except Exception as e:
+            last_err = str(e)
+    logger.warning(f"FRED {series_id} failed after {retries+1} tries: {last_err}")
+    return []
+
+
+def _read_last_cb_rate(name: str):
+    """從上次 cache_data.json 讀取已成功抓到的央行利率（fallback 用）。
+    回傳 (rate_str, source_str) 或 (None, None)。"""
     try:
-        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
-        resp = requests.get(url, timeout=(5, 25), headers={"User-Agent": "Mozilla/5.0"})
-        lines = resp.text.strip().split("\n")[1:]
-        results = []
-        for line in lines[-n_rows:]:
-            parts = line.split(",")
-            if len(parts) == 2 and parts[1] != ".":
-                results.append((parts[0], float(parts[1])))
-        return results
+        if not os.path.exists(CACHE_FILE):
+            return (None, None)
+        with open(CACHE_FILE, "r") as f:
+            cache = json.load(f)
+        rate = cache.get("data", {}).get("cb_rates", {}).get(name, {}).get("rate")
+        ts = cache.get("timestamp", "")
+        return (rate, ts[:10] if ts else None)
     except Exception as e:
-        logger.warning(f"FRED {series_id} failed: {e}")
-        return []
+        logger.warning(f"Read last {name} rate from cache failed: {e}")
+        return (None, None)
+
+
+def _scrape_fed_official() -> str:
+    """爬 federalreserve.gov 抓最新 FOMC 目標區間（FRED fallback）"""
+    try:
+        import re as _re
+        resp = requests.get(
+            "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
+            headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        # 找所有 "X.XX-X.XX" 格式的目標區間，page 由近至遠排序，第一個即最新
+        m = _re.search(r'<td[^>]*>(\d+\.\d+)-(\d+\.\d+)</td>', resp.text)
+        if m:
+            return f"{float(m.group(1)):.2f}–{float(m.group(2)):.2f}"
+    except Exception as e:
+        logger.warning(f"Fed official scrape failed: {e}")
+    return ""
+
+
+def _scrape_ecb_official() -> str:
+    """爬 ecb.europa.eu 抓最新 Deposit facility rate（FRED fallback）"""
+    try:
+        import re as _re
+        resp = requests.get(
+            "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html",
+            headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        # 抓 Deposit facility 表格的第一個 <tr>
+        m = _re.search(r'Deposit facility.*?</thead>(.*?)</table>', resp.text, _re.DOTALL)
+        if m:
+            first_row = _re.search(r'<tr[^>]*>(.*?)</tr>', m.group(1), _re.DOTALL)
+            if first_row:
+                cells = _re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', first_row.group(1), _re.DOTALL)
+                cells = [_re.sub(r'<[^>]+>', ' ', c).strip() for c in cells]
+                # 表格欄位：年、日期、Deposit、Main refi (low)、-、Main refi (high)
+                for c in cells:
+                    if _re.match(r'^\d+\.\d+$', c):
+                        return f"{float(c):.2f}"
+    except Exception as e:
+        logger.warning(f"ECB official scrape failed: {e}")
+    return ""
+
+
+def _scrape_boj_official() -> str:
+    """爬 BOJ 政策利率（FRED fallback）— 從 trading economics meta description 抓最新值"""
+    try:
+        import re as _re
+        resp = requests.get(
+            "https://tradingeconomics.com/japan/interest-rate",
+            headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        # 主：<meta name="description"> 內 "interest rate in Japan was last recorded at X.XX percent"
+        m = _re.search(
+            r'<meta[^>]*name="description"[^>]*content="[^"]*?(\d+\.\d+)\s*percent',
+            resp.text, _re.IGNORECASE)
+        if m:
+            return f"{float(m.group(1)):.2f}"
+    except Exception as e:
+        logger.warning(f"BOJ official scrape failed: {e}")
+    return ""
 
 
 # ============================================================
@@ -909,70 +989,74 @@ def fetch_geopolitics() -> dict:
 
 
 def fetch_cb_rates() -> dict:
-    """央行利率：Fed 從 FRED 動態抓（失敗 fallback 4.25–4.50）+ ECB/BOJ hardcoded + CBC 會議日期自動算"""
+    """央行利率：四家每日自動抓，每家三層 fallback（主來源 → 備援爬蟲 → 上次 cache → hardcoded）"""
     result = {}
 
-    # ── Fed（FRED 動態抓，失敗 fallback hardcoded）──
-    FED_FALLBACK = "4.25–4.50"  # 最後已知值，FRED 失敗時使用
-    try:
-        lower_rows = _get_fred_csv("DFEDTARL", 3)
-        upper_rows = _get_fred_csv("DFEDTARU", 3)
-        if lower_rows and upper_rows:
-            fed_rate = f"{lower_rows[-1][1]:.2f}–{upper_rows[-1][1]:.2f}"
-        else:
-            fed_rate = FED_FALLBACK
-            logger.warning("FRED Fed rate: empty rows, using fallback")
-    except Exception as e:
-        logger.warning(f"FRED Fed rate failed: {e}, using fallback")
-        fed_rate = FED_FALLBACK
+    def _resolve(name: str, primary_fn, secondary_fn, hardcoded: str) -> str:
+        """三層 fallback：primary → secondary → 上次 cache → hardcoded"""
+        # Tier 1: 主來源（FRED 或官網）
+        try:
+            v = primary_fn()
+            if v:
+                logger.info(f"{name} rate from primary: {v}")
+                return v
+        except Exception as e:
+            logger.warning(f"{name} primary failed: {e}")
+        # Tier 2: 備援來源
+        if secondary_fn:
+            try:
+                v = secondary_fn()
+                if v:
+                    logger.info(f"{name} rate from secondary: {v}")
+                    return v
+            except Exception as e:
+                logger.warning(f"{name} secondary failed: {e}")
+        # Tier 3: 上次 cache（last-known-good）
+        cached, cached_ts = _read_last_cb_rate(name)
+        if cached:
+            logger.warning(f"{name} using last-known-good from cache ({cached_ts}): {cached}")
+            return cached
+        # Tier 4: hardcoded final fallback
+        logger.warning(f"{name} all sources failed, using hardcoded: {hardcoded}")
+        return hardcoded
 
-    result["Fed"] = {
-        "rate": fed_rate,
-        "next": _next_meeting(FOMC_DATES_2026),
-    }
+    # ── Fed ──
+    def _fed_fred():
+        l = _get_fred_csv("DFEDTARL", 3)
+        u = _get_fred_csv("DFEDTARU", 3)
+        return f"{l[-1][1]:.2f}–{u[-1][1]:.2f}" if (l and u) else ""
 
-    # ── ECB（FRED ECBDFR 動態抓，失敗 fallback）──
-    ECB_FALLBACK = "2.50"  # 2026-04 確認值（FRED ECBDFR 成功時回傳 2.50）
-    try:
-        ecb_rows = _get_fred_csv("ECBDFR", 3)
-        ecb_rate = f"{ecb_rows[-1][1]:.2f}" if ecb_rows else ECB_FALLBACK
-    except Exception as e:
-        logger.warning(f"FRED ECB rate failed: {e}, using fallback")
-        ecb_rate = ECB_FALLBACK
-    result["ECB"] = {
-        "rate": ecb_rate,
-        "next": _next_meeting(ECB_DATES_2026),
-    }
+    fed_rate = _resolve("Fed", _fed_fred, _scrape_fed_official, "3.50–3.75")
 
-    # ── BOJ（FRED IRSTJPN156N 動態抓，失敗 fallback）──
-    BOJ_FALLBACK = "0.50"  # 2026-04 確認值（2025-01 升至 0.50%）
-    try:
-        boj_rows = _get_fred_csv("IRSTJPN156N", 3)
-        boj_rate = f"{boj_rows[-1][1]:.2f}" if boj_rows else BOJ_FALLBACK
-    except Exception as e:
-        logger.warning(f"FRED BOJ rate failed: {e}, using fallback")
-        boj_rate = BOJ_FALLBACK
-    result["BOJ"] = {
-        "rate": boj_rate,
-        "next": _next_meeting(BOJ_DATES_2026),
-    }
+    # ── ECB ──
+    def _ecb_fred():
+        r = _get_fred_csv("ECBDFR", 3)
+        return f"{r[-1][1]:.2f}" if r else ""
 
-    # ── CBC（台灣央行重貼現率 — CBC 官網自動更新）──
-    CBC_FALLBACK = "2.00"  # 2024-03-22 起確認值
-    try:
+    ecb_rate = _resolve("ECB", _ecb_fred, _scrape_ecb_official, "2.00")
+
+    # ── BOJ ──
+    def _boj_fred():
+        r = _get_fred_csv("IRSTJPN156N", 3)
+        return f"{r[-1][1]:.2f}" if r else ""
+
+    boj_rate = _resolve("BOJ", _boj_fred, _scrape_boj_official, "0.50")
+
+    # ── CBC（台灣央行重貼現率）──
+    def _cbc_official():
         import re as _re
-        _cbc_resp = requests.get(
+        resp = requests.get(
             'https://www.cbc.gov.tw/tw/cp-534-4088-F0CAF-2.html',
-            headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
-        _m = _re.search(r'重貼現率.*?<em>([\d.]+)%</em>', _cbc_resp.text, _re.DOTALL)
-        cbc_rate = _m.group(1) if _m else CBC_FALLBACK
-    except Exception as e:
-        logger.warning(f"CBC rate scrape failed: {e}, using fallback")
-        cbc_rate = CBC_FALLBACK
-    result["CBC"] = {
-        "rate": cbc_rate,
-        "next": _next_meeting(CBC_DATES_2026),
-    }
+            headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+        m = _re.search(r'重貼現率.*?<em>([\d.]+)%</em>', resp.text, _re.DOTALL)
+        return m.group(1) if m else ""
+
+    cbc_rate = _resolve("CBC", _cbc_official, None, "2.00")
+
+    result["Fed"] = {"rate": fed_rate, "next": _next_meeting(FOMC_DATES_2026)}
+    result["ECB"] = {"rate": ecb_rate, "next": _next_meeting(ECB_DATES_2026)}
+    result["BOJ"] = {"rate": boj_rate, "next": _next_meeting(BOJ_DATES_2026)}
+    result["CBC"] = {"rate": cbc_rate, "next": _next_meeting(CBC_DATES_2026)}
 
     return result
 
