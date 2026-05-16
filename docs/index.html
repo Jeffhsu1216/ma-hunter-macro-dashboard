@@ -50,9 +50,9 @@
         /* ── Layout ── */
         .main { padding: 16px 24px; display: flex; flex-direction: column; gap: 14px; }
 
-        /* CB Rate bar */
+        /* CB Rate bar — 6 央行：3 欄 × 2 列 */
         .cb-bar {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
         }
         .cb-card {
             background: var(--gold-dim);
@@ -61,8 +61,17 @@
             display: flex; flex-direction: column; gap: 2px;
         }
         .cb-card .cb-name  { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-        .cb-card .cb-rate  { font-size: 22px; font-weight: 700; color: var(--gold); line-height: 1.2; }
+        .cb-card .cb-rate  { font-size: 20px; font-weight: 700; color: var(--gold); line-height: 1.2; }
         .cb-card .cb-next  { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+        /* 匯率分組標題 */
+        .fx-group-header {
+            font-size: 10px; font-weight: 600; color: var(--gold);
+            text-transform: uppercase; letter-spacing: 1px;
+            padding: 6px 0 2px; margin-top: 4px;
+            border-bottom: 1px solid rgba(201,165,78,0.15);
+        }
+        .fx-group-header:first-child { margin-top: 0; }
 
         /* Main grid 2 cols */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -246,7 +255,7 @@
             2026/05/16（週六）
             <span class="badge">休市日</span>
         </div>
-        <div class="sub">數據截至 2026/05/15｜更新 2026/05/16 13:48</div>
+        <div class="sub">數據截至 2026/05/15｜更新 2026/05/16 14:52</div>
     </div>
 </header>
 
@@ -268,20 +277,32 @@
         </div>
         
         <div class="cb-card">
+            <div class="cb-name">英國央行 (BoE)</div>
+            <div class="cb-rate">3.75%</div>
+            <div class="cb-next">下次會議 2026/06/18</div>
+        </div>
+        
+        <div class="cb-card">
             <div class="cb-name">日本央行 (BOJ)</div>
             <div class="cb-rate">0.75%</div>
             <div class="cb-next">下次會議 2026/06/16</div>
         </div>
         
         <div class="cb-card">
+            <div class="cb-name">中國央行 (PBOC)</div>
+            <div class="cb-rate">1.40%</div>
+            <div class="cb-next">下次會議 2026/05/20（LPR）</div>
+        </div>
+        
+        <div class="cb-card">
             <div class="cb-name">中央銀行 (CBC)</div>
-            <div class="cb-rate">2%</div>
+            <div class="cb-rate">2.00%</div>
             <div class="cb-next">下次會議 2026/06/18</div>
         </div>
         
     </div>
     <div style="font-size:10px; color:var(--text-3); text-align:right; margin-top:-8px; margin-bottom:2px;">
-        🕐 央行利率更新時間：2026/05/16 13:48（Fed 來源：FRED）
+        🕐 央行利率更新時間：2026/05/16 14:52（Fed 來源：FRED）
     </div>
 
     <!-- ② FX + 殖利率曲線 -->
@@ -289,10 +310,12 @@
 
         <!-- 匯率 -->
         <div class="card">
-            <div class="card-title">💱 匯率</div>
+            <div class="card-title">💱 匯率（依語意分組）</div>
             <div style="font-size:10px; color:var(--text-3); margin-bottom:8px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
                 USD/XXX ↑ = 美元走強、該幣走弱｜XXX/USD ↑ = 該幣走強、美元走弱
             </div>
+            
+            
             
             <div class="row">
                 <div class="lbl">美元指數 (DXY)</div>
@@ -306,6 +329,10 @@
                 </div>
             </div>
             
+            
+            
+            <div class="fx-group-header">🇨🇳 中國</div>
+            
             <div class="row">
                 <div class="lbl">人民幣 (CNY/USD)</div>
                 <div class="val">
@@ -318,29 +345,9 @@
                 </div>
             </div>
             
-            <div class="row">
-                <div class="lbl">新台幣 (TWD/USD)</div>
-                <div class="val">
-                    0.0317
-                    
-                    <span class="chg down">
-                        -0.83%
-                    </span>
-                    
-                </div>
-            </div>
             
-            <div class="row">
-                <div class="lbl">澳幣 (AUD/USD)</div>
-                <div class="val">
-                    0.7153
-                    
-                    <span class="chg down">
-                        -1.16%
-                    </span>
-                    
-                </div>
-            </div>
+            
+            <div class="fx-group-header">🇪🇺 歐洲三大</div>
             
             <div class="row">
                 <div class="lbl">歐元 (EUR/USD)</div>
@@ -354,17 +361,7 @@
                 </div>
             </div>
             
-            <div class="row">
-                <div class="lbl">日圓 (JPY/USD)</div>
-                <div class="val">
-                    0.006300
-                    
-                    <span class="chg down">
-                        -1.19%
-                    </span>
-                    
-                </div>
-            </div>
+            
             
             <div class="row">
                 <div class="lbl">英鎊 (GBP/USD)</div>
@@ -377,6 +374,38 @@
                     
                 </div>
             </div>
+            
+            
+            
+            <div class="row">
+                <div class="lbl">瑞士法郎 (CHF/USD)</div>
+                <div class="val">
+                    1.2723
+                    
+                    <span class="chg down">
+                        -1.05%
+                    </span>
+                    
+                </div>
+            </div>
+            
+            
+            
+            <div class="fx-group-header">🌏 亞太四強</div>
+            
+            <div class="row">
+                <div class="lbl">日圓 (JPY/USD)</div>
+                <div class="val">
+                    0.006300
+                    
+                    <span class="chg down">
+                        -1.19%
+                    </span>
+                    
+                </div>
+            </div>
+            
+            
             
             <div class="row">
                 <div class="lbl">韓元 (KRW/USD)</div>
@@ -391,33 +420,78 @@
             </div>
             
             
-            <div class="commentary">DXY 美元指數上漲 +1.36%，美元全面走強，非美貨幣承壓。<br>新台幣貶值 0.83%（新台幣 (TWD/USD) ↓），外資匯出壓力增、進口成本上升。<br>澳幣貶值 1.16%（澳幣 (AUD/USD) ↓），商品價格走弱或全球風險趨避。<br>歐元貶值 1.17%（歐元 (EUR/USD) ↓），歐洲經濟疲弱或美元避險需求上升。<br>日圓貶值 1.19%（日圓 (JPY/USD) ↓），日本出口競爭力增但進口通膨壓力大。<br>英鎊貶值 1.99%（英鎊 (GBP/USD) ↓），英國經濟下行壓力或脫歐後續影響。<br>韓元貶值 2.55%（韓元 (KRW/USD) ↓），韓國出口導向受益但外資流出壓力。</div>
             
-            <div class="card-ts">🕐 更新時間：2026/05/16 13:43</div>
+            <div class="row">
+                <div class="lbl">新台幣 (TWD/USD)</div>
+                <div class="val">
+                    0.0317
+                    
+                    <span class="chg down">
+                        -0.83%
+                    </span>
+                    
+                </div>
+            </div>
+            
+            
+            
+            <div class="row">
+                <div class="lbl">澳幣 (AUD/USD)</div>
+                <div class="val">
+                    0.7153
+                    
+                    <span class="chg down">
+                        -1.16%
+                    </span>
+                    
+                </div>
+            </div>
+            
+            
+            <div class="commentary">DXY 美元指數上漲 +1.36%，美元全面走強，非美貨幣承壓。<br>歐元貶值 1.17%（歐元 (EUR/USD) ↓），歐洲經濟疲弱或美元避險需求上升。<br>英鎊貶值 1.99%（英鎊 (GBP/USD) ↓），英國經濟下行壓力或脫歐後續影響。<br>瑞郎貶值 1.05%（瑞士法郎 (CHF/USD) ↓），全球風險偏好回升、避險需求消退。<br>日圓貶值 1.19%（日圓 (JPY/USD) ↓），日本出口競爭力增但進口通膨壓力大。<br>韓元貶值 2.55%（韓元 (KRW/USD) ↓），韓國出口導向受益但外資流出壓力。<br>新台幣貶值 0.83%（新台幣 (TWD/USD) ↓），外資匯出壓力增、進口成本上升。<br>澳幣貶值 1.16%（澳幣 (AUD/USD) ↓），商品價格走弱或全球風險趨避。</div>
+            
+            <div class="card-ts">🕐 更新時間：2026/05/16 14:48</div>
         </div>
 
-        <!-- 美股技術面 -->
+        <!-- 美股技術面（月度視角，5 指標） -->
         <div class="card">
-            <div class="card-title">📊 美股技術面</div>
+            <div class="card-title">📊 美股技術面（月度視角）</div>
+            <div style="font-size:10px; color:var(--text-3); margin-bottom:8px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
+                月線 MA20 / 季線 MA60 / 年線 MA200｜RSI(21)（21 天，比 RSI(14) 雜訊少）｜距 52W 高（月度安全邊際）
+            </div>
             
             
             
             <div style="margin-bottom:14px;">
                 <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
                     <span style="font-weight:600; font-size:13px;">標普 500 (S&P 500)</span>
-                    <span style="font-size:15px; font-weight:700; color:var(--text-1);">7,408</span>
+                    <span style="font-size:15px; font-weight:700; color:var(--text-1);">
+                        7,408
+                        <span class="chg up" style="margin-left:6px; font-size:10px;">
+                            多頭排列
+                        </span>
+                    </span>
                 </div>
                 <div class="row">
-                    <div class="lbl" style="font-size:11px;">MA50</div>
+                    <div class="lbl" style="font-size:11px;">月線 MA20</div>
                     <div class="val" style="font-size:11px;">
-                        6,921
+                        7,260
                         <span class="chg up">
-                            +7.0%
+                            +2.0%
                         </span>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="lbl" style="font-size:11px;">MA200</div>
+                    <div class="lbl" style="font-size:11px;">季線 MA60</div>
+                    <div class="val" style="font-size:11px;">
+                        6,914
+                        <span class="chg up">
+                            +7.2%
+                        </span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="lbl" style="font-size:11px;">年線 MA200</div>
                     <div class="val" style="font-size:11px;">
                         6,780
                         <span class="chg up">
@@ -426,18 +500,19 @@
                     </div>
                 </div>
                 <div class="row" style="margin-top:4px;">
-                    <div class="lbl" style="font-size:11px;">RSI(14)</div>
+                    <div class="lbl" style="font-size:11px;">RSI(21)</div>
                     <div class="val" style="font-size:11px;">
-                        <b>68.5</b>
+                        <b>69.3</b>
                         <span style="color:var(--text-3); margin-left:4px;">偏多</span>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="lbl" style="font-size:11px;">均線訊號</div>
+                    <div class="lbl" style="font-size:11px;">距 52W 高</div>
                     <div class="val" style="font-size:11px;">
                         <span class="chg up">
-                            黃金交叉 ✅
+                            -1.2%
                         </span>
+                        <span style="color:var(--text-3); margin-left:4px;">創新高 / 強勢區</span>
                     </div>
                 </div>
             </div>
@@ -449,19 +524,33 @@
             <div style="margin-bottom:14px;">
                 <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
                     <span style="font-weight:600; font-size:13px;">那斯達克 (Nasdaq)</span>
-                    <span style="font-size:15px; font-weight:700; color:var(--text-1);">26,225</span>
+                    <span style="font-size:15px; font-weight:700; color:var(--text-1);">
+                        26,225
+                        <span class="chg up" style="margin-left:6px; font-size:10px;">
+                            多頭排列
+                        </span>
+                    </span>
                 </div>
                 <div class="row">
-                    <div class="lbl" style="font-size:11px;">MA50</div>
+                    <div class="lbl" style="font-size:11px;">月線 MA20</div>
                     <div class="val" style="font-size:11px;">
-                        23,566
+                        25,337
                         <span class="chg up">
-                            +11.3%
+                            +3.5%
                         </span>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="lbl" style="font-size:11px;">MA200</div>
+                    <div class="lbl" style="font-size:11px;">季線 MA60</div>
+                    <div class="val" style="font-size:11px;">
+                        23,436
+                        <span class="chg up">
+                            +11.9%
+                        </span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="lbl" style="font-size:11px;">年線 MA200</div>
                     <div class="val" style="font-size:11px;">
                         22,957
                         <span class="chg up">
@@ -470,25 +559,26 @@
                     </div>
                 </div>
                 <div class="row" style="margin-top:4px;">
-                    <div class="lbl" style="font-size:11px;">RSI(14)</div>
+                    <div class="lbl" style="font-size:11px;">RSI(21)</div>
                     <div class="val" style="font-size:11px;">
-                        <b>71.3</b>
+                        <b>72.2</b>
                         <span style="color:var(--text-3); margin-left:4px;">超買</span>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="lbl" style="font-size:11px;">均線訊號</div>
+                    <div class="lbl" style="font-size:11px;">距 52W 高</div>
                     <div class="val" style="font-size:11px;">
                         <span class="chg up">
-                            黃金交叉 ✅
+                            -1.5%
                         </span>
+                        <span style="color:var(--text-3); margin-left:4px;">創新高 / 強勢區</span>
                     </div>
                 </div>
             </div>
             
             
             
-            <div class="card-ts">🕐 更新時間：2026/05/16 13:43</div>
+            <div class="card-ts">🕐 更新時間：2026/05/16 14:48</div>
         </div>
 
     </div>
@@ -659,7 +749,7 @@
             
             <div class="commentary">全球股市齊跌，10/11 大市場收跌，避險情緒主導。<br>領跌：上證綜合 (SSEC) -2.12%。<br>台股下跌 -1.48%，表現弱於全球均值。</div>
             
-            <div class="card-ts">🕐 更新時間：2026/05/16 13:48</div>
+            <div class="card-ts">🕐 更新時間：2026/05/16 14:52</div>
         </div>
 
         <!-- VIX + Fear & Greed -->
@@ -733,7 +823,7 @@
             
             <div class="commentary">CNN Fear & Greed 指數 31（恐懼），市場風險偏好下降，避險資產需求上升。<br>VIX 18.4，處於正常區間，市場波動溫和。<br>CNN 指數較前日暴跌 -12.0 點，情緒面出現劇烈轉折。</div>
             
-            <div class="card-ts">🕐 更新時間：2026/05/16 13:48</div>
+            <div class="card-ts">🕐 更新時間：2026/05/16 14:52</div>
         </div>
 
     </div>
@@ -823,10 +913,10 @@
             <div class="row">
                 <div class="lbl">BTC</div>
                 <div class="val">
-                    $79,006
+                    $78,661
                     
                     <span class="chg down">
-                        -1.75%
+                        -2.37%
                     </span>
                     
                 </div>
@@ -835,10 +925,10 @@
             <div class="row">
                 <div class="lbl">ETH</div>
                 <div class="val">
-                    $2,226.44
+                    $2,216.33
                     
                     <span class="chg down">
-                        -0.79%
+                        -1.72%
                     </span>
                     
                 </div>
@@ -847,19 +937,19 @@
             <div class="row">
                 <div class="lbl">SOL</div>
                 <div class="val">
-                    $88.63
+                    $88.09
                     
                     <span class="chg down">
-                        -2.07%
+                        -3.2%
                     </span>
                     
                 </div>
             </div>
             
             
-            <div class="commentary">Brent-WTI 價差擴至 $8.2，反映國際市場供給緊於美國。<br>WTI 原油大漲 +3.01% 至 $101.02，可能受地緣衝突升級（中東局勢/制裁）或 OPEC+ 減產等供給面因素推動。<br>油價處於 $101 高位，推升運輸與製造成本，通膨壓力可能延遲 Fed 降息時程。<br>天然氣上漲 1.72% 至 $2.960，冬季取暖需求或供給中斷，影響電力與工業成本。<br>BTC $79,006（-1.75%），窄幅整理。<br>銅價下跌 1.85% 至 $6.295/磅，「銅博士」暗示工業需求放緩，中國經濟復甦不如預期。<br>黃金下跌 -3.32%，美元走強或實質利率上升壓抑金價。<br>金價 $4,562 處於歷史高位，反映去美元化趨勢與全球央行儲備多元化。<br>白銀下跌 9.29%，兼具工業（光伏、電子）與貴金屬屬性，工業需求疑慮拖累。</div>
+            <div class="commentary">Brent-WTI 價差擴至 $8.2，反映國際市場供給緊於美國。<br>WTI 原油大漲 +3.01% 至 $101.02，可能受地緣衝突升級（中東局勢/制裁）或 OPEC+ 減產等供給面因素推動。<br>油價處於 $101 高位，推升運輸與製造成本，通膨壓力可能延遲 Fed 降息時程。<br>天然氣上漲 1.72% 至 $2.960，冬季取暖需求或供給中斷，影響電力與工業成本。<br>銅價下跌 1.85% 至 $6.295/磅，「銅博士」暗示工業需求放緩，中國經濟復甦不如預期。<br>BTC 下跌 -2.37%，加密市場風險偏好下降。<br>黃金下跌 -3.32%，美元走強或實質利率上升壓抑金價。<br>金價 $4,562 處於歷史高位，反映去美元化趨勢與全球央行儲備多元化。<br>白銀下跌 9.29%，兼具工業（光伏、電子）與貴金屬屬性，工業需求疑慮拖累。</div>
             
-            <div class="card-ts">🕐 原物料：2026/05/16 13:48｜加密貨幣（CoinGecko）：2026/05/16 13:48</div>
+            <div class="card-ts">🕐 原物料：2026/05/16 14:52｜加密貨幣（CoinGecko）：2026/05/16 14:52</div>
         </div>
 
         <!-- 台灣市場 三大法人 -->
@@ -1166,7 +1256,7 @@
         
         <div class="commentary">Existing Home Sales（成屋銷售） 4.02M（遜於預期，預期 4.05M）。<br>Core Inflation Rate MoM 實際 0.4（優於預期，預期 0.3），通膨高於預期，Fed 降息壓力增大。<br>Inflation Rate MoM 實際 0.6（符合預期，預期 0.6），通膨符合 Fed 預測路徑。<br>Core Inflation Rate YoY 實際 2.8（優於預期，預期 2.7），通膨高於預期，Fed 降息壓力增大。<br>Inflation Rate YoY 實際 3.8（優於預期，預期 3.7），通膨高於預期，Fed 降息壓力增大。<br>Monthly Budget Statement 215.00B（遜於預期，預期 220.00B）。<br>API Crude Oil Stock Change -2.19M（遜於預期，預期 -1.65M）。<br>PPI 1（優於預期，預期 0.3），生產者物價上漲，通膨上游壓力升溫。<br>PPI 1.4（優於預期，預期 0.5），生產者物價上漲，通膨上游壓力升溫。<br>EIA Gasoline Stocks Change -4.08M（遜於預期，預期 -2.85M）。<br>EIA Crude Oil Stocks Change -4.31M（遜於預期，預期 -2.10M）。<br>首次申請失業救濟金 211.0K（優於預期，預期 205.0K），申請人數增加，勞動市場出現鬆弛。<br>零售銷售 0.5（符合預期，預期 0.5），消費降溫，需關注信心指標。<br>Import Prices MoM（進口物價 (月)） 1.9（優於預期，預期 1）。<br>Export Prices MoM（出口物價 (月)） 3.3（優於預期，預期 1.1）。</div>
         
-        <div class="card-ts">🕐 資料截至：2026/05/16 13:48</div>
+        <div class="card-ts">🕐 資料截至：2026/05/16 14:52</div>
         
     </div>
 

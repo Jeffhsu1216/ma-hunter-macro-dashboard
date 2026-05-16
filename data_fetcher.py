@@ -40,15 +40,21 @@ TAIPEI_TZ        = pytz.timezone("Asia/Taipei")
 
 # (name, ticker, decimals, invert)
 # invert=True：yfinance 給 USD/XXX，需倒轉為 XXX/USD（price=1/p，change_pct 取反）
+# 顯示順序：DXY → 中國 → 歐洲三大 → 亞太四強（語意分組固定，不再依漲跌排序）
 FX_TICKERS = [
-    ("DXY 美元指數", "DX-Y.NYB", 2, False),
-    ("TWD/USD",     "TWD=X",    4, True),
-    ("JPY/USD",     "JPY=X",    6, True),
-    ("CNY/USD",     "CNY=X",    4, True),
-    ("EUR/USD",     "EURUSD=X", 4, False),
-    ("GBP/USD",     "GBPUSD=X", 4, False),
-    ("AUD/USD",     "AUDUSD=X", 4, False),
-    ("KRW/USD",     "KRW=X",    6, True),
+    # 錨指標
+    ("美元指數 (DXY)",       "DX-Y.NYB", 2, False),
+    # 中國
+    ("人民幣 (CNY/USD)",     "CNY=X",    4, True),
+    # 歐洲三大
+    ("歐元 (EUR/USD)",       "EURUSD=X", 4, False),
+    ("英鎊 (GBP/USD)",       "GBPUSD=X", 4, False),
+    ("瑞士法郎 (CHF/USD)",   "CHF=X",    4, True),
+    # 亞太四強
+    ("日圓 (JPY/USD)",       "JPY=X",    6, True),
+    ("韓元 (KRW/USD)",       "KRW=X",    6, True),
+    ("新台幣 (TWD/USD)",     "TWD=X",    4, True),
+    ("澳幣 (AUD/USD)",       "AUDUSD=X", 4, False),
 ]
 
 # 殖利率用 FRED（官方來源，精準）
@@ -60,17 +66,17 @@ YIELD_FRED_IDS = [
 ]
 
 INDEX_TICKERS = [
-    ("S&P 500",   "^GSPC",     "🇺🇸"),
-    ("Nasdaq",    "^IXIC",     "🇺🇸"),
-    ("FTSE 100",  "^FTSE",     "🇬🇧"),
-    ("DAX",       "^GDAXI",    "🇩🇪"),
-    ("STOXX 600", "^STOXX",    "🇪🇺"),
-    ("日經 225",  "^N225",     "🇯🇵"),
-    ("KOSPI",     "^KS11",     "🇰🇷"),
-    ("恆生指數",  "^HSI",      "🇭🇰"),
-    ("上證綜合",  "000001.SS", "🇨🇳"),
-    ("Nifty 50",  "^NSEI",     "🇮🇳"),
-    ("加權指數",  "^TWII",     "🇹🇼"),
+    ("標普 500 (S&P 500)",        "^GSPC",     "🇺🇸"),
+    ("那斯達克 (Nasdaq)",          "^IXIC",     "🇺🇸"),
+    ("英國富時 100 (FTSE 100)",    "^FTSE",     "🇬🇧"),
+    ("德國 DAX (DAX)",             "^GDAXI",    "🇩🇪"),
+    ("歐洲 STOXX 600 (STOXX 600)", "^STOXX",    "🇪🇺"),
+    ("日經 225 (Nikkei 225)",      "^N225",     "🇯🇵"),
+    ("南韓綜合 (KOSPI)",            "^KS11",     "🇰🇷"),
+    ("恆生指數 (HSI)",              "^HSI",      "🇭🇰"),
+    ("上證綜合 (SSEC)",             "000001.SS", "🇨🇳"),
+    ("印度 Nifty 50 (Nifty 50)",   "^NSEI",     "🇮🇳"),
+    ("加權指數 (TAIEX)",            "^TWII",     "🇹🇼"),
 ]
 
 # (name, ticker, decimals, currency_symbol)
@@ -91,18 +97,18 @@ CRYPTO_LIST = [
 
 VIX_TICKER = "^VIX"
 
-# 2026 全年 FOMC 會議日程（結束日）
+# 2026 全年 FOMC 會議日程（結束日 / release date，源：federalreserve.gov）
 FOMC_DATES_2026 = [
-    date(2026, 1, 29), date(2026, 3, 19), date(2026, 5,  7),
-    date(2026, 6, 18), date(2026, 7, 30), date(2026, 9, 17),
-    date(2026, 11, 5), date(2026, 12, 17),
+    date(2026, 1, 28), date(2026, 3, 18), date(2026, 4, 29),
+    date(2026, 6, 17), date(2026, 7, 29), date(2026, 9, 16),
+    date(2026, 10, 28), date(2026, 12, 9),
 ]
 
-# 2026 全年 ECB 理事會決策會議日程（結束日）
+# 2026 全年 ECB 理事會決策會議日程（決議日，源：ecb.europa.eu）
 ECB_DATES_2026 = [
-    date(2026, 1, 30), date(2026, 3,  6), date(2026, 4, 30),
+    date(2026, 1, 29), date(2026, 3, 19), date(2026, 4, 30),
     date(2026, 6, 11), date(2026, 7, 23), date(2026, 9, 10),
-    date(2026, 10, 22), date(2026, 12, 3),
+    date(2026, 10, 29), date(2026, 12, 17),
 ]
 
 # 2026 全年 BOJ 金融政策決定會合日程（結束日）
@@ -112,11 +118,21 @@ BOJ_DATES_2026 = [
     date(2026, 10, 30), date(2026, 12, 18),
 ]
 
+# 2026 全年 BoE MPC 會議日程（決議日，源：bankofengland.co.uk）
+BOE_DATES_2026 = [
+    date(2026, 2, 5),  date(2026, 3, 19), date(2026, 5, 7),
+    date(2026, 6, 18), date(2026, 8, 6),  date(2026, 9, 17),
+    date(2026, 11, 5), date(2026, 12, 17),
+]
+
 # 2026 全年 CBC（台灣央行）理監事會日程
 CBC_DATES_2026 = [
     date(2026, 3, 19), date(2026, 6, 18),
     date(2026, 9, 17), date(2026, 12, 17),
 ]
+
+# PBOC 沒有固定會議日程；LPR 每月 20 日例行公布（遇假日順延）
+# OMO（7 天逆回購）為主要政策利率，與 LPR 同步公布或央行臨時調整
 
 
 # ============================================================
@@ -274,6 +290,70 @@ def _scrape_boj_official() -> str:
     return ""
 
 
+def _scrape_boe_official() -> str:
+    """爬 BoE 官網首頁 Bank Rate（主要政策利率）"""
+    try:
+        import re as _re
+        resp = requests.get(
+            "https://www.bankofengland.co.uk/",
+            headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        # 首頁顯示 "Bank Rate X.XX%"（不同 HTML 結構，用較寬鬆的 pattern）
+        m = _re.search(r'Bank Rate[^0-9%]{1,80}(\d+\.\d+)\s*%', resp.text, _re.DOTALL)
+        if m:
+            return f"{float(m.group(1)):.2f}"
+    except Exception as e:
+        logger.warning(f"BoE official scrape failed: {e}")
+    return ""
+
+
+def _scrape_boe_tradingeconomics() -> str:
+    """BoE 備援：tradingeconomics meta description"""
+    try:
+        import re as _re
+        resp = requests.get(
+            "https://tradingeconomics.com/united-kingdom/interest-rate",
+            headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        m = _re.search(
+            r'<meta[^>]*name="description"[^>]*content="[^"]*?(\d+\.\d+)\s*percent',
+            resp.text, _re.IGNORECASE)
+        if m:
+            return f"{float(m.group(1)):.2f}"
+    except Exception as e:
+        logger.warning(f"BoE TE scrape failed: {e}")
+    return ""
+
+
+def _scrape_pboc_omo() -> str:
+    """爬 PBOC 7 天逆回購利率（央行政策利率，對標 Fed Funds / ECB DFR / BoE Bank Rate）
+    來源：tradingeconomics（中國央行政策利率）"""
+    try:
+        import re as _re
+        resp = requests.get(
+            "https://tradingeconomics.com/china/interest-rate",
+            headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        m = _re.search(
+            r'<meta[^>]*name="description"[^>]*content="[^"]*?(\d+\.\d+)\s*percent',
+            resp.text, _re.IGNORECASE)
+        if m:
+            return f"{float(m.group(1)):.2f}"
+    except Exception as e:
+        logger.warning(f"PBOC OMO scrape failed: {e}")
+    return ""
+
+
+def _next_pboc_lpr_date() -> str:
+    """PBOC LPR 每月 20 日公布（遇假日順延），用此當作下次發布日"""
+    today = date.today()
+    if today.day < 20:
+        target = today.replace(day=20)
+    else:
+        if today.month == 12:
+            target = date(today.year + 1, 1, 20)
+        else:
+            target = date(today.year, today.month + 1, 20)
+    return target.strftime("%Y/%m/%d")
+
+
 # ============================================================
 # 備援抓取：TradingView → FRED（ForexFactory 未回填實際值時）
 # ============================================================
@@ -419,13 +499,14 @@ def _fx_commentary(fx_list: list) -> str:
     """
     # 各幣對的中文名稱與漲/跌時的解讀
     _META = {
-        "TWD/USD": ("新台幣", "外資匯入支撐、進口成本下降",       "外資匯出壓力增、進口成本上升"),
-        "JPY/USD": ("日圓",   "避險資金湧入日圓、日銀可能調整政策","日本出口競爭力增但進口通膨壓力大"),
-        "CNY/USD": ("人民幣", "中國經濟信心回升或政策引導升值",   "中國資本外流壓力或政策寬鬆預期"),
-        "KRW/USD": ("韓元",   "外資回流韓股、韓元走強",           "韓國出口導向受益但外資流出壓力"),
-        "EUR/USD": ("歐元",   "歐洲經濟數據優於預期或 ECB 鷹派", "歐洲經濟疲弱或美元避險需求上升"),
-        "GBP/USD": ("英鎊",   "英國經濟韌性或 BOE 偏鷹",         "英國經濟下行壓力或脫歐後續影響"),
-        "AUD/USD": ("澳幣",   "大宗商品需求回升、中國經濟改善預期","商品價格走弱或全球風險趨避"),
+        "人民幣 (CNY/USD)":    ("人民幣",   "中國經濟信心回升或政策引導升值",     "中國資本外流壓力或政策寬鬆預期"),
+        "歐元 (EUR/USD)":      ("歐元",     "歐洲經濟數據優於預期或 ECB 鷹派",   "歐洲經濟疲弱或美元避險需求上升"),
+        "英鎊 (GBP/USD)":      ("英鎊",     "英國經濟韌性或 BoE 偏鷹",           "英國經濟下行壓力或脫歐後續影響"),
+        "瑞士法郎 (CHF/USD)":  ("瑞郎",     "避險資金流入、SNB 偏鷹",            "全球風險偏好回升、避險需求消退"),
+        "日圓 (JPY/USD)":      ("日圓",     "避險資金湧入日圓、日銀可能調整政策", "日本出口競爭力增但進口通膨壓力大"),
+        "韓元 (KRW/USD)":      ("韓元",     "外資回流韓股、韓元走強",             "韓國出口導向受益但外資流出壓力"),
+        "新台幣 (TWD/USD)":    ("新台幣",   "外資匯入支撐、進口成本下降",         "外資匯出壓力增、進口成本上升"),
+        "澳幣 (AUD/USD)":      ("澳幣",     "大宗商品需求回升、中國經濟改善預期", "商品價格走弱或全球風險趨避"),
     }
     parts = []
 
@@ -736,7 +817,7 @@ def _index_commentary(indices: list) -> str:
         parts.append(f"領跌：{worst['name']} {worst['change_pct']:+.2f}%")
 
     # 台股
-    taiex = next((i for i in valid if i["name"] == "加權指數"), None)
+    taiex = next((i for i in valid if "TAIEX" in i["name"]), None)
     if taiex and taiex.get("change_pct") is not None:
         c = taiex["change_pct"]
         if c < -2:
@@ -749,8 +830,8 @@ def _index_commentary(indices: list) -> str:
             parts.append(f"台股上漲 {c:.2f}%，跟隨全球多頭")
 
     # US vs Asia 背離
-    sp = next((i for i in valid if i["name"] == "S&P 500"), None)
-    nk = next((i for i in valid if i["name"] == "日經 225"), None)
+    sp = next((i for i in valid if "S&P 500" in i["name"]), None)
+    nk = next((i for i in valid if "Nikkei" in i["name"] or "日經" in i["name"]), None)
     if sp and nk and sp.get("change_pct") is not None and nk.get("change_pct") is not None:
         diff = sp["change_pct"] - nk["change_pct"]
         if diff > 2:
@@ -834,7 +915,8 @@ def _calendar_commentary(cal: list) -> str:
 # ============================================================
 
 def fetch_fx_data() -> dict:
-    """抓匯率，統一 XXX/USD 格式，DXY 置頂，其餘按漲跌幅排序 + 解釋"""
+    """抓匯率，統一 XXX/USD 格式，依 FX_TICKERS 定義的語意分組順序顯示
+    （DXY → 中國 → 歐洲三大 → 亞太四強），不再依漲跌幅排序 + 解釋"""
     results = []
     for name, ticker, dec, inv in FX_TICKERS:
         q = _get_quote(ticker)
@@ -849,12 +931,6 @@ def fetch_fx_data() -> dict:
             "price_fmt": _fmt(price, dec) if price is not None else "N/A",
             "change_pct": chg_pct,
         })
-
-    # DXY 固定第一行，其餘按漲跌幅排序
-    dxy = [r for r in results if "DXY" in r["name"]]
-    others = [r for r in results if "DXY" not in r["name"]]
-    others.sort(key=lambda x: x["change_pct"] if x["change_pct"] is not None else -999, reverse=True)
-    results = dxy + others
 
     return {
         "items": results,
@@ -1026,21 +1102,27 @@ def fetch_cb_rates() -> dict:
         u = _get_fred_csv("DFEDTARU", 3)
         return f"{l[-1][1]:.2f}–{u[-1][1]:.2f}" if (l and u) else ""
 
-    fed_rate = _resolve("Fed", _fed_fred, _scrape_fed_official, "3.50–3.75")
+    fed_rate = _resolve("聯準會 (Fed)", _fed_fred, _scrape_fed_official, "3.50–3.75")
 
     # ── ECB ──
     def _ecb_fred():
         r = _get_fred_csv("ECBDFR", 3)
         return f"{r[-1][1]:.2f}" if r else ""
 
-    ecb_rate = _resolve("ECB", _ecb_fred, _scrape_ecb_official, "2.00")
+    ecb_rate = _resolve("歐洲央行 (ECB)", _ecb_fred, _scrape_ecb_official, "2.00")
 
     # ── BOJ ──
     def _boj_fred():
         r = _get_fred_csv("IRSTJPN156N", 3)
         return f"{r[-1][1]:.2f}" if r else ""
 
-    boj_rate = _resolve("BOJ", _boj_fred, _scrape_boj_official, "0.50")
+    boj_rate = _resolve("日本央行 (BOJ)", _boj_fred, _scrape_boj_official, "0.50")
+
+    # ── BoE（英國央行 Bank Rate）──
+    boe_rate = _resolve("英國央行 (BoE)", _scrape_boe_official, _scrape_boe_tradingeconomics, "4.25")
+
+    # ── PBOC（中國央行 7 天逆回購）──
+    pboc_rate = _resolve("中國央行 (PBOC)", _scrape_pboc_omo, None, "1.40")
 
     # ── CBC（台灣央行重貼現率）──
     def _cbc_official():
@@ -1049,21 +1131,26 @@ def fetch_cb_rates() -> dict:
             'https://www.cbc.gov.tw/tw/cp-534-4088-F0CAF-2.html',
             headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
         m = _re.search(r'重貼現率.*?<em>([\d.]+)%</em>', resp.text, _re.DOTALL)
-        return m.group(1) if m else ""
+        return f"{float(m.group(1)):.2f}" if m else ""
 
-    cbc_rate = _resolve("CBC", _cbc_official, None, "2.00")
+    cbc_rate = _resolve("中央銀行 (CBC)", _cbc_official, None, "2.00")
 
-    result["Fed"] = {"rate": fed_rate, "next": _next_meeting(FOMC_DATES_2026)}
-    result["ECB"] = {"rate": ecb_rate, "next": _next_meeting(ECB_DATES_2026)}
-    result["BOJ"] = {"rate": boj_rate, "next": _next_meeting(BOJ_DATES_2026)}
-    result["CBC"] = {"rate": cbc_rate, "next": _next_meeting(CBC_DATES_2026)}
+    # 顯示順序：Fed → ECB → BoE → BOJ → PBOC → CBC（依重要性與地理）
+    result["聯準會 (Fed)"]    = {"rate": fed_rate,  "next": _next_meeting(FOMC_DATES_2026)}
+    result["歐洲央行 (ECB)"]  = {"rate": ecb_rate,  "next": _next_meeting(ECB_DATES_2026)}
+    result["英國央行 (BoE)"]  = {"rate": boe_rate,  "next": _next_meeting(BOE_DATES_2026)}
+    result["日本央行 (BOJ)"]  = {"rate": boj_rate,  "next": _next_meeting(BOJ_DATES_2026)}
+    result["中國央行 (PBOC)"] = {"rate": pboc_rate, "next": _next_pboc_lpr_date() + "（LPR）"}
+    result["中央銀行 (CBC)"]  = {"rate": cbc_rate,  "next": _next_meeting(CBC_DATES_2026)}
 
     return result
 
 
 def fetch_spx_technical() -> dict:
-    """美股技術面：S&P 500 + Nasdaq  MA50/MA200/RSI(14)"""
-    def _rsi(closes, period=14):
+    """美股技術面（針對月度投資週期）：S&P 500 + Nasdaq
+    5 個指標：MA20（月線）/ MA60（季線）/ MA200（年線）/ RSI(21) / 距 52W 高
+    統計學原理：觀察窗 ≈ 投資週期 時訊號雜訊比最佳；月度持倉用 21 天 RSI 比 14 天乾淨"""
+    def _rsi(closes, period=21):
         deltas = [closes[i] - closes[i-1] for i in range(1, len(closes))]
         gains  = [max(d, 0)      for d in deltas[-period:]]
         losses = [abs(min(d, 0)) for d in deltas[-period:]]
@@ -1081,6 +1168,24 @@ def fetch_spx_technical() -> dict:
         if v < 70: return '偏多'
         return '超買'
 
+    def _trend_lbl(price, ma20, ma60, ma200):
+        """月度視角的趨勢判讀（站上幾條均線）"""
+        if price > ma20 > ma60 > ma200:
+            return ('多頭排列', True)        # 完美多頭：站上月＞季＞年
+        if price > ma200 and price > ma60:
+            return ('多頭趨勢', True)        # 站上季線與年線
+        if price < ma200 and price < ma60:
+            return ('空頭趨勢', False)       # 跌破季線與年線
+        return ('盤整中', None)
+
+    def _high_lbl(pct_from_high):
+        """距 52W 高的月度安全邊際判讀"""
+        if pct_from_high >= -3:   return '創新高 / 強勢區'
+        if pct_from_high >= -10:  return '強勢區'
+        if pct_from_high >= -20:  return '修正中'
+        if pct_from_high >= -30:  return '熊市邊緣'
+        return '深度熊市'
+
     import urllib.request as _urlr, urllib.parse as _urlp
 
     def _hist(symbol):
@@ -1092,28 +1197,37 @@ def fetch_spx_technical() -> dict:
         return [x for x in closes if x is not None]
 
     result = {}
-    for key, sym, name in [('spx', '^GSPC', 'S&P 500'), ('ndq', '^IXIC', 'Nasdaq')]:
+    for key, sym, name in [('spx', '^GSPC', '標普 500 (S&P 500)'), ('ndq', '^IXIC', '那斯達克 (Nasdaq)')]:
         try:
             closes = _hist(sym)
             if len(closes) < 200:
                 result[key] = {'ok': False, 'name': name}
                 continue
-            price  = closes[-1]
-            ma50   = sum(closes[-50:])  / 50
-            ma200  = sum(closes[-200:]) / 200
-            rsi    = _rsi(closes)
+            price   = closes[-1]
+            ma20    = sum(closes[-20:])  / 20
+            ma60    = sum(closes[-60:])  / 60
+            ma200   = sum(closes[-200:]) / 200
+            rsi21   = _rsi(closes, 21)
+            high52w = max(closes[-252:]) if len(closes) >= 252 else max(closes)
+            pct_high = (price - high52w) / high52w * 100
+            trend, trend_ok = _trend_lbl(price, ma20, ma60, ma200)
             result[key] = {
-                'ok':    True,
-                'name':  name,
-                'price': round(price, 2),
-                'ma50':  round(ma50,  2),
-                'ma200': round(ma200, 2),
-                'pct50':  round((price - ma50)  / ma50  * 100, 1),
-                'pct200': round((price - ma200) / ma200 * 100, 1),
-                'rsi':     rsi,
-                'rsi_lbl': _rsi_lbl(rsi),
-                'cross':    '黃金交叉' if ma50 > ma200 else '死亡交叉',
-                'cross_ok':  ma50 > ma200,
+                'ok':       True,
+                'name':     name,
+                'price':    round(price, 2),
+                'ma20':     round(ma20,  2),
+                'ma60':     round(ma60,  2),
+                'ma200':    round(ma200, 2),
+                'pct20':    round((price - ma20)  / ma20  * 100, 1),
+                'pct60':    round((price - ma60)  / ma60  * 100, 1),
+                'pct200':   round((price - ma200) / ma200 * 100, 1),
+                'rsi':      rsi21,
+                'rsi_lbl':  _rsi_lbl(rsi21),
+                'high52w':  round(high52w, 2),
+                'pct_high': round(pct_high, 1),
+                'high_lbl': _high_lbl(pct_high),
+                'trend':    trend,
+                'trend_ok': trend_ok,
             }
         except Exception as e:
             logger.warning(f"fetch_spx_technical {sym}: {e}")
@@ -1386,14 +1500,23 @@ def _fetch_tv_calendar_full(tv_from: str, tv_to: str) -> list:
 
 def fetch_economic_calendar() -> list:
     now_utc = datetime.now(pytz.utc)
-    tv_from = (now_utc - timedelta(days=3)).strftime("%Y-%m-%dT00:00:00.000Z")
+    tv_from = (now_utc - timedelta(days=7)).strftime("%Y-%m-%dT00:00:00.000Z")
     tv_to   = (now_utc + timedelta(days=7)).strftime("%Y-%m-%dT23:59:59.000Z")
 
-    # 同時抓 TV actuals（供 FF 事件補值用）
-    tv_actuals = _fetch_tv_actuals(tv_from, tv_to)
-    logger.info(f"TradingView actuals fetched: {len(tv_actuals)} events")
+    # ── 主來源：TradingView（actual 直接內建，不需 title 配對）──
+    tv_results = _fetch_tv_calendar_full(tv_from, tv_to)
+    if tv_results:
+        logger.info(f"TradingView primary returned {len(tv_results)} events")
+        try:
+            with open(CALENDAR_BACKUP, "w", encoding="utf-8") as f:
+                json.dump(tv_results, f, ensure_ascii=False)
+        except:
+            pass
+        return tv_results
 
-    # ── 主來源：ForexFactory ──
+    # ── 備援一：ForexFactory + 借 TV actuals 補值 ──
+    logger.info("TradingView failed, fallback to ForexFactory")
+    tv_actuals = _fetch_tv_actuals(tv_from, tv_to)
     for week in ["thisweek", "nextweek"]:
         try:
             url = f"https://nfs.faireconomy.media/ff_calendar_{week}.json"
@@ -1414,17 +1537,6 @@ def fetch_economic_calendar() -> list:
         except Exception as e:
             logger.warning(f"Calendar FF {week} failed: {e}")
             continue
-
-    # ── 備援一：TradingView 完整日曆 ──
-    logger.info("FF failed, trying TradingView full calendar...")
-    tv_results = _fetch_tv_calendar_full(tv_from, tv_to)
-    if tv_results:
-        try:
-            with open(CALENDAR_BACKUP, "w", encoding="utf-8") as f:
-                json.dump(tv_results, f, ensure_ascii=False)
-        except:
-            pass
-        return tv_results
 
     # ── 備援二：calendar_backup.json（同週才用）──
     try:
