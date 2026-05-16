@@ -12,7 +12,7 @@
 import urllib.request, urllib.parse, json, datetime, threading, time, os, subprocess, re
 
 # ══════════════════════════════════════════
-TOKEN   = '8743919766:AAG6z6YPW7Gqt7rF2KY2xC9mvbm2Ge31tjQ'
+TOKEN   = '8950989278:AAGhGH_B3lpeF0e43KHUyqJAK_7Zcgz6hEc'
 CHAT_ID = '2117347781'
 DASHBOARD_URL = 'https://jeffhsu1216.github.io/ma-hunter-macro-dashboard/'
 # ══════════════════════════════════════════
@@ -50,7 +50,7 @@ TICKERS = {
 crypto_res = {}; fg_res = {}; inst_res = {}; cal_res = {}; cb_res = {}; spx_tech = {}
 
 def fetch_fed_rate():
-    """從 FRED 動態抓 Fed/ECB/BOJ 利率，失敗各自 fallback"""
+    """從 FRED 動態抓 Fed/ECB/BOJ 利率 + 爬蟲抓 BoE/PBOC/CBC，失敗各自 fallback"""
     def _fred_csv(series_id, timeout=25):
         url = f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}'
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -63,27 +63,59 @@ def fetch_fed_rate():
                 rows.append(float(parts[1]))
         return rows
 
+    def _scrape_te_rate(country_slug):
+        """tradingeconomics meta description 抓政策利率"""
+        try:
+            req = urllib.request.Request(
+                f'https://tradingeconomics.com/{country_slug}/interest-rate',
+                headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=15) as r:
+                html = r.read().decode('utf-8', errors='ignore')
+            m = re.search(
+                r'<meta[^>]*name="description"[^>]*content="[^"]*?(\d+\.\d+)\s*percent',
+                html, re.IGNORECASE)
+            return f'{float(m.group(1)):.2f}' if m else None
+        except Exception:
+            return None
+
     # Fed
     try:
         lower = _fred_csv('DFEDTARL')
         upper = _fred_csv('DFEDTARU')
-        cb_res['fed'] = f'{lower[-1]:.2f}–{upper[-1]:.2f}' if lower and upper else '4.25–4.50'
+        cb_res['fed'] = f'{lower[-1]:.2f}–{upper[-1]:.2f}' if lower and upper else '3.50–3.75'
     except:
-        cb_res['fed'] = '4.25–4.50'
+        cb_res['fed'] = '3.50–3.75'
 
     # ECB
     try:
         ecb = _fred_csv('ECBDFR')
-        cb_res['ecb'] = f'{ecb[-1]:.2f}' if ecb else '2.50'
+        cb_res['ecb'] = f'{ecb[-1]:.2f}' if ecb else '2.00'
     except:
-        cb_res['ecb'] = '2.50'
+        cb_res['ecb'] = '2.00'
+
+    # BoE（英國央行 Bank Rate）— 官網首頁 + tradingeconomics 備援
+    try:
+        boe_req = urllib.request.Request('https://www.bankofengland.co.uk/',
+                                          headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(boe_req, timeout=15) as r:
+            html = r.read().decode('utf-8', errors='ignore')
+        m = re.search(r'Bank Rate[^0-9%]{1,80}(\d+\.\d+)\s*%', html, re.DOTALL)
+        if m:
+            cb_res['boe'] = f'{float(m.group(1)):.2f}'
+        else:
+            cb_res['boe'] = _scrape_te_rate('united-kingdom') or '4.25'
+    except:
+        cb_res['boe'] = _scrape_te_rate('united-kingdom') or '4.25'
 
     # BOJ
     try:
         boj = _fred_csv('IRSTJPN156N')
-        cb_res['boj'] = f'{boj[-1]:.2f}' if boj else '0.50'
+        cb_res['boj'] = f'{boj[-1]:.2f}' if boj else '0.75'
     except:
-        cb_res['boj'] = '0.50'
+        cb_res['boj'] = '0.75'
+
+    # PBOC（中國央行 7 天逆回購 — 對標其他央行政策利率）
+    cb_res['pboc'] = _scrape_te_rate('china') or '1.40'
 
     # CBC（台灣央行重貼現率 — CBC 官網爬蟲）
     try:
@@ -93,7 +125,7 @@ def fetch_fed_rate():
         with urllib.request.urlopen(_req, timeout=10) as _r:
             _html = _r.read().decode('utf-8')
         _m = re.search(r'重貼現率.*?<em>([\d.]+)%</em>', _html, re.DOTALL)
-        cb_res['cbc'] = _m.group(1) if _m else '2.00'
+        cb_res['cbc'] = f'{float(_m.group(1)):.2f}' if _m else '2.00'
     except:
         cb_res['cbc'] = '2.00'
 
@@ -118,7 +150,8 @@ def fetch_crypto():
         crypto_res['ok'] = False
 
 def fetch_spx_tech():
-    """S&P 500 + Nasdaq 技術面：MA50、MA200、RSI(14)"""
+    """S&P 500 + Nasdaq 技術面（月度視角）：MA20/MA60/MA200/RSI(21)/距 52W 高
+    為何選這 5 個：投資週期 ≈ 1 個月，觀察窗對齊（20D/60D/200D/21D RSI）訊號雜訊比最佳"""
     def _hist(symbol):
         url = f'https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?interval=1d&range=1y'
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -127,7 +160,7 @@ def fetch_spx_tech():
         closes = d['chart']['result'][0]['indicators']['quote'][0]['close']
         return [x for x in closes if x is not None]
 
-    def _rsi(closes, period=14):
+    def _rsi(closes, period=21):
         deltas = [closes[i] - closes[i-1] for i in range(1, len(closes))]
         gains  = [max(d, 0)      for d in deltas[-period:]]
         losses = [abs(min(d, 0)) for d in deltas[-period:]]
@@ -144,23 +177,43 @@ def fetch_spx_tech():
         if v < 70: return '偏多'
         return '超買 🔴'
 
-    for key, sym, name in [('spx', '^GSPC', 'S&amp;P 500'), ('ndq', '^IXIC', 'Nasdaq')]:
+    def _trend_lbl(p, m20, m60, m200):
+        if p > m20 > m60 > m200: return ('多頭排列 ✅', True)
+        if p > m200 and p > m60: return ('多頭趨勢 ✅', True)
+        if p < m200 and p < m60: return ('空頭趨勢 ⚠️', False)
+        return ('盤整中', None)
+
+    def _high_lbl(pct):
+        if pct >= -3:   return '創新高 / 強勢區'
+        if pct >= -10:  return '強勢區'
+        if pct >= -20:  return '修正中'
+        if pct >= -30:  return '熊市邊緣'
+        return '深度熊市'
+
+    for key, sym, name in [('spx', '^GSPC', '標普 500 (S&amp;P 500)'), ('ndq', '^IXIC', '那斯達克 (Nasdaq)')]:
         try:
             closes = _hist(sym)
             if len(closes) < 200:
                 spx_tech[key] = {'ok': False}
                 continue
-            price  = closes[-1]
-            ma50   = sum(closes[-50:])  / 50
-            ma200  = sum(closes[-200:]) / 200
-            rsi    = _rsi(closes)
+            price   = closes[-1]
+            ma20    = sum(closes[-20:])  / 20
+            ma60    = sum(closes[-60:])  / 60
+            ma200   = sum(closes[-200:]) / 200
+            rsi21   = _rsi(closes, 21)
+            high52w = max(closes[-252:]) if len(closes) >= 252 else max(closes)
+            pct_high = (price - high52w) / high52w * 100
+            trend, trend_ok = _trend_lbl(price, ma20, ma60, ma200)
             spx_tech[key] = {
                 'ok': True, 'name': name, 'price': price,
-                'ma50': ma50, 'ma200': ma200, 'rsi': rsi,
-                'pct50':  (price - ma50)  / ma50  * 100,
+                'ma20': ma20, 'ma60': ma60, 'ma200': ma200,
+                'pct20':  (price - ma20)  / ma20  * 100,
+                'pct60':  (price - ma60)  / ma60  * 100,
                 'pct200': (price - ma200) / ma200 * 100,
-                'rsi_lbl': _rsi_lbl(rsi),
-                'cross': '黃金交叉 ✅' if ma50 > ma200 else '死亡交叉 ⚠️',
+                'rsi': rsi21, 'rsi_lbl': _rsi_lbl(rsi21),
+                'high52w': high52w, 'pct_high': pct_high,
+                'high_lbl': _high_lbl(pct_high),
+                'trend': trend, 'trend_ok': trend_ok,
             }
         except:
             spx_tech[key] = {'ok': False}
@@ -372,48 +425,57 @@ def run(geopolitics_bullets=None):
         return f'{v:,.6f}'
 
     A('💱 <b>匯率</b>')
-    # DXY 永遠第一
+    # 顯示順序固定：DXY → 中國 → 歐洲三大 → 亞太四強（語意分組）
     _p, _d, _dp = get('DX-Y.NYB')
-    if _p: A(f'  DXY 美元  <code>{fFX(_p):>12}</code>  {arr(_d)} {pct(_dp)}')
+    if _p: A(f'  美元指數 (DXY)        <code>{fFX(_p):>12}</code>  {arr(_d)} {pct(_dp)}')
 
-    # 其餘幣對：統一為 XXX/USD 格式，yfinance 給 USD/XXX 的倒轉過來
-    _fx_pairs = [
-        ('EURUSD=X', 'EUR/USD', False),
-        ('GBPUSD=X', 'GBP/USD', False),
-        ('AUDUSD=X', 'AUD/USD', False),
-        ('TWD=X',    'TWD/USD', True),
-        ('JPY=X',    'JPY/USD', True),
-        ('CNY=X',    'CNY/USD', True),
-        ('KRW=X',    'KRW/USD', True),
+    _fx_groups = [
+        ('🇨🇳 中國', [('CNY=X', '人民幣 (CNY/USD)', True)]),
+        ('🇪🇺 歐洲', [
+            ('EURUSD=X', '歐元 (EUR/USD)',     False),
+            ('GBPUSD=X', '英鎊 (GBP/USD)',     False),
+            ('CHF=X',    '瑞士法郎 (CHF/USD)', True),
+        ]),
+        ('🌏 亞太', [
+            ('JPY=X',    '日圓 (JPY/USD)',     True),
+            ('KRW=X',    '韓元 (KRW/USD)',     True),
+            ('TWD=X',    '新台幣 (TWD/USD)',   True),
+            ('AUDUSD=X', '澳幣 (AUD/USD)',     False),
+        ]),
     ]
-    _fx_rows = []
-    for _t, _lbl, _inv in _fx_pairs:
-        _op, _od, _odp = get(_t)
-        if _op is None: continue
-        if _inv:
-            _np  = 1.0 / _op
-            _ndp = -_odp
-            _nd  = _np * _ndp / 100
-        else:
-            _np, _nd, _ndp = _op, _od, _odp
-        _fx_rows.append((_lbl, _np, _nd, _ndp))
-    _fx_rows.sort(key=lambda x: x[3], reverse=True)  # 漲幅最大排最上
-    for _lbl, _np, _nd, _ndp in _fx_rows:
-        A(f'  {_lbl}  <code>{fFX(_np):>12}</code>  {arr(_nd)} {pct(_ndp)}')
+    for _hdr, _pairs in _fx_groups:
+        A(f'  <i>{_hdr}</i>')
+        for _t, _lbl, _inv in _pairs:
+            _op, _od, _odp = get(_t)
+            if _op is None: continue
+            if _inv:
+                _np  = 1.0 / _op
+                _ndp = -_odp if _odp is not None else None
+                _nd  = (_np * _ndp / 100) if _ndp is not None else None
+            else:
+                _np, _nd, _ndp = _op, _od, _odp
+            A(f'    {_lbl}  <code>{fFX(_np):>12}</code>  {arr(_nd)} {pct(_ndp)}')
 
     A('')
-    A('📊 <b>美股技術面</b>')
+    A('📊 <b>美股技術面（月度視角）</b>')
     for key in ['spx', 'ndq']:
         t = spx_tech.get(key, {})
         if t.get('ok'):
-            A(f'  <b>{t["name"]}</b>  <code>{fN(t["price"], 0)}</code>')
-            A(f'    MA50 {fN(t["ma50"], 0)}（{t["pct50"]:+.1f}%）  MA200 {fN(t["ma200"], 0)}（{t["pct200"]:+.1f}%）')
-            A(f'    RSI(14) <b>{t["rsi"]}</b> {t["rsi_lbl"]}  ｜  {t["cross"]}')
+            A(f'  <b>{t["name"]}</b>  <code>{fN(t["price"], 0)}</code>  — {t["trend"]}')
+            A(f'    月線 MA20 {fN(t["ma20"], 0)}（{t["pct20"]:+.1f}%）')
+            A(f'    季線 MA60 {fN(t["ma60"], 0)}（{t["pct60"]:+.1f}%）')
+            A(f'    年線 MA200 {fN(t["ma200"], 0)}（{t["pct200"]:+.1f}%）')
+            A(f'    RSI(21) <b>{t["rsi"]}</b> {t["rsi_lbl"]}  ｜  距 52W 高 {t["pct_high"]:+.1f}%（{t["high_lbl"]}）')
 
     A('')
     A('📈 <b>全球股市</b>')
-    for t,lbl in [('^GSPC','S&amp;P 500'),('^IXIC','Nasdaq  '),('^TWII','TAIEX   '),
-                  ('^N225','日經 225'),('^HSI','恆生    '),('^GDAXI','DAX     '),('^KS11','KOSPI   ')]:
+    for t,lbl in [('^GSPC','標普 500 (S&amp;P 500)'),
+                  ('^IXIC','那斯達克 (Nasdaq)'),
+                  ('^TWII','加權指數 (TAIEX)'),
+                  ('^N225','日經 225 (Nikkei 225)'),
+                  ('^HSI', '恆生指數 (HSI)'),
+                  ('^GDAXI','德國 DAX (DAX)'),
+                  ('^KS11','南韓綜合 (KOSPI)')]:
         p,d,dp = get(t)
         if p: A(f'  {lbl}  <code>{fN(p,0):>10}</code>  {arr(d)} {pct(dp)}')
 
@@ -440,11 +502,16 @@ def run(geopolitics_bullets=None):
         A(f'  Fear &amp; Greed  <code>{sc}</code>（{fg_lbl(sc)}）  前值 {pv}')
 
     A('')
-    fed = cb_res.get('fed', '3.50–3.75')
-    ecb = cb_res.get('ecb', '2.00')
-    boj = cb_res.get('boj', '0.50')
-    cbc = cb_res.get('cbc', '2.00')
-    A(f'🏦 <b>央行利率</b>  Fed {fed}% ｜ ECB {ecb}% ｜ BOJ {boj}% ｜ CBC {cbc}%')
+    fed  = cb_res.get('fed',  '3.50–3.75')
+    ecb  = cb_res.get('ecb',  '2.00')
+    boe  = cb_res.get('boe',  '4.25')
+    boj  = cb_res.get('boj',  '0.75')
+    pboc = cb_res.get('pboc', '1.40')
+    cbc  = cb_res.get('cbc',  '2.00')
+    A('🏦 <b>央行利率</b>（6 大央行）')
+    A(f'  🇺🇸 聯準會 (Fed) {fed}%  ｜  🇪🇺 歐洲央行 (ECB) {ecb}%')
+    A(f'  🇬🇧 英國央行 (BoE) {boe}%  ｜  🇯🇵 日本央行 (BOJ) {boj}%')
+    A(f'  🇨🇳 中國央行 (PBOC) {pboc}%  ｜  🇹🇼 中央銀行 (CBC) {cbc}%')
 
     A('')
     A(f'🇹🇼 <b>三大法人</b>（{inst_res.get("date","N/A")}）')

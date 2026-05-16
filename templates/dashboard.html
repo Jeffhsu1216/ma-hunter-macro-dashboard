@@ -50,9 +50,9 @@
         /* ── Layout ── */
         .main { padding: 16px 24px; display: flex; flex-direction: column; gap: 14px; }
 
-        /* CB Rate bar */
+        /* CB Rate bar — 6 央行：3 欄 × 2 列 */
         .cb-bar {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
         }
         .cb-card {
             background: var(--gold-dim);
@@ -61,8 +61,17 @@
             display: flex; flex-direction: column; gap: 2px;
         }
         .cb-card .cb-name  { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-        .cb-card .cb-rate  { font-size: 22px; font-weight: 700; color: var(--gold); line-height: 1.2; }
+        .cb-card .cb-rate  { font-size: 20px; font-weight: 700; color: var(--gold); line-height: 1.2; }
         .cb-card .cb-next  { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+        /* 匯率分組標題 */
+        .fx-group-header {
+            font-size: 10px; font-weight: 600; color: var(--gold);
+            text-transform: uppercase; letter-spacing: 1px;
+            padding: 6px 0 2px; margin-top: 4px;
+            border-bottom: 1px solid rgba(201,165,78,0.15);
+        }
+        .fx-group-header:first-child { margin-top: 0; }
 
         /* Main grid 2 cols */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -271,11 +280,19 @@
 
         <!-- 匯率 -->
         <div class="card">
-            <div class="card-title">💱 匯率</div>
+            <div class="card-title">💱 匯率（依語意分組）</div>
             <div style="font-size:10px; color:var(--text-3); margin-bottom:8px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
                 USD/XXX ↑ = 美元走強、該幣走弱｜XXX/USD ↑ = 該幣走強、美元走弱
             </div>
             {% for fx in data.fx %}
+            {# 分組標題：1=中國、2=歐洲三大、5=亞太四強 #}
+            {% if loop.index0 == 1 %}
+            <div class="fx-group-header">🇨🇳 中國</div>
+            {% elif loop.index0 == 2 %}
+            <div class="fx-group-header">🇪🇺 歐洲三大</div>
+            {% elif loop.index0 == 5 %}
+            <div class="fx-group-header">🌏 亞太四強</div>
+            {% endif %}
             <div class="row">
                 <div class="lbl">{{ fx.name }}</div>
                 <div class="val">
@@ -294,28 +311,45 @@
             <div class="card-ts">🕐 更新時間：{{ data.fx_updated_at }}</div>
         </div>
 
-        <!-- 美股技術面 -->
+        <!-- 美股技術面（月度視角，5 指標） -->
         <div class="card">
-            <div class="card-title">📊 美股技術面</div>
+            <div class="card-title">📊 美股技術面（月度視角）</div>
+            <div style="font-size:10px; color:var(--text-3); margin-bottom:8px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
+                月線 MA20 / 季線 MA60 / 年線 MA200｜RSI(21)（21 天，比 RSI(14) 雜訊少）｜距 52W 高（月度安全邊際）
+            </div>
             {% for key in ['spx', 'ndq'] %}
             {% set t = data.spx_tech.get(key, {}) %}
             {% if t.get('ok') %}
             <div style="margin-bottom:14px;">
                 <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
                     <span style="font-weight:600; font-size:13px;">{{ t.name }}</span>
-                    <span style="font-size:15px; font-weight:700; color:var(--text-1);">{{ "{:,.0f}".format(t.price) }}</span>
+                    <span style="font-size:15px; font-weight:700; color:var(--text-1);">
+                        {{ "{:,.0f}".format(t.price) }}
+                        <span class="chg {{ 'up' if t.trend_ok else ('down' if t.trend_ok is sameas false else 'flat') }}" style="margin-left:6px; font-size:10px;">
+                            {{ t.trend }}
+                        </span>
+                    </span>
                 </div>
                 <div class="row">
-                    <div class="lbl" style="font-size:11px;">MA50</div>
+                    <div class="lbl" style="font-size:11px;">月線 MA20</div>
                     <div class="val" style="font-size:11px;">
-                        {{ "{:,.0f}".format(t.ma50) }}
-                        <span class="chg {{ 'up' if t.pct50 > 0 else 'down' }}">
-                            {{ '+' if t.pct50 > 0 else '' }}{{ t.pct50 }}%
+                        {{ "{:,.0f}".format(t.ma20) }}
+                        <span class="chg {{ 'up' if t.pct20 > 0 else 'down' }}">
+                            {{ '+' if t.pct20 > 0 else '' }}{{ t.pct20 }}%
                         </span>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="lbl" style="font-size:11px;">MA200</div>
+                    <div class="lbl" style="font-size:11px;">季線 MA60</div>
+                    <div class="val" style="font-size:11px;">
+                        {{ "{:,.0f}".format(t.ma60) }}
+                        <span class="chg {{ 'up' if t.pct60 > 0 else 'down' }}">
+                            {{ '+' if t.pct60 > 0 else '' }}{{ t.pct60 }}%
+                        </span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="lbl" style="font-size:11px;">年線 MA200</div>
                     <div class="val" style="font-size:11px;">
                         {{ "{:,.0f}".format(t.ma200) }}
                         <span class="chg {{ 'up' if t.pct200 > 0 else 'down' }}">
@@ -324,18 +358,19 @@
                     </div>
                 </div>
                 <div class="row" style="margin-top:4px;">
-                    <div class="lbl" style="font-size:11px;">RSI(14)</div>
+                    <div class="lbl" style="font-size:11px;">RSI(21)</div>
                     <div class="val" style="font-size:11px;">
                         <b>{{ t.rsi }}</b>
                         <span style="color:var(--text-3); margin-left:4px;">{{ t.rsi_lbl }}</span>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="lbl" style="font-size:11px;">均線訊號</div>
+                    <div class="lbl" style="font-size:11px;">距 52W 高</div>
                     <div class="val" style="font-size:11px;">
-                        <span class="chg {{ 'up' if t.cross_ok else 'down' }}">
-                            {{ t.cross }}{{ ' ✅' if t.cross_ok else ' ⚠️' }}
+                        <span class="chg {{ 'up' if t.pct_high >= -3 else 'down' }}">
+                            {{ '+' if t.pct_high > 0 else '' }}{{ t.pct_high }}%
                         </span>
+                        <span style="color:var(--text-3); margin-left:4px;">{{ t.high_lbl }}</span>
                     </div>
                 </div>
             </div>
