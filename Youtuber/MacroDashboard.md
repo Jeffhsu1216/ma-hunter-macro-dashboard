@@ -288,7 +288,7 @@
 | 參數 | 值 |
 |------|-----|
 | 平台 | Telegram |
-| Bot Token | `8743919766:AAG6z6YPW7Gqt7rF2KY2xC9mvbm2Ge31tjQ` |
+| Bot Token | `8950989278:AAGhGH_B3lpeF0e43KHUyqJAK_7Zcgz6hEc` |
 | Chat ID | `2117347781` |
 | Dashboard URL | `https://ma-hunter-macro-dashboard.onrender.com` |
 | LINE | ⚠️ LINE Notify 已停服；Messaging API 需 Official Account，暫不使用 |

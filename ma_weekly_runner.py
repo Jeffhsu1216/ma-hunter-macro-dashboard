@@ -16,7 +16,7 @@ import anthropic
 import pytz
 
 # ══════════════════════════════════════════
-TOKEN   = '8743919766:AAG6z6YPW7Gqt7rF2KY2xC9mvbm2Ge31tjQ'
+TOKEN   = '8950989278:AAGhGH_B3lpeF0e43KHUyqJAK_7Zcgz6hEc'
 CHAT_ID = '2117347781'
 TAIPEI_TZ = pytz.timezone('Asia/Taipei')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
