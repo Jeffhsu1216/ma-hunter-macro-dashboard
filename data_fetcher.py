@@ -574,58 +574,31 @@ def _yield_commentary(yields: dict) -> str:
     return "<br>".join(p + "。" for p in parts) if parts else "殖利率變動不大，市場等待新催化劑。"
 
 
-def _sentiment_commentary(fg: dict, vix_price: float = None, vix_chg: float = None) -> str:
-    """根據 Fear & Greed + VIX 生成精準市場情緒解釋"""
+def _sentiment_commentary(vix_price: float = None, vix_chg: float = None,
+                           pc_data: dict = None) -> str:
+    """根據 VIX + Put/Call Ratio 生成市場情緒解釋"""
     parts = []
-    score = fg.get("score")
-    change = fg.get("change")
 
-    # CNN Fear & Greed — 精準分級
-    if score is not None:
-        if score <= 10:
-            parts.append(f"CNN Fear & Greed 指數跌至 {score}，觸及歷史極端低位。"
-                         f"該指數綜合動能、股價強度、Put/Call 比率、避險需求等七項指標，"
-                         f"當前讀數顯示市場全面性恐慌")
-        elif score <= 20:
-            parts.append(f"CNN Fear & Greed 指數 {score}（極度恐懼），"
-                         f"Put/Call 比率偏高、市場波動加劇，投資人大幅降低風險敞口")
-        elif score <= 35:
-            parts.append(f"CNN Fear & Greed 指數 {score}（恐懼），"
-                         f"市場風險偏好下降，避險資產需求上升")
-        elif score <= 50:
-            parts.append(f"CNN Fear & Greed 指數 {score}（偏空中性），"
-                         f"市場觀望氣氛濃，缺乏明確方向")
-        elif score <= 65:
-            parts.append(f"CNN Fear & Greed 指數 {score}（偏多中性），"
-                         f"風險偏好溫和，資金持續進場")
-        elif score <= 80:
-            parts.append(f"CNN Fear & Greed 指數 {score}（貪婪），"
-                         f"市場追漲意願強，估值可能偏高")
-        else:
-            parts.append(f"CNN Fear & Greed 指數 {score}（極度貪婪），"
-                         f"市場過度樂觀，歷史上此水位後常見 5-10% 修正")
-
-    # VIX — 精準分級
+    # ── VIX 解讀 ──
     if vix_price is not None:
         if vix_price > 40:
-            parts.append(f"VIX 恐慌指數飆至 {vix_price:.1f}，已進入歷史前 5% 高位區間，"
+            parts.append(f"VIX 飆至 {vix_price:.1f}，已進入歷史前 5% 高位區間，"
                          f"隱含 S&P 500 未來 30 日年化波動率約 {vix_price:.0f}%，"
                          f"選擇權市場定價劇烈震盪")
         elif vix_price > 30:
-            parts.append(f"VIX {vix_price:.1f}，高於長期均值（約 19-20）超過 50%，"
-                         f"選擇權隱含波動率顯著擴大，市場預期未來一個月波動加劇")
+            parts.append(f"VIX {vix_price:.1f}，高於長期均值（19-20）超過 50%，"
+                         f"避險需求顯著升溫，市場預期未來一個月波動加劇")
         elif vix_price > 25:
             parts.append(f"VIX {vix_price:.1f}，高於長期均值，"
                          f"市場不確定性上升，避險成本增加")
         elif vix_price > 20:
             parts.append(f"VIX {vix_price:.1f}，略高於長期均值，市場存在一定不安情緒")
         elif vix_price > 15:
-            parts.append(f"VIX {vix_price:.1f}，處於正常區間，市場波動溫和")
+            parts.append(f"VIX {vix_price:.1f}，處於正常區間（長期均值 19-20），市場波動溫和")
         else:
             parts.append(f"VIX 僅 {vix_price:.1f}，處於歷史低位，市場極度自滿，"
                          f"低波動環境下需警惕突發事件衝擊")
 
-        # VIX 日變動
         if vix_chg is not None and abs(vix_chg) >= 5:
             if vix_chg > 15:
                 parts.append(f"VIX 單日暴漲 {vix_chg:+.1f}%，選擇權避險需求急遽升溫")
@@ -636,16 +609,87 @@ def _sentiment_commentary(fg: dict, vix_price: float = None, vix_chg: float = No
             elif vix_chg < -5:
                 parts.append(f"VIX 單日回落 {vix_chg:+.1f}%，市場緊張情緒緩解")
 
-    # CNN 日變動
-    if change is not None:
-        if abs(change) >= 10:
-            direction = "急升" if change > 0 else "暴跌"
-            parts.append(f"CNN 指數較前日{direction} {change:+.1f} 點，情緒面出現劇烈轉折")
-        elif abs(change) >= 5:
-            direction = "回升" if change > 0 else "惡化"
-            parts.append(f"CNN 指數較前日{direction} {change:+.1f} 點")
+    # ── Put/Call Ratio 解讀 ──
+    if pc_data and pc_data.get("current") is not None:
+        pc = pc_data["current"]
+        puts_per_100c = int(round(pc * 100))
+        if pc >= 1.20:
+            parts.append(f"Put/Call Ratio {pc:.2f}（每 100 口 call 對應 {puts_per_100c} 口 put），"
+                         f"put 量遠高於 call，市場極度避險；歷史上此區間後常見技術性反彈")
+        elif pc >= 1.00:
+            parts.append(f"Put/Call Ratio {pc:.2f}（每 100 口 call 對應 {puts_per_100c} 口 put），"
+                         f"put 主導，看空情緒偏濃")
+        elif pc >= 0.80:
+            parts.append(f"Put/Call Ratio {pc:.2f}（每 100 口 call 對應 {puts_per_100c} 口 put），"
+                         f"略偏空但接近中性")
+        elif pc >= 0.65:
+            parts.append(f"Put/Call Ratio {pc:.2f}（每 100 口 call 對應 {puts_per_100c} 口 put），"
+                         f"略偏多")
+        elif pc >= 0.50:
+            parts.append(f"Put/Call Ratio {pc:.2f}（每 100 口 call 對應 {puts_per_100c} 口 put），"
+                         f"call 主導，看多情緒明確")
+        else:
+            parts.append(f"Put/Call Ratio {pc:.2f}（每 100 口 call 對應 {puts_per_100c} 口 put），"
+                         f"call 量遠高於 put，市場極度貪婪；歷史上此區間後常見短線拉回")
+
+        chg = pc_data.get("change")
+        if chg is not None and abs(chg) >= 0.10:
+            direction = "急升" if chg > 0 else "驟降"
+            parts.append(f"P/C 比率較前日{direction} {chg:+.2f}，情緒轉折劇烈")
 
     return "<br>".join(p + "。" for p in parts) if parts else "市場情緒數據暫無法取得。"
+
+
+def _tech_commentary(tech: dict) -> str:
+    """根據美股技術面數據生成 SPX/NDQ 文字總結"""
+    parts = []
+    for key in ('spx', 'ndq'):
+        t = tech.get(key, {})
+        if not t.get('ok'):
+            continue
+        name = t['name']
+        price, m20, m60, m200 = t['price'], t['ma20'], t['ma60'], t['ma200']
+        rsi, pct_high = t['rsi'], t['pct_high']
+
+        # 趨勢
+        if price > m20 > m60 > m200:
+            trend = f"<b>{name}</b> 多頭排列穩固（現價站上月＞季＞年線），趨勢健康"
+        elif price > m60 and price > m200 and price > m20:
+            trend = f"<b>{name}</b> 多頭趨勢（站上月、季、年線）"
+        elif price > m60 and price > m200:
+            trend = f"<b>{name}</b> 多頭趨勢（站上季線與年線，月線拉回中）"
+        elif price < m60 and price < m200:
+            trend = f"<b>{name}</b> 空頭趨勢（跌破季線與年線），動能轉弱"
+        else:
+            trend = f"<b>{name}</b> 進入盤整（均線糾結）"
+
+        # 距 52W 高
+        if pct_high >= -3:
+            high_lbl = f"距 52W 高 {pct_high:+.1f}%（強勢區，逼近高點）"
+        elif pct_high >= -10:
+            high_lbl = f"距 52W 高 {pct_high:+.1f}%（強勢區）"
+        elif pct_high >= -20:
+            high_lbl = f"距 52W 高 {pct_high:+.1f}%（回檔區）"
+        else:
+            high_lbl = f"距 52W 高 {pct_high:+.1f}%（深度回檔）"
+
+        # RSI
+        if rsi >= 70:
+            rsi_lbl = f"RSI {rsi} <b>超買</b>（短線需留意回檔）"
+        elif rsi >= 60:
+            rsi_lbl = f"RSI {rsi}（偏多動能強）"
+        elif rsi >= 50:
+            rsi_lbl = f"RSI {rsi}（中性偏多）"
+        elif rsi >= 40:
+            rsi_lbl = f"RSI {rsi}（中性偏弱）"
+        elif rsi >= 30:
+            rsi_lbl = f"RSI {rsi}（偏弱）"
+        else:
+            rsi_lbl = f"RSI {rsi} <b>超賣</b>（技術面可能反彈）"
+
+        parts.append(f"{trend}；{high_lbl}；{rsi_lbl}")
+
+    return "<br>".join(p + "。" for p in parts) if parts else ""
 
 
 def _commodity_commentary(cm) -> str:
@@ -1834,6 +1878,7 @@ def fetch_all() -> dict:
         "fx_commentary": fx_data["commentary"],
         "fx_updated_at": fx_ts,
         "spx_tech":          tech_data,
+        "tech_commentary":   _tech_commentary(tech_data),
         "spx_tech_updated_at": tech_ts,
         "cb_rates":      cb_data,
         "cb_rates_updated_at": cb_ts,
@@ -1847,7 +1892,7 @@ def fetch_all() -> dict:
         "crypto_updated_at":  crypto_ts,
         "fear_greed":    fg,
         "put_call_ratio": pc_ratio,
-        "sentiment_commentary": _sentiment_commentary(fg, vix_price, vix_chg),
+        "sentiment_commentary": _sentiment_commentary(vix_price, vix_chg, pc_ratio),
         "fg_updated_at": fg_ts,
         "calendar":             cal_data,
         "calendar_commentary":  _calendar_commentary(cal_data),
