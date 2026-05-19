@@ -207,49 +207,49 @@
             font-size: 9px; color: var(--text-3); margin-top: 4px;
         }
 
-        /* ── Put/Call Ratio sparkline ── */
+        /* ── Put/Call Ratio：白話橫條 + sparkline ── */
         .pc-wrap { margin: 8px 0 4px; }
         .pc-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
         .pc-num { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
         .pc-lbl { font-size: 11px; }
-        .pc-spark { width: 100%; height: 42px; display: block; margin-top: 4px; }
+        /* 看多 ←→ 看空 橫條 */
+        .pc-bar-labels {
+            display: flex; justify-content: space-between;
+            font-size: 10px; margin-bottom: 4px;
+        }
+        .pc-bar-track {
+            height: 14px; border-radius: 7px; position: relative;
+            background: linear-gradient(to right,
+                #16a34a 0%, #22c55e 25%,
+                #eab308 50%,
+                #f97316 75%, #ef4444 100%);
+        }
+        /* 中性線 (1.0 在 60% 位置) */
+        .pc-bar-neutral {
+            position: absolute; top: -2px; bottom: -2px;
+            left: 60%; width: 2px; background: rgba(255,255,255,0.6);
+            border-radius: 1px; transform: translateX(-50%);
+        }
+        .pc-bar-marker {
+            position: absolute; top: -5px; width: 5px; height: 24px;
+            background: #fff; border-radius: 2px; transform: translateX(-50%);
+            box-shadow: 0 0 8px rgba(255,255,255,0.8);
+        }
+        .pc-bar-ticks {
+            display: flex; justify-content: space-between;
+            font-size: 9px; color: var(--text-3); margin-top: 3px;
+        }
+        .pc-plain {
+            margin-top: 8px; padding: 7px 10px;
+            background: rgba(255,255,255,0.03); border-radius: 6px;
+            font-size: 11px; color: var(--text-2); text-align: center;
+        }
+        .pc-plain b { color: var(--text); font-size: 12px; }
+        .pc-spark { width: 100%; height: 36px; display: block; margin-top: 6px; }
         .pc-spark-meta {
             display: flex; justify-content: space-between;
             font-size: 9px; color: var(--text-3); margin-top: 2px;
         }
-
-        /* Fear & Greed gauge */
-        .fg-wrap { text-align: center; padding: 6px 0; }
-        .fg-gauge-outer {
-            width: 140px; height: 70px; margin: 0 auto;
-            position: relative; overflow: hidden;
-        }
-        .fg-gauge-bg {
-            width: 140px; height: 140px; border-radius: 50%;
-            position: absolute; top: 0; left: 0;
-            background: conic-gradient(
-                #ef4444 0deg 36deg,
-                #f97316 36deg 72deg,
-                #eab308 72deg 108deg,
-                #84cc16 108deg 144deg,
-                #22c55e 144deg 180deg,
-                transparent 180deg 360deg
-            );
-        }
-        .fg-gauge-inner {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: var(--bg-card);
-            position: absolute; top: 20px; left: 20px;
-        }
-        .fg-needle {
-            width: 2px; height: 46px; background: var(--text);
-            position: absolute; bottom: 0; left: 50%;
-            transform-origin: bottom center;
-            border-radius: 2px;
-        }
-        .fg-score  { font-size: 28px; font-weight: 700; line-height: 1; margin-top: 6px; }
-        .fg-label  { font-size: 12px; color: var(--text-2); margin-top: 2px; }
-        .fg-change { font-size: 11px; margin-top: 4px; }
 
         /* Taiwan 三大法人 bars */
         .inst-row { margin: 6px 0; }
@@ -482,12 +482,15 @@
             {% if not loop.last %}<hr style="border:none; border-top:1px solid rgba(255,255,255,0.05); margin:6px 0;">{% endif %}
             {% endif %}
             {% endfor %}
+            {% if data.tech_commentary %}
+            <div class="commentary">{{ data.tech_commentary | safe }}</div>
+            {% endif %}
             <div class="card-ts">🕐 更新時間：{{ data.spx_tech_updated_at }}</div>
         </div>
 
     </div>
 
-    <!-- ③ 全球股市 + Fear & Greed -->
+    <!-- ③ 全球股市 + 市場情緒（VIX + Put/Call Ratio） -->
     <div class="grid-2">
 
         <!-- 全球股市 -->
@@ -552,9 +555,15 @@
 
             <div class="divider"></div>
 
-            <!-- ── Put/Call Ratio + sparkline ── -->
+            <!-- ── Put/Call Ratio：白話橫條 + 比喻框 ── -->
             {% set pc = data.put_call_ratio %}
             {% if pc and pc.current is not none %}
+            {# 位置換算：0.4 → 0%, 1.0 → 60% (中性), 1.4 → 100% #}
+            {% set pc_pos_raw = ((pc.current - 0.4) / 1.0 * 100) %}
+            {% if pc_pos_raw < 0 %}{% set pc_pos = 0 %}
+            {% elif pc_pos_raw > 100 %}{% set pc_pos = 100 %}
+            {% else %}{% set pc_pos = pc_pos_raw %}{% endif %}
+            {% set puts_per_100c = (pc.current * 100)|round|int %}
             <div class="pc-wrap">
                 <div class="pc-head">
                     <span class="vix-lbl"><b style="color:var(--text); font-size:13px;">⚖️ Put/Call Ratio</b>
@@ -569,7 +578,26 @@
                         {% endif %}
                     </span>
                 </div>
-                <div class="pc-lbl" style="color:{{ pc.rating_color }}; text-align:right; font-weight:600; margin-bottom:6px;">{{ pc.rating }}</div>
+
+                <!-- 看多 ←→ 看空 白話橫條 -->
+                <div class="pc-bar-labels">
+                    <span style="color:#22c55e; font-weight:600;">📈 看多（call 多）</span>
+                    <span style="color:var(--text-3);">中性 1.0</span>
+                    <span style="color:#ef4444; font-weight:600;">📉 看空（put 多）</span>
+                </div>
+                <div class="pc-bar-track">
+                    <div class="pc-bar-neutral"></div>
+                    <div class="pc-bar-marker" style="left:{{ pc_pos }}%;"></div>
+                </div>
+                <div class="pc-bar-ticks">
+                    <span>0.4</span><span>0.7</span><span>1.0</span><span>1.2</span><span>1.4+</span>
+                </div>
+
+                <!-- 白話解讀：每 100 個 call 對應 X 個 put -->
+                <div class="pc-plain">
+                    每 <b style="color:#22c55e;">100 口 call</b> 對應 <b style="color:#ef4444;">{{ puts_per_100c }} 口 put</b>
+                    <span style="color:{{ pc.rating_color }}; font-weight:600;">— {{ pc.rating }}</span>
+                </div>
 
                 {% if pc.history|length >= 3 %}
                 {# 計算 sparkline 座標 #}
@@ -579,7 +607,6 @@
                 {% set vrng = (vmax - vmin) if (vmax - vmin) > 0.01 else 0.1 %}
                 {% set npts = vals|length %}
                 <svg class="pc-spark" viewBox="0 0 100 30" preserveAspectRatio="none">
-                    <!-- 1.0 = 中性線 -->
                     {% if vmin <= 1.0 <= vmax %}
                     {% set neutral_y = 30 - (1.0 - vmin) / vrng * 28 - 1 %}
                     <line x1="0" y1="{{ neutral_y }}" x2="100" y2="{{ neutral_y }}" stroke="rgba(255,255,255,0.15)" stroke-dasharray="2,2" stroke-width="0.5"/>
@@ -587,16 +614,14 @@
                     <polyline
                         points="{% for v in vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 30 - (v - vmin) / vrng * 28 - 1 }} {% endfor %}"
                         fill="none" stroke="{{ pc.rating_color }}" stroke-width="1.5" stroke-linejoin="round"/>
-                    <!-- 最後一點 marker -->
                     <circle cx="100" cy="{{ 30 - (vals[-1] - vmin) / vrng * 28 - 1 }}" r="2" fill="{{ pc.rating_color }}"/>
                 </svg>
                 <div class="pc-spark-meta">
-                    <span>{{ pc.history|length }} 日｜低 {{ vmin }} / 高 {{ vmax }}</span>
-                    <span>↑ put 增＝偏空｜↓ call 增＝偏多</span>
+                    <span>近 {{ pc.history|length }} 日走勢｜低 {{ vmin }} / 高 {{ vmax }}</span>
                 </div>
                 {% else %}
-                <div style="font-size:10px; color:var(--text-3); margin-top:8px; padding:6px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
-                    歷史累積中（已有 {{ pc.history|length }} 個交易日）— 5 日後啟用走勢圖
+                <div style="font-size:10px; color:var(--text-3); margin-top:6px; text-align:center;">
+                    走勢圖累積中（已 {{ pc.history|length }} 日，第 5 日起顯示）
                 </div>
                 {% endif %}
             </div>
@@ -777,7 +802,7 @@
 
 <footer class="footer">
     M&A Hunter 總經儀表板｜Jeff Hsu, CFA｜圖靈金融集團
-    ｜數據來源：Yahoo Finance · CNN Fear &amp; Greed · ForexFactory · TWSE<br>
+    ｜數據來源：Yahoo Finance · CBOE Put/Call Ratio · ForexFactory · TWSE<br>
     <a href="https://ma-hunter-macro-dashboard.onrender.com">ma-hunter-macro-dashboard.onrender.com</a>
 </footer>
 
