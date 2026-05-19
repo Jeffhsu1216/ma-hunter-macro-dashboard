@@ -1,0 +1,33 @@
+# ── macOS / 編輯器 ─────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ── Python ─────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# ── Claude Code 工作目錄 ───────────────────────────
+.claude/
+
+# ── Runtime 生成（每跑 runner 都會重寫，不需追蹤）──
+cache_data.json
+calendar_backup.json
+autopull.log
+autopull.sh
+output/
+
+# 注意：以下檔案「需要」追蹤，請勿加進 .gitignore：
+#   cal_raw_backup.json      — runner 寫入後 commit 上 git，供 Render 容錯
+#   taiwan_backup.json       — 同上
+#   geopolitics.json         — 每日 08:00 由 Claude 寫入，需追蹤
+#   pc_ratio_history.json    — Put/Call ratio 自建歷史，需追蹤累積
+
+# ── 防誤入：主 repo (~/Desktop/Claude/) 的子資料夾不該出現在此 repo ──
+/個人基金/
+/圖靈金融/
+/投資分析/
+/併購新聞整理.txt
