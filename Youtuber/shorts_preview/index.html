@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1">
+<title>M&A Hunter Shorts — 04/07–04/12</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: #0a0a0a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: -apple-system, 'PingFang TC', 'Helvetica Neue', sans-serif;
+}
+
+/* ── FULLSCREEN MODE ── */
+body.fullscreen {
+  background: #000;
+}
+body.fullscreen .phone {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  box-shadow: none;
+}
+body.fullscreen .toolbar { display: none; }
+
+/* ── toolbar ── */
+.toolbar {
+  position: fixed;
+  top: 20px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 10px; z-index: 9999;
+}
+.tb-btn {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.25);
+  color: #fff; border-radius: 20px;
+  padding: 8px 16px; font-size: 12px; font-weight: 700;
+  cursor: pointer; backdrop-filter: blur(8px);
+  transition: background .2s;
+}
+.tb-btn:hover { background: rgba(255,255,255,.2); }
+.tb-btn.gold { background: rgba(201,168,76,.25); border-color: #C9A84C; color: #C9A84C; }
+
+/* ── countdown overlay ── */
+.countdown-ov {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,.85);
+  z-index: 10000;
+  display: none;
+}
+.countdown-ov.show { display: flex; }
+.countdown-num {
+  font-size: 120px; font-weight: 900; color: #C9A84C;
+  line-height: 1; animation: pulse .9s ease-in-out infinite;
+}
+.countdown-label {
+  font-size: 16px; color: rgba(255,255,255,.6);
+  margin-top: 16px; letter-spacing: 2px;
+}
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+
+.phone {
+  width: 390px;
+  height: 693px;
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 0 3px #2a2a2a, 0 40px 100px rgba(0,0,0,.9);
+  background: #000;
+  transition: width .3s, height .3s, border-radius .3s;
+}
+
+/* ── scenes ── */
+.scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 26px 130px;
+  opacity: 0;
+  transition: opacity .35s;
+  pointer-events: none;
+}
+.scene.active { opacity:1; pointer-events:auto; }
+
+.s0 { background: radial-gradient(ellipse at 50% 40%, #1a1a3a 0%, #050510 100%); }
+.s1 { background: radial-gradient(ellipse at 50% 30%, #1a0e2e 0%, #060008 100%); }
+.s2 { background: radial-gradient(ellipse at 50% 40%, #0e1a1a 0%, #020c10 100%); }
+.s3 { background: radial-gradient(ellipse at 50% 40%, #1a1400 0%, #0a0800 100%); }
+.s4 { background: radial-gradient(ellipse at 50% 35%, #001a0a 0%, #000a04 100%); }
+.s5 { background: radial-gradient(ellipse at 50% 40%, #1a0a00 0%, #0a0400 100%); }
+.s6 { background: radial-gradient(ellipse at 50% 50%, #111111 0%, #000 100%); }
+
+/* ── progress ── */
+.prog-track {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  gap: 3px;
+  padding: 16px 14px 0;
+  z-index: 100;
+}
+.prog-seg {
+  height: 2.5px;
+  flex: 1;
+  background: rgba(255,255,255,.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  width: 0%;
+  background: #fff;
+  border-radius: 2px;
+}
+
+/* ── header ── */
+.hdr {
+  position: absolute;
+  top: 26px; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  z-index: 99;
+}
+.av {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C9A84C, #7a5c10);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900; color: #fff;
+  border: 1.5px solid rgba(255,255,255,.25);
+  margin-right: 9px;
+}
+.ch { font-size: 13px; font-weight: 700; color: #fff; }
+.follow {
+  margin-left: auto;
+  background: #fff; color: #000;
+  border: none; border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+}
+
+/* ── sidebar ── */
+.sbar {
+  position: absolute;
+  right: 10px; bottom: 110px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 18px;
+  z-index: 99;
+}
+.sbar-item { display:flex; flex-direction:column; align-items:center; gap:3px; color:#fff; font-size:10px; }
+.sbar-icon {
+  width: 42px; height: 42px;
+  background: rgba(255,255,255,.12);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  backdrop-filter: blur(8px);
+}
+
+/* ── bottom ── */
+.bot {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px 16px 22px;
+  background: linear-gradient(to top, rgba(0,0,0,.9) 0%, transparent 100%);
+  z-index: 99;
+}
+.bot-tag { font-size: 10px; color: #C9A84C; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 3px; }
+.bot-title { font-size: 12.5px; color: #fff; font-weight: 600; line-height: 1.4; }
+.bot-music { margin-top: 7px; display: flex; align-items: center; gap: 7px; font-size: 10px; color: rgba(255,255,255,.55); }
+.disc { animation: spin 3s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── common scene elements ── */
+.stag {
+  font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+  color: #C9A84C; margin-bottom: 10px;
+  opacity: 0; transform: translateY(6px);
+  transition: all .3s ease .1s;
+}
+.scene.active .stag { opacity:1; transform:translateY(0); }
+
+.bignum {
+  font-size: 64px; font-weight: 900; color: #fff;
+  line-height: 1; text-align: center;
+  opacity: 0; transform: scale(.82);
+  transition: all .45s cubic-bezier(.34,1.56,.64,1) .18s;
+}
+.scene.active .bignum { opacity:1; transform:scale(1); }
+.bignum .gold { color: #C9A84C; }
+.bignum .red  { color: #FF6B6B; }
+
+.sublabel {
+  font-size: 13px; color: rgba(255,255,255,.65);
+  text-align: center; margin-top: 7px;
+  opacity: 0; transform: translateY(5px);
+  transition: all .3s ease .35s;
+}
+.scene.active .sublabel { opacity:1; transform:translateY(0); }
+
+.divider {
+  width: 36px; height: 2.5px;
+  background: #C9A84C; border-radius: 2px;
+  margin: 13px auto;
+  opacity: 0; transition: opacity .3s ease .42s;
+}
+.scene.active .divider { opacity:1; }
+
+.body {
+  font-size: 16.5px; line-height: 1.7; color: #fff;
+  text-align: center; font-weight: 500;
+  opacity: 0; transform: translateY(8px);
+  transition: all .35s ease .28s;
+}
+.scene.active .body { opacity:1; transform:translateY(0); }
+.g { color: #C9A84C; font-weight: 800; }
+.r { color: #FF6B6B; }
+.gr { color: #69DB7C; }
+
+/* deal cards */
+.cards { width: 100%; margin-top: 6px; }
+.card {
+  display: flex; align-items: center; gap: 11px;
+  background: rgba(255,255,255,.07);
+  border-radius: 11px; padding: 10px 13px;
+  margin-top: 8px;
+  opacity: 0; transform: translateX(-10px);
+  transition: all .32s ease;
+  width: 100%;
+}
+.scene.active .card:nth-child(1) { opacity:1; transform:translateX(0); transition-delay: .15s; }
+.scene.active .card:nth-child(2) { opacity:1; transform:translateX(0); transition-delay: .3s; }
+.scene.active .card:nth-child(3) { opacity:1; transform:translateX(0); transition-delay: .45s; }
+.card-left { border-left: 3px solid #C9A84C; padding-left: 10px; flex:1; }
+.card-title { font-size: 12.5px; font-weight: 700; color: #fff; line-height: 1.3; }
+.card-amt { font-size: 11.5px; color: #C9A84C; font-weight: 700; margin-top: 2px; }
+.card-tag { font-size: 10px; color: rgba(255,255,255,.45); margin-top: 1px; }
+.card-emoji { font-size: 20px; flex-shrink: 0; }
+
+/* tw cards — green accent */
+.tw .card-left { border-left-color: #69DB7C; }
+.tw .card-amt { color: #69DB7C; }
+
+/* ── CTA scene ── */
+.cta-logo {
+  font-size: 40px; font-weight: 900; color: #fff;
+  text-align: center; line-height: 1.1;
+  opacity: 0; transform: scale(.8);
+  transition: all .5s cubic-bezier(.34,1.56,.64,1) .1s;
+}
+.scene.active .cta-logo { opacity:1; transform:scale(1); }
+.cta-logo .g { color: #C9A84C; }
+
+.cta-sub {
+  font-size: 13px; color: rgba(255,255,255,.55);
+  text-align: center; margin-top: 8px;
+  opacity: 0; transition: opacity .4s ease .45s;
+}
+.scene.active .cta-sub { opacity:1; }
+
+.cta-btn {
+  margin-top: 26px;
+  background: #C9A84C; color: #000;
+  border: none; border-radius: 30px;
+  padding: 14px 36px;
+  font-size: 14px; font-weight: 900;
+  cursor: pointer; letter-spacing: .5px;
+  opacity: 0; transform: translateY(10px);
+  transition: all .4s ease .65s;
+}
+.scene.active .cta-btn { opacity:1; transform:translateY(0); }
+
+.ring {
+  position: absolute;
+  width: 180px; height: 180px; border-radius: 50%;
+  border: 1.5px solid rgba(201,168,76,.25);
+  animation: ringout 2.2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes ringout {
+  0%   { transform:scale(.7); opacity:.5; }
+  100% { transform:scale(2);  opacity:0;  }
+}
+
+/* ── play overlay ── */
+.play-ov {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; cursor: pointer;
+  background: rgba(0,0,0,.5);
+  opacity: 0; transition: opacity .2s;
+}
+.play-ov.show { opacity:1; }
+.play-circle {
+  width: 68px; height: 68px;
+  background: rgba(255,255,255,.9); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+}
+
+/* ── replay ── */
+.replay {
+  position: absolute;
+  bottom: 76px; left: 50%; transform: translateX(-50%);
+  background: rgba(255,255,255,.12);
+  color: #fff; border: 1px solid rgba(255,255,255,.25);
+  border-radius: 24px; padding: 10px 24px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  z-index: 201; backdrop-filter: blur(6px);
+  display: none;
+}
+.replay.show { display:block; }
+
+.hint {
+  position: absolute; bottom: 150px; left:0; right:0;
+  text-align: center; font-size: 11px;
+  color: rgba(255,255,255,.4); z-index: 99;
+  pointer-events: none;
+  animation: hindfade 3.5s ease 1.2s forwards;
+}
+@keyframes hindfade { 0%{opacity:1} 70%{opacity:1} 100%{opacity:0} }
+
+/* ── fullscreen scene scaling ── */
+body.fullscreen .scene {
+  padding: calc(11.5vw) calc(6.5vw) calc(18vw);
+}
+body.fullscreen .bignum { font-size: min(17vw, 17vh); }
+body.fullscreen .body { font-size: min(4.5vw, 4.5vh); }
+body.fullscreen .stag { font-size: min(2.8vw, 2.8vh); letter-spacing: 3px; }
+body.fullscreen .sublabel { font-size: min(3.5vw, 3.5vh); }
+body.fullscreen .card-title { font-size: min(3.3vw, 3.3vh); }
+body.fullscreen .card-amt { font-size: min(3vw, 3vh); }
+body.fullscreen .card-tag { font-size: min(2.6vw, 2.6vh); }
+body.fullscreen .card { border-radius: min(3vw, 3vh); padding: min(2.5vw, 2.5vh) min(3.5vw, 3.5vh); margin-top: min(2vw, 2vh); }
+body.fullscreen .card-emoji { font-size: min(5.5vw, 5.5vh); }
+body.fullscreen .cta-logo { font-size: min(11vw, 11vh); }
+body.fullscreen .cta-sub { font-size: min(3.5vw, 3.5vh); }
+body.fullscreen .cta-btn { font-size: min(3.7vw, 3.7vh); padding: min(3.5vw, 3.5vh) min(9vw, 9vh); border-radius: min(8vw, 8vh); margin-top: min(6vw, 6vh); }
+body.fullscreen .hdr { top: 3.5vh; padding: 0 4vw; }
+body.fullscreen .av { width: min(9vw, 9vh); height: min(9vw, 9vh); font-size: min(3.5vw, 3.5vh); margin-right: 2.5vw; }
+body.fullscreen .ch { font-size: min(3.5vw, 3.5vh); }
+body.fullscreen .follow { font-size: min(3.2vw, 3.2vh); padding: min(1.5vw, 1.5vh) min(3.5vw, 3.5vh); }
+body.fullscreen .sbar { right: 3vw; bottom: 16vh; gap: min(4.5vw, 4.5vh); }
+body.fullscreen .sbar-icon { width: min(11vw, 11vh); height: min(11vw, 11vh); font-size: min(5vw, 5vh); }
+body.fullscreen .sbar-item { font-size: min(2.8vw, 2.8vh); }
+body.fullscreen .bot { padding: min(2.5vw, 2.5vh) min(4vw, 4vw) min(5vh, 5vh); }
+body.fullscreen .bot-tag { font-size: min(2.8vw, 2.8vh); }
+body.fullscreen .bot-title { font-size: min(3.3vw, 3.3vh); }
+body.fullscreen .bot-music { font-size: min(2.7vw, 2.7vh); margin-top: min(1.8vw, 1.8vh); }
+body.fullscreen .prog-track { padding: min(4vw, 4vh) min(3.5vw, 3.5vw) 0; gap: min(0.8vw, 0.8vh); }
+body.fullscreen .prog-seg { height: min(0.7vw, 0.7vh); }
+body.fullscreen .ring { width: min(45vw, 45vh); height: min(45vw, 45vh); }
+body.fullscreen .divider { width: min(9vw, 9vh); height: min(0.7vw, 0.7vh); margin: min(3.5vw, 3.5vh) auto; }
+body.fullscreen .hint { font-size: min(3vw, 3vh); bottom: 20vh; }
+body.fullscreen .play-circle { width: min(18vw, 18vh); height: min(18vw, 18vh); font-size: min(7vw, 7vh); }
+body.fullscreen .replay { font-size: min(3.5vw, 3.5vh); padding: min(2.5vw, 2.5vh) min(6vw, 6vh); border-radius: min(6vw, 6vh); bottom: 10vh; }
+</style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <button class="tb-btn" onclick="toggleFullscreen()">🎬 全螢幕錄影模式</button>
+  <button class="tb-btn" onclick="restart()">↺ 重播</button>
+  <button class="tb-btn gold" id="sc-hint" onclick="showScreenRecordHint()">📸 錄影指南</button>
+</div>
+
+<!-- Countdown overlay -->
+<div class="countdown-ov" id="co">
+  <div class="countdown-num" id="cn">3</div>
+  <div class="countdown-label">準備好開始錄影...</div>
+</div>
+
+<div class="phone" id="phone">
+
+  <!-- Progress -->
+  <div class="prog-track" id="pt"></div>
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="av">M</div>
+    <div class="ch">M&A Hunter</div>
+    <button class="follow">追蹤</button>
+  </div>
+
+  <!-- ══ SCENE 0: Hook ══ -->
+  <div class="scene s0 active" id="s0">
+    <div class="stag">⚡ 本週全球併購 04/07–04/12</div>
+    <div class="bignum"><span class="gold">640</span>億</div>
+    <div class="sublabel">美元｜這週最大一筆</div>
+    <div class="divider"></div>
+    <div class="body">
+      關稅風暴這週<br>
+      還有人砸 <span class="g">1,000 億美元</span><br>
+      在買公司
+    </div>
+  </div>
+
+  <!-- ══ SCENE 1: Pershing Square ══ -->
+  <div class="scene s1" id="s1">
+    <div class="stag">🌐 全球最大｜音樂版權</div>
+    <div class="bignum"><span class="gold">640</span>億</div>
+    <div class="sublabel">美元｜Pershing Square × 環球音樂</div>
+    <div class="divider"></div>
+    <div class="body">
+      Bill Ackman<br>
+      不買工廠、不買科技——<br>
+      他要買<span class="g">全球最大音樂版權帝國</span><br>
+      <span style="font-size:13px; color:rgba(255,255,255,.5); margin-top:4px; display:block;">還打算拉到紐約掛牌</span>
+    </div>
+  </div>
+
+  <!-- ══ SCENE 2: PE 雙雄 ══ -->
+  <div class="scene s2" id="s2">
+    <div class="stag">🏦 PE 聯手｜醫療私有化</div>
+    <div class="bignum"><span class="gold">183</span>億</div>
+    <div class="sublabel">美元｜TPG + 黑石 雙雄出手</div>
+    <div class="divider"></div>
+    <div class="body">
+      兩大 PE 巨頭<span class="g">聯手</span><br>
+      收購醫療科技龍頭 Hologic<br>
+      <span class="r">推動私有化</span>、整頓再出售<br>
+      <span style="font-size:13px; color:rgba(255,255,255,.5); display:block; margin-top:4px;">PE 大型 LBO 回來了</span>
+    </div>
+  </div>
+
+  <!-- ══ SCENE 3: 生技雙彈 ══ -->
+  <div class="scene s3" id="s3">
+    <div class="stag">💊 生技雙彈｜搶管線沒停過</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-emoji">🔵</div>
+        <div class="card-left">
+          <div class="card-title">吉立亞 × Tubulis</div>
+          <div class="card-amt">USD 50億｜新世代 ADC 平台</div>
+          <div class="card-tag">腫瘤學版圖擴張</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-emoji">🟣</div>
+        <div class="card-left">
+          <div class="card-title">Neurocrine × Soleno</div>
+          <div class="card-amt">USD 29億｜小胖威利症</div>
+          <div class="card-tag">罕病市場卡位</div>
+        </div>
+      </div>
+    </div>
+    <div class="divider" style="margin-top:14px;"></div>
+    <div class="body" style="font-size:14.5px; margin-top:0;">
+      大藥廠搶管線的戰爭<br><span class="g">沒有暫停鍵</span>
+    </div>
+  </div>
+
+  <!-- ══ SCENE 4: 台灣 ══ -->
+  <div class="scene s4" id="s4">
+    <div class="stag">🇹🇼 台灣這週｜三筆整合</div>
+    <div class="cards tw">
+      <div class="card">
+        <div class="card-emoji">💊</div>
+        <div class="card-left">
+          <div class="card-title">藥華藥 × FORUS</div>
+          <div class="card-amt">NT$11.5億｜補齊北美版圖</div>
+          <div class="card-tag">強化加拿大市場布局</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-emoji">🏦</div>
+        <div class="card-left">
+          <div class="card-title">玉山金 × 三商美邦</div>
+          <div class="card-amt">公平會放行｜壽險整合</div>
+          <div class="card-tag">金融整合浪潮持續</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-emoji">📈</div>
+        <div class="card-left">
+          <div class="card-title">台新證 × 元富證</div>
+          <div class="card-amt">合併後躍升第 4 大券商</div>
+          <div class="card-tag">券商版圖重組</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCENE 5: 本週一句話 ══ -->
+  <div class="scene s5" id="s5">
+    <div class="stag">📌 本週觀點</div>
+    <div class="divider" style="margin-top:0; margin-bottom: 16px;"></div>
+    <div class="body" style="font-size:17px; line-height:1.8;">
+      關稅讓市場恐慌<br>
+      但<span class="g">資本從不停歇</span><br><br>
+      這週最聰明的錢<br>
+      押注<span class="g">音樂、醫療、金融</span><br><br>
+      <span style="font-size:13px; color:rgba(255,255,255,.45);">你看到他們在佈的局了嗎？</span>
+    </div>
+  </div>
+
+  <!-- ══ SCENE 6: CTA ══ -->
+  <div class="scene s6" id="s6">
+    <div class="ring"></div>
+    <div class="cta-logo">M&amp;<span class="g">A</span><br>Hunter</div>
+    <div class="cta-sub">每週最大交易，我幫你追好追滿<br>不錯過任何改變產業版圖的大交易</div>
+    <button class="cta-btn">👆 追蹤 M&A Hunter</button>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sbar">
+    <div class="sbar-item"><div class="sbar-icon">❤️</div><span>18.2K</span></div>
+    <div class="sbar-item"><div class="sbar-icon">💬</div><span>留言</span></div>
+    <div class="sbar-item"><div class="sbar-icon">↗️</div><span>分享</span></div>
+    <div class="sbar-item"><div class="sbar-icon">⋯</div><span>更多</span></div>
+  </div>
+
+  <!-- Bottom -->
+  <div class="bot">
+    <div class="bot-tag">M&A HUNTER · 週報</div>
+    <div class="bot-title">這週 1,000億美元的交易：環球音樂、PE私有化、台灣金融整合 | 04/07–04/12</div>
+    <div class="bot-music"><span class="disc">💿</span><span>M&A Hunter 原聲帶</span></div>
+  </div>
+
+  <div class="hint">點擊暫停 / 繼續</div>
+
+  <div class="play-ov" id="po">
+    <div class="play-circle" id="pi">▶</div>
+  </div>
+
+  <button class="replay" id="rb" onclick="restart()">↺ 重新播放</button>
+
+</div>
+
+<script>
+const SCENES = [
+  { id:'s0', dur:3200 },
+  { id:'s1', dur:4500 },
+  { id:'s2', dur:4200 },
+  { id:'s3', dur:4800 },
+  { id:'s4', dur:5000 },
+  { id:'s5', dur:4200 },
+  { id:'s6', dur:4500 },
+];
+
+let cur=0, playing=false, timer=null, fills=[], t0=0, elapsed=0;
+let isFullscreen = false;
+
+function buildProg(){
+  const pt=document.getElementById('pt');
+  pt.innerHTML=''; fills=[];
+  SCENES.forEach((_,i)=>{
+    const seg=document.createElement('div'); seg.className='prog-seg';
+    const fill=document.createElement('div'); fill.className='prog-fill';
+    seg.appendChild(fill); pt.appendChild(seg); fills.push(fill);
+  });
+}
+
+function showScene(i){
+  SCENES.forEach((s,j)=>{
+    document.getElementById(s.id).classList.toggle('active',j===i);
+  });
+  fills.forEach((f,j)=>{
+    f.style.transition='none';
+    f.style.width = j<i ? '100%' : '0%';
+  });
+}
+
+function animBar(i,dur){
+  const f=fills[i];
+  requestAnimationFrame(()=>{
+    f.style.transition=`width ${dur}ms linear`;
+    f.style.width='100%';
+  });
+}
+
+function next(){
+  if(cur>=SCENES.length-1){ done(); return; }
+  cur++; showScene(cur);
+  animBar(cur, SCENES[cur].dur);
+  timer=setTimeout(next, SCENES[cur].dur);
+  t0=Date.now(); elapsed=0;
+}
+
+function done(){
+  playing=false;
+  document.getElementById('rb').classList.add('show');
+}
+
+function play(){
+  playing=true;
+  document.getElementById('po').classList.remove('show');
+  document.getElementById('pi').textContent='⏸';
+  const rem=SCENES[cur].dur - elapsed;
+  animBar(cur, rem);
+  timer=setTimeout(next, rem);
+  t0=Date.now();
+}
+
+function pause(){
+  playing=false;
+  if(timer) clearTimeout(timer);
+  elapsed += Date.now()-t0;
+  const f=fills[cur];
+  const w=getComputedStyle(f).width;
+  f.style.transition='none'; f.style.width=w;
+  document.getElementById('po').classList.add('show');
+  document.getElementById('pi').textContent='▶';
+}
+
+function restart(){
+  if(timer) clearTimeout(timer);
+  cur=0; elapsed=0;
+  showScene(0);
+  document.getElementById('rb').classList.remove('show');
+  document.getElementById('po').classList.remove('show');
+  playing=true;
+  animBar(0,SCENES[0].dur);
+  timer=setTimeout(next,SCENES[0].dur);
+  t0=Date.now();
+  document.getElementById('pi').textContent='⏸';
+}
+
+// ── Fullscreen recording mode ──
+function toggleFullscreen(){
+  isFullscreen = !isFullscreen;
+  if(isFullscreen){
+    // Start countdown then play
+    startCountdown();
+  } else {
+    document.body.classList.remove('fullscreen');
+    document.querySelector('.toolbar').style.display = 'flex';
+  }
+}
+
+function startCountdown(){
+  const co = document.getElementById('co');
+  const cn = document.getElementById('cn');
+  document.querySelector('.toolbar').style.display = 'none';
+  co.classList.add('show');
+  let n = 3;
+  cn.textContent = n;
+  const iv = setInterval(()=>{
+    n--;
+    if(n <= 0){
+      clearInterval(iv);
+      co.classList.remove('show');
+      document.body.classList.add('fullscreen');
+      // Re-request fullscreen API
+      document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+      restart();
+    } else {
+      cn.textContent = n;
+    }
+  }, 1000);
+}
+
+function showScreenRecordHint(){
+  alert(
+    '📸 Mac 螢幕錄影步驟：\n\n' +
+    '1. 點「🎬 全螢幕錄影模式」→ 倒數 3 秒後自動播放\n' +
+    '2. 按 Shift + Cmd + 5 開始錄影（選「錄製整個螢幕」）\n' +
+    '3. 動畫播完後按 Cmd + Ctrl + Esc 停止錄影\n' +
+    '4. 影片自動存到桌面 .mov 格式\n\n' +
+    '📱 iPhone 發布：\n' +
+    '・AirDrop 傳到 iPhone → 直接上傳 IG Reels / YT Shorts\n\n' +
+    '💡 建議在 Chrome 全螢幕模式下錄影效果最佳'
+  );
+}
+
+document.getElementById('phone').addEventListener('click',e=>{
+  if(e.target.id==='rb'||e.target.closest('#rb')) return;
+  if(document.getElementById('rb').classList.contains('show')) return;
+  playing ? pause() : play();
+});
+
+// ESC to exit fullscreen
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && isFullscreen){
+    isFullscreen = false;
+    document.body.classList.remove('fullscreen');
+    document.querySelector('.toolbar').style.display = 'flex';
+  }
+});
+
+buildProg(); showScene(0);
+setTimeout(()=>play(), 700);
+</script>
+</body>
+</html>
