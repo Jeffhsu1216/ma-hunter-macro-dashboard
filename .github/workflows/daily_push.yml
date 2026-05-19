@@ -1,0 +1,48 @@
+name: Daily Macro Dashboard Push
+
+on:
+  schedule:
+    # 台北時間 08:00 = UTC 00:00
+    - cron: '0 0 * * *'
+    # 台北時間 20:00 = UTC 12:00
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write   # 允許用 GITHUB_TOKEN 觸發 pages.yml
+
+jobs:
+  push-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run dashboard runner
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python macro_dashboard_runner.py
+
+      # 修正：GITHUB_TOKEN push 的 commit 不會觸發 pages.yml 的 on:push
+      # → 主動用 workflow_dispatch 呼叫 Pages 部署
+      - name: Trigger Pages deployment
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run pages.yml --ref main

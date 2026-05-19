@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M&A Hunter｜總經儀表板</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    <style>
+        :root {
+            --bg:        #0a0a0f;
+            --bg-card:   #12121a;
+            --bg-hover:  #1a1a25;
+            --border:    #1e1e2e;
+            --text:      #e8e6e3;
+            --text-2:    #8a8a9a;
+            --text-3:    #55556a;
+            --gold:      #c9a54e;
+            --gold-dim:  rgba(201,165,78,0.12);
+            --wine:      #8b2252;
+            --green:     #22c55e;
+            --red:       #ef4444;
+            --green-bg:  rgba(34,197,94,0.09);
+            --red-bg:    rgba(239,68,68,0.09);
+            --blue:      #60a5fa;
+            --purple:    #a78bfa;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            font-size: 13px;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: linear-gradient(135deg, var(--wine) 0%, #12040e 100%);
+            border-bottom: 1px solid var(--gold);
+            padding: 16px 28px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header-title { color: var(--gold); font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+        .header-title span { color: var(--text-2); font-size: 13px; font-weight: 400; margin-left: 10px; }
+        .header-meta { text-align: right; }
+        .header-meta .date { font-size: 18px; font-weight: 600; }
+        .header-meta .sub  { color: var(--text-2); font-size: 11px; margin-top: 2px; }
+        .badge { background: var(--wine); color:#fff; font-size:10px; padding:2px 7px; border-radius:4px; margin-left:6px; vertical-align:middle; }
+
+        /* ── Layout ── */
+        .main { padding: 16px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+        /* CB Rate bar — 6 央行：3 欄 × 2 列 */
+        .cb-bar {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+        }
+        .cb-card {
+            background: var(--gold-dim);
+            border: 1px solid rgba(201,165,78,0.25);
+            border-radius: 10px; padding: 12px 16px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .cb-card .cb-name  { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+        .cb-card .cb-rate  { font-size: 20px; font-weight: 700; color: var(--gold); line-height: 1.2; }
+        .cb-card .cb-next  { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+        /* 匯率分組標題 */
+        .fx-group-header {
+            font-size: 10px; font-weight: 600; color: var(--gold);
+            text-transform: uppercase; letter-spacing: 1px;
+            padding: 6px 0 2px; margin-top: 4px;
+            border-bottom: 1px solid rgba(201,165,78,0.15);
+        }
+        .fx-group-header:first-child { margin-top: 0; }
+
+        /* Main grid 2 cols */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 16px;
+        }
+        .card-title {
+            font-size: 11px; font-weight: 600; color: var(--gold);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            padding-bottom: 10px; margin-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        /* Data row */
+        .row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.025);
+        }
+        .row:last-child { border-bottom: none; }
+        .row .lbl { color: var(--text-2); display: flex; align-items: center; gap: 5px; }
+        .row .val { font-weight: 600; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
+        .chg {
+            font-size: 11px; font-weight: 500; padding: 1px 5px; border-radius: 3px;
+            white-space: nowrap;
+        }
+        /* 台股慣例：紅漲綠跌 */
+        .up   { color: var(--red);   background: var(--red-bg); }
+        .down { color: var(--green); background: var(--green-bg); }
+        .flat { color: var(--text-3); }
+
+        /* Yield curve mini-bar */
+        .yield-bars { margin-top: 4px; }
+        .yield-bar-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+        .yield-bar-label { width: 28px; color: var(--text-2); font-size: 11px; flex-shrink: 0; }
+        .yield-bar-track { flex: 1; height: 6px; background: #1e1e2e; border-radius: 3px; overflow: hidden; }
+        .yield-bar-fill  { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #8b2252, #c9a54e); }
+        .yield-bar-val   { width: 52px; text-align: right; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .yield-bar-bps   { width: 52px; text-align: right; font-size: 10px; }
+        .spread-box {
+            margin-top: 10px; padding: 7px 10px;
+            background: rgba(255,255,255,0.02); border-radius: 6px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .spread-box .lbl { color: var(--text-2); font-size: 11px; }
+
+        /* ── 價格軸定位圖（PAT, Price Axis Tracker）── */
+        .pat-wrap { position: relative; height: 92px; margin: 14px 4px 6px; }
+        .pat-track {
+            position: absolute; top: 44px; left: 0; right: 0; height: 5px;
+            background: linear-gradient(to right,
+                rgba(239,68,68,0.35) 0%,
+                rgba(234,179,8,0.30)  50%,
+                rgba(34,197,94,0.35)  100%);
+            border-radius: 3px;
+        }
+        .pat-tick {
+            position: absolute; top: 38px; width: 1px; height: 17px;
+            background: rgba(255,255,255,0.35); transform: translateX(-50%);
+        }
+        .pat-tick-label {
+            position: absolute; top: 60px; font-size: 9px; color: var(--text-3);
+            transform: translateX(-50%); white-space: nowrap;
+        }
+        .pat-tick-value {
+            position: absolute; top: 75px; font-size: 9px;
+            color: var(--text-2); font-variant-numeric: tabular-nums;
+            transform: translateX(-50%); white-space: nowrap;
+        }
+        .pat-end {
+            position: absolute; top: 28px; font-size: 9px;
+            color: var(--text-3); white-space: nowrap;
+        }
+        .pat-end-val {
+            position: absolute; top: 60px; font-size: 9px;
+            color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap;
+        }
+        .pat-marker {
+            position: absolute; top: 35px; width: 20px; height: 20px;
+            border-radius: 50%; transform: translateX(-50%);
+            border: 2px solid #fff;
+            box-shadow: 0 0 8px currentColor;
+            z-index: 5;
+        }
+        .pat-marker-label {
+            position: absolute; top: 4px; font-size: 11px; font-weight: 700;
+            transform: translateX(-50%); white-space: nowrap; z-index: 6;
+        }
+        /* ── RSI gauge ── */
+        .rsi-wrap { margin: 8px 0 4px; }
+        .rsi-track {
+            height: 8px; border-radius: 4px; position: relative;
+            background: linear-gradient(to right,
+                #22c55e 0%, #22c55e 30%,
+                #6b7280 30%, #6b7280 70%,
+                #ef4444 70%, #ef4444 100%);
+        }
+        .rsi-marker {
+            position: absolute; top: -3px; width: 4px; height: 14px;
+            background: #fff; border-radius: 2px; transform: translateX(-50%);
+            box-shadow: 0 0 6px rgba(255,255,255,0.6);
+        }
+        .rsi-ticks {
+            display: flex; justify-content: space-between;
+            font-size: 9px; color: var(--text-3); margin-top: 3px;
+        }
+
+        /* ── VIX gauge bar ── */
+        .vix-wrap { margin: 10px 0; }
+        .vix-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+        .vix-num { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .vix-lbl { font-size: 11px; color: var(--text-2); }
+        .vix-track {
+            height: 12px; border-radius: 6px; position: relative;
+            background: linear-gradient(to right,
+                #22c55e 0%, #22c55e 30%,
+                #eab308 30%, #eab308 50%,
+                #f97316 50%, #f97316 70%,
+                #ef4444 70%, #ef4444 100%);
+        }
+        .vix-marker {
+            position: absolute; top: -4px; width: 5px; height: 20px;
+            background: #fff; border-radius: 2px; transform: translateX(-50%);
+            box-shadow: 0 0 8px rgba(255,255,255,0.7);
+        }
+        .vix-ticks {
+            display: flex; justify-content: space-between;
+            font-size: 9px; color: var(--text-3); margin-top: 4px;
+        }
+
+        /* ── Put/Call Ratio sparkline ── */
+        .pc-wrap { margin: 8px 0 4px; }
+        .pc-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+        .pc-num { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .pc-lbl { font-size: 11px; }
+        .pc-spark { width: 100%; height: 42px; display: block; margin-top: 4px; }
+        .pc-spark-meta {
+            display: flex; justify-content: space-between;
+            font-size: 9px; color: var(--text-3); margin-top: 2px;
+        }
+
+        /* Fear & Greed gauge */
+        .fg-wrap { text-align: center; padding: 6px 0; }
+        .fg-gauge-outer {
+            width: 140px; height: 70px; margin: 0 auto;
+            position: relative; overflow: hidden;
+        }
+        .fg-gauge-bg {
+            width: 140px; height: 140px; border-radius: 50%;
+            position: absolute; top: 0; left: 0;
+            background: conic-gradient(
+                #ef4444 0deg 36deg,
+                #f97316 36deg 72deg,
+                #eab308 72deg 108deg,
+                #84cc16 108deg 144deg,
+                #22c55e 144deg 180deg,
+                transparent 180deg 360deg
+            );
+        }
+        .fg-gauge-inner {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: var(--bg-card);
+            position: absolute; top: 20px; left: 20px;
+        }
+        .fg-needle {
+            width: 2px; height: 46px; background: var(--text);
+            position: absolute; bottom: 0; left: 50%;
+            transform-origin: bottom center;
+            border-radius: 2px;
+        }
+        .fg-score  { font-size: 28px; font-weight: 700; line-height: 1; margin-top: 6px; }
+        .fg-label  { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+        .fg-change { font-size: 11px; margin-top: 4px; }
+
+        /* Taiwan 三大法人 bars */
+        .inst-row { margin: 6px 0; }
+        .inst-name { font-size: 11px; color: var(--text-2); margin-bottom: 3px; }
+        .inst-bar-wrap { display: flex; align-items: center; gap: 8px; }
+        .inst-bar-track {
+            flex: 1; height: 8px; background: #1e1e2e; border-radius: 4px;
+            position: relative; overflow: hidden;
+        }
+        .inst-bar-fill {
+            height: 100%; border-radius: 4px; position: absolute;
+            top: 0;
+        }
+        /* 紅漲綠跌：買超紅色、賣超綠色 */
+        .inst-bar-fill.pos { background: var(--red);   right: 50%; }
+        .inst-bar-fill.neg { background: var(--green); left:  50%; }
+        .inst-val { width: 80px; text-align: right; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+        /* Calendar table */
+        .cal-table { width: 100%; border-collapse: collapse; }
+        .cal-table th {
+            text-align: left; font-size: 10px; color: var(--text-3);
+            text-transform: uppercase; letter-spacing: 1px;
+            padding: 4px 8px; border-bottom: 1px solid var(--border);
+        }
+        .cal-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.025); font-size: 12px; }
+        .cal-table tr:last-child td { border-bottom: none; }
+        .cal-table td.event-title { color: var(--text); font-weight: 500; }
+        .cal-table td.forecast, .cal-table td.prev { color: var(--text-2); font-variant-numeric: tabular-nums; }
+        .country-badge {
+            display: inline-block; font-size: 9px; font-weight: 700;
+            padding: 1px 5px; border-radius: 3px; background: rgba(201,165,78,0.15);
+            color: var(--gold); letter-spacing: 0.5px;
+        }
+
+        /* Geo */
+        .geo-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .geo-category { }
+        .geo-cat-title {
+            font-size: 10px; color: var(--gold); text-transform: uppercase;
+            letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+        }
+        .geo-item { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.025); }
+        .geo-item:last-child { border-bottom: none; }
+        .geo-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .geo-text { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+        .geo-text strong { color: var(--text); }
+
+        /* Footer */
+        .footer {
+            text-align: center; padding: 14px; color: var(--text-3); font-size: 11px;
+            border-top: 1px solid var(--border); margin-top: 4px;
+        }
+        .footer a { color: var(--gold); text-decoration: none; }
+
+        /* Refresh button */
+        .refresh-btn {
+            position: fixed; bottom: 16px; right: 16px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; padding: 7px 12px; font-size: 11px; color: var(--text-3);
+            cursor: pointer; transition: all 0.2s; z-index: 100;
+        }
+        .refresh-btn:hover { border-color: var(--gold); color: var(--gold); }
+        .dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green); margin-right:5px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        .na { color: var(--text-3); font-size: 11px; }
+        .divider { height: 1px; background: var(--border); margin: 8px 0; }
+        .card-ts {
+            font-size: 10px; color: var(--text-3); margin-top: 10px;
+            padding-top: 7px; border-top: 1px dashed var(--border);
+            text-align: right; letter-spacing: 0.3px;
+        }
+
+        /* 解釋文字 */
+        .commentary {
+            margin-top: 10px; padding: 9px 12px;
+            background: rgba(201,165,78,0.06);
+            border-left: 3px solid var(--gold);
+            border-radius: 0 6px 6px 0;
+            font-size: 12px; color: var(--text-2); line-height: 1.7;
+        }
+        .commentary::before {
+            content: "💡 "; font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+    <div class="header-title">
+        🎯 M&A HUNTER <span>總經儀表板</span>
+    </div>
+    <div class="header-meta">
+        <div class="date">
+            {{ today }}（週{{ weekday }}）
+            {% if is_weekend %}<span class="badge">休市日</span>{% endif %}
+        </div>
+        <div class="sub">數據截至 {{ data.market_date }}｜更新 {{ data.updated_at }}</div>
+    </div>
+</header>
+
+<div class="main">
+
+    <!-- ① 央行利率 -->
+    <div class="cb-bar">
+        {% for name, info in data.cb_rates.items() %}
+        <div class="cb-card">
+            <div class="cb-name">{{ name }}</div>
+            <div class="cb-rate">{{ info.rate }}%</div>
+            <div class="cb-next">下次會議 {{ info.next }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="font-size:10px; color:var(--text-3); text-align:right; margin-top:-8px; margin-bottom:2px;">
+        🕐 央行利率更新時間：{{ data.cb_rates_updated_at }}（Fed 來源：FRED）
+    </div>
+
+    <!-- ② FX + 殖利率曲線 -->
+    <div class="grid-2">
+
+        <!-- 匯率 -->
+        <div class="card">
+            <div class="card-title">💱 匯率（依語意分組）</div>
+            <div style="font-size:10px; color:var(--text-3); margin-bottom:8px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
+                USD/XXX ↑ = 美元走強、該幣走弱｜XXX/USD ↑ = 該幣走強、美元走弱
+            </div>
+            {% for fx in data.fx %}
+            {# 分組標題：1=中國、2=歐洲三大、5=亞太四強 #}
+            {% if loop.index0 == 1 %}
+            <div class="fx-group-header">🇨🇳 中國</div>
+            {% elif loop.index0 == 2 %}
+            <div class="fx-group-header">🇪🇺 歐洲三大</div>
+            {% elif loop.index0 == 5 %}
+            <div class="fx-group-header">🌏 亞太四強</div>
+            {% endif %}
+            <div class="row">
+                <div class="lbl">{{ fx.name }}</div>
+                <div class="val">
+                    {{ fx.price_fmt if fx.price else '<span class="na">N/A</span>'|safe }}
+                    {% if fx.change_pct is not none %}
+                    <span class="chg {{ 'up' if fx.change_pct > 0 else ('down' if fx.change_pct < 0 else 'flat') }}">
+                        {{ '+' if fx.change_pct > 0 else '' }}{{ fx.change_pct }}%
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% if data.fx_commentary %}
+            <div class="commentary">{{ data.fx_commentary | safe }}</div>
+            {% endif %}
+            <div class="card-ts">🕐 更新時間：{{ data.fx_updated_at }}</div>
+        </div>
+
+        <!-- 美股技術面（價格軸定位圖 + RSI gauge） -->
+        <div class="card">
+            <div class="card-title">📊 美股技術面（月度視角）</div>
+            <div style="font-size:10px; color:var(--text-3); margin-bottom:6px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
+                現價在 52W 區間的相對位置｜MA20/60/200 為均線錨點｜RSI(21) 動能
+            </div>
+            {% for key in ['spx', 'ndq'] %}
+            {% set t = data.spx_tech.get(key, {}) %}
+            {% if t.get('ok') %}
+            {% set rng = (t.high52w - t.low52w) %}
+            {% set pos_ma200 = ((t.ma200 - t.low52w) / rng * 100) if rng > 0 else 50 %}
+            {% set pos_ma60  = ((t.ma60  - t.low52w) / rng * 100) if rng > 0 else 50 %}
+            {% set pos_ma20  = ((t.ma20  - t.low52w) / rng * 100) if rng > 0 else 50 %}
+            {% set pos_now   = t.range_pos %}
+            {% set marker_color = '#22c55e' if t.price > t.ma20 else ('#ef4444' if t.price < t.ma200 else '#eab308') %}
+            <div style="margin-bottom:18px;">
+                <!-- 標題 -->
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;">
+                    <span style="font-weight:600; font-size:13px;">{{ t.name }}</span>
+                    <span style="font-size:15px; font-weight:700; color:var(--text-1);">
+                        {{ "{:,.0f}".format(t.price) }}
+                        <span class="chg {{ 'up' if t.trend_ok else ('down' if t.trend_ok is sameas false else 'flat') }}" style="margin-left:6px; font-size:10px;">
+                            {{ t.trend }}
+                        </span>
+                    </span>
+                </div>
+
+                <!-- 價格軸定位圖 -->
+                <div class="pat-wrap">
+                    <!-- 左右端標籤 -->
+                    <div class="pat-end" style="left:0;">52W 低</div>
+                    <div class="pat-end" style="right:0;">52W 高</div>
+                    <div class="pat-end-val" style="left:0;">{{ "{:,.0f}".format(t.low52w) }}</div>
+                    <div class="pat-end-val" style="right:0;">{{ "{:,.0f}".format(t.high52w) }}</div>
+
+                    <!-- 主軸 -->
+                    <div class="pat-track"></div>
+
+                    <!-- MA tick marks（按相對位置定位）-->
+                    <div class="pat-tick" style="left:{{ pos_ma200 }}%;"></div>
+                    <div class="pat-tick-label" style="left:{{ pos_ma200 }}%;">年線</div>
+                    <div class="pat-tick-value" style="left:{{ pos_ma200 }}%;">{{ "{:,.0f}".format(t.ma200) }}</div>
+
+                    <div class="pat-tick" style="left:{{ pos_ma60 }}%;"></div>
+                    <div class="pat-tick-label" style="left:{{ pos_ma60 }}%;">季線</div>
+                    <div class="pat-tick-value" style="left:{{ pos_ma60 }}%;">{{ "{:,.0f}".format(t.ma60) }}</div>
+
+                    <div class="pat-tick" style="left:{{ pos_ma20 }}%;"></div>
+                    <div class="pat-tick-label" style="left:{{ pos_ma20 }}%;">月線</div>
+                    <div class="pat-tick-value" style="left:{{ pos_ma20 }}%;">{{ "{:,.0f}".format(t.ma20) }}</div>
+
+                    <!-- 現價 marker -->
+                    <div class="pat-marker-label" style="left:{{ pos_now }}%; color:{{ marker_color }};">▼</div>
+                    <div class="pat-marker" style="left:{{ pos_now }}%; background:{{ marker_color }}; color:{{ marker_color }};"></div>
+                </div>
+
+                <!-- RSI gauge -->
+                <div class="rsi-wrap">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:3px;">
+                        <span style="color:var(--text-2);">RSI(21)</span>
+                        <span><b style="color:var(--text);">{{ t.rsi }}</b>
+                            <span style="color:var(--text-3); font-size:10px; margin-left:4px;">{{ t.rsi_lbl }}</span>
+                            <span style="color:var(--text-3); font-size:10px; margin-left:6px;">距高 <span class="chg {{ 'up' if t.pct_high >= -3 else 'down' }}">{{ t.pct_high }}%</span></span>
+                        </span>
+                    </div>
+                    <div class="rsi-track">
+                        <div class="rsi-marker" style="left:{{ t.rsi }}%;"></div>
+                    </div>
+                    <div class="rsi-ticks">
+                        <span>超賣 0</span><span>30</span><span>50</span><span>70</span><span>100 超買</span>
+                    </div>
+                </div>
+            </div>
+            {% if not loop.last %}<hr style="border:none; border-top:1px solid rgba(255,255,255,0.05); margin:6px 0;">{% endif %}
+            {% endif %}
+            {% endfor %}
+            <div class="card-ts">🕐 更新時間：{{ data.spx_tech_updated_at }}</div>
+        </div>
+
+    </div>
+
+    <!-- ③ 全球股市 + Fear & Greed -->
+    <div class="grid-2">
+
+        <!-- 全球股市 -->
+        <div class="card">
+            <div class="card-title">📈 全球股市</div>
+            {% for idx in data.indices %}
+            {% if not idx.get('is_vix') %}
+            <div class="row">
+                <div class="lbl"><span>{{ idx.flag }}</span> {{ idx.name }}</div>
+                <div class="val">
+                    {{ idx.price_fmt if idx.price else '<span class="na">N/A</span>'|safe }}
+                    {% if idx.change_pct is not none %}
+                    <span class="chg {{ 'up' if idx.change_pct > 0 else ('down' if idx.change_pct < 0 else 'flat') }}">
+                        {{ '+' if idx.change_pct > 0 else '' }}{{ idx.change_pct }}%
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% if data.indices_commentary %}
+            <div class="commentary">{{ data.indices_commentary | safe }}</div>
+            {% endif %}
+            <div class="card-ts">🕐 更新時間：{{ data.indices_updated_at }}</div>
+        </div>
+
+        <!-- 市場情緒：VIX gauge + Put/Call Ratio sparkline -->
+        <div class="card">
+            <div class="card-title">🧠 市場情緒</div>
+
+            <!-- ── VIX gauge bar ── -->
+            {% for idx in data.indices %}
+            {% if idx.get('is_vix') %}
+            {% set vix_pos = ((idx.price or 0) / 50 * 100) %}
+            {% if vix_pos > 100 %}{% set vix_pos = 100 %}{% endif %}
+            {% set vix_lbl = '極度恐慌' if idx.price >= 30 else ('緊張' if idx.price >= 20 else ('穩定' if idx.price >= 15 else '平靜')) %}
+            {% set vix_color = '#ef4444' if idx.price >= 30 else ('#f97316' if idx.price >= 20 else ('#eab308' if idx.price >= 15 else '#22c55e')) %}
+            <div class="vix-wrap">
+                <div class="vix-head">
+                    <span class="vix-lbl"><b style="color:var(--text); font-size:13px;">📉 VIX 恐慌指數</b></span>
+                    <span>
+                        <span class="vix-num" style="color:{{ vix_color }};">{{ idx.price_fmt if idx.price else 'N/A' }}</span>
+                        {% if idx.change_pct is not none %}
+                        <span class="chg {{ 'up' if idx.change_pct > 0 else ('down' if idx.change_pct < 0 else 'flat') }}" style="font-size:11px; margin-left:4px;">
+                            {{ '+' if idx.change_pct > 0 else '' }}{{ idx.change_pct }}%
+                        </span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="vix-track">
+                    <div class="vix-marker" style="left:{{ vix_pos }}%;"></div>
+                </div>
+                <div class="vix-ticks">
+                    <span>0</span><span>15 平靜</span><span>25 緊張</span><span>35 恐慌</span><span>50</span>
+                </div>
+                <div style="text-align:right; font-size:11px; color:{{ vix_color }}; margin-top:4px; font-weight:600;">
+                    當前：{{ vix_lbl }}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            <div class="divider"></div>
+
+            <!-- ── Put/Call Ratio + sparkline ── -->
+            {% set pc = data.put_call_ratio %}
+            {% if pc and pc.current is not none %}
+            <div class="pc-wrap">
+                <div class="pc-head">
+                    <span class="vix-lbl"><b style="color:var(--text); font-size:13px;">⚖️ Put/Call Ratio</b>
+                        <span style="color:var(--text-3); font-size:10px; margin-left:4px;">CBOE Equity</span>
+                    </span>
+                    <span>
+                        <span class="pc-num" style="color:{{ pc.rating_color }};">{{ pc.current }}</span>
+                        {% if pc.change is not none %}
+                        <span class="chg {{ 'up' if pc.change > 0 else ('down' if pc.change < 0 else 'flat') }}" style="font-size:11px; margin-left:4px;">
+                            {{ '+' if pc.change > 0 else '' }}{{ pc.change }}
+                        </span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="pc-lbl" style="color:{{ pc.rating_color }}; text-align:right; font-weight:600; margin-bottom:6px;">{{ pc.rating }}</div>
+
+                {% if pc.history|length >= 3 %}
+                {# 計算 sparkline 座標 #}
+                {% set vals = pc.history | map(attribute='value') | list %}
+                {% set vmin = vals | min %}
+                {% set vmax = vals | max %}
+                {% set vrng = (vmax - vmin) if (vmax - vmin) > 0.01 else 0.1 %}
+                {% set npts = vals|length %}
+                <svg class="pc-spark" viewBox="0 0 100 30" preserveAspectRatio="none">
+                    <!-- 1.0 = 中性線 -->
+                    {% if vmin <= 1.0 <= vmax %}
+                    {% set neutral_y = 30 - (1.0 - vmin) / vrng * 28 - 1 %}
+                    <line x1="0" y1="{{ neutral_y }}" x2="100" y2="{{ neutral_y }}" stroke="rgba(255,255,255,0.15)" stroke-dasharray="2,2" stroke-width="0.5"/>
+                    {% endif %}
+                    <polyline
+                        points="{% for v in vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 30 - (v - vmin) / vrng * 28 - 1 }} {% endfor %}"
+                        fill="none" stroke="{{ pc.rating_color }}" stroke-width="1.5" stroke-linejoin="round"/>
+                    <!-- 最後一點 marker -->
+                    <circle cx="100" cy="{{ 30 - (vals[-1] - vmin) / vrng * 28 - 1 }}" r="2" fill="{{ pc.rating_color }}"/>
+                </svg>
+                <div class="pc-spark-meta">
+                    <span>{{ pc.history|length }} 日｜低 {{ vmin }} / 高 {{ vmax }}</span>
+                    <span>↑ put 增＝偏空｜↓ call 增＝偏多</span>
+                </div>
+                {% else %}
+                <div style="font-size:10px; color:var(--text-3); margin-top:8px; padding:6px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
+                    歷史累積中（已有 {{ pc.history|length }} 個交易日）— 5 日後啟用走勢圖
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div style="text-align:center; color:var(--text-3); padding:14px 0; font-size:11px;">Put/Call Ratio 資料無法取得</div>
+            {% endif %}
+
+            {% if data.sentiment_commentary %}
+            <div class="commentary">{{ data.sentiment_commentary | safe }}</div>
+            {% endif %}
+            <div class="card-ts">🕐 更新時間：{{ data.fg_updated_at }}</div>
+        </div>
+
+    </div>
+
+    <!-- ④ 原物料 + 台灣市場 -->
+    <div class="grid-2">
+
+        <!-- 原物料 -->
+        <div class="card">
+            <div class="card-title">🛢️ 原物料</div>
+            {% for c in data.commodities %}
+            <div class="row">
+                <div class="lbl">{{ c.name }}</div>
+                <div class="val">
+                    {% if c.price %}{{ c.symbol }}{{ c.price_fmt }}{% else %}<span class="na">N/A</span>{% endif %}
+                    {% if c.change_pct is not none %}
+                    <span class="chg {{ 'up' if c.change_pct > 0 else ('down' if c.change_pct < 0 else 'flat') }}">
+                        {{ '+' if c.change_pct > 0 else '' }}{{ c.change_pct }}%
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="divider"></div>
+            <div style="font-size:10px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin:6px 0 4px;">₿ 加密貨幣 <span style="color:var(--text-3); text-transform:none; letter-spacing:0;">（CoinGecko 24h）</span></div>
+            {% for c in data.crypto %}
+            <div class="row">
+                <div class="lbl">{{ c.name }}</div>
+                <div class="val">
+                    {% if c.price %}{{ c.symbol }}{{ c.price_fmt }}{% else %}<span class="na">N/A</span>{% endif %}
+                    {% if c.change_pct is not none %}
+                    <span class="chg {{ 'up' if c.change_pct > 0 else ('down' if c.change_pct < 0 else 'flat') }}">
+                        {{ '+' if c.change_pct > 0 else '' }}{{ c.change_pct }}%
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% if data.commodities_commentary %}
+            <div class="commentary">{{ data.commodities_commentary | safe }}</div>
+            {% endif %}
+            <div class="card-ts">🕐 原物料：{{ data.commodities_updated_at }}｜加密貨幣（CoinGecko）：{{ data.crypto_updated_at }}</div>
+        </div>
+
+        <!-- 台灣市場 三大法人 -->
+        <div class="card">
+            <div class="card-title">🇹🇼 台灣市場｜三大法人買賣超</div>
+            {% if data.taiwan %}
+            {% set tw = data.taiwan %}
+            {% set max_abs = [tw.foreign_yi|abs, tw.inv_trust_yi|abs, tw.dealer_yi|abs, 1]|max %}
+
+            {% for label, yi_val in [('外資', tw.foreign_yi), ('投信', tw.inv_trust_yi), ('自營商', tw.dealer_yi)] %}
+            <div class="inst-row">
+                <div class="inst-name">{{ label }}</div>
+                <div class="inst-bar-wrap">
+                    <div class="inst-bar-track">
+                        {% set pct = (yi_val|abs / max_abs * 50)|int %}
+                        {% if yi_val >= 0 %}
+                        <div class="inst-bar-fill pos" style="width:{{ pct }}%;"></div>
+                        {% else %}
+                        <div class="inst-bar-fill neg" style="width:{{ pct }}%;"></div>
+                        {% endif %}
+                    </div>
+                    <div class="inst-val {{ 'up' if yi_val >= 0 else 'down' }}">
+                        {{ '+' if yi_val >= 0 else '' }}{{ yi_val }} 億
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="divider"></div>
+            <div class="row">
+                <div class="lbl" style="font-weight:600; color:var(--text);">三大法人合計</div>
+                <div class="val" style="font-size:16px;">
+                    <span class="chg {{ 'up' if tw.total_yi >= 0 else 'down' }}" style="font-size:14px; padding: 3px 8px;">
+                        {{ '+' if tw.total_yi >= 0 else '' }}{{ tw.total_yi }} 億元
+                    </span>
+                </div>
+            </div>
+            {% if data.taiwan_commentary %}
+            <div class="commentary">{{ data.taiwan_commentary | safe }}</div>
+            {% endif %}
+            <div class="card-ts">🕐 更新時間：{{ data.taiwan_updated_at }}</div>
+            {% else %}
+            <div style="color:var(--text-3); padding:20px 0; text-align:center;">
+                今日尚無資料（可能為假日或盤後更新前）
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- ⑤ 本週經濟日曆 -->
+    <div class="card">
+        <div class="card-title">📅 本週重要經濟數據<span style="font-size:10px; color:var(--text-3); font-weight:400; text-transform:none; letter-spacing:0; margin-left:8px;">時間為台北時間</span></div>
+        {% if data.calendar %}
+        <table class="cal-table">
+            <thead>
+                <tr>
+                    <th>日期／時間（台北）</th>
+                    <th>地區</th>
+                    <th>事件</th>
+                    <th style="text-align:right;">預期</th>
+                    <th style="text-align:right;">前值</th>
+                    <th style="text-align:right;">實際值</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ev in data.calendar %}
+                <tr>
+                    <td style="color:var(--text-2); white-space:nowrap;">{{ ev.date }}</td>
+                    <td><span class="country-badge">{{ ev.country }}</span></td>
+                    <td class="event-title">{{ ev.title }}</td>
+                    <td class="forecast" style="text-align:right;">{{ ev.forecast }}</td>
+                    <td class="prev" style="text-align:right;">{{ ev.previous }}</td>
+                    <td style="text-align:right; font-weight:600; font-variant-numeric:tabular-nums;
+                        {{ 'color:var(--red)' if ev.beat_indicator == '▲' else ('color:var(--green)' if ev.beat_indicator == '▼' else 'color:var(--text)') }}">
+                        {% if ev.actual %}
+                            ✅ {{ ev.actual }}{% if ev.beat_indicator %} {{ ev.beat_indicator }}{% endif %}
+                        {% elif ev.is_past %}
+                            <span style="color:#f59e0b;">⚠️ 待確認</span>
+                        {% else %}
+                            <span style="color:var(--text-3);">⏳</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if data.calendar_commentary %}
+        <div class="commentary">{{ data.calendar_commentary | safe }}</div>
+        {% endif %}
+        <div class="card-ts">🕐 資料截至：{{ data.calendar_updated_at }}</div>
+        {% else %}
+        <div style="color:var(--text-3); padding:12px 0; text-align:center;">本週目前尚無重大數據</div>
+        {% endif %}
+    </div>
+
+    <!-- ⑥ 國際局勢（6 大分類，從 geopolitics.json 動態載入）-->
+    <div class="card">
+        <div class="card-title">🌍 國際局勢速覽</div>
+        {% if data.geopolitics and data.geopolitics.categories %}
+        <div class="geo-section">
+            {% for cat in data.geopolitics.categories %}
+            <div class="geo-category">
+                <div class="geo-cat-title">{{ cat.icon }} {{ cat.title }}</div>
+                {% for item in cat["items"] %}
+                <div class="geo-item">
+                    <span class="geo-icon">{{ item.icon }}</span>
+                    <div class="geo-text"><strong>{{ item.title }}</strong> — {{ item.desc }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        <div style="font-size:10px; color:var(--text-3); margin-top:10px; padding-top:8px; border-top:1px dashed var(--border);">
+            🔄 國際局勢更新時間：{{ data.geopolitics.updated }}｜市場數據為即時抓取
+        </div>
+        {% else %}
+        <div style="color:var(--text-3); padding:20px 0; text-align:center;">
+            尚未載入國際局勢資料（執行時自動更新）
+        </div>
+        {% endif %}
+    </div>
+
+</div><!-- /main -->
+
+<footer class="footer">
+    M&A Hunter 總經儀表板｜Jeff Hsu, CFA｜圖靈金融集團
+    ｜數據來源：Yahoo Finance · CNN Fear &amp; Greed · ForexFactory · TWSE<br>
+    <a href="https://ma-hunter-macro-dashboard.onrender.com">ma-hunter-macro-dashboard.onrender.com</a>
+</footer>
+
+<div class="refresh-btn" onclick="location.reload()">
+    <span class="dot"></span>即時更新
+</div>
+
+<script>
+    setTimeout(() => location.reload(), 30 * 60 * 1000);
+</script>
+</body>
+</html>
