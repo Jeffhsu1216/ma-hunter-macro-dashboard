@@ -457,7 +457,7 @@ def run(geopolitics_bullets=None):
             A(f'    {_lbl}  <code>{fFX(_np):>12}</code>  {arr(_nd)} {pct(_ndp)}')
 
     A('')
-    A('📊 <b>美股技術面（月度視角）</b>')
+    A('📊 <b>美股技術面</b>')
     for key in ['spx', 'ndq']:
         t = spx_tech.get(key, {})
         if t.get('ok'):

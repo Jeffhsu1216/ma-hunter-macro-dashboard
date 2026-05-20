@@ -147,7 +147,7 @@ def _get_quote(ticker_symbol: str, retries: int = 2) -> dict:
     """
     import urllib.request as _urlr, urllib.parse as _urlp, time
     url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
-           f"{_urlp.quote(ticker_symbol)}?interval=1d&range=5d")
+           f"{_urlp.quote(ticker_symbol)}?interval=1d&range=1d")
     for attempt in range(retries + 1):
         try:
             req = _urlr.Request(url, headers={"User-Agent": "Mozilla/5.0"})
