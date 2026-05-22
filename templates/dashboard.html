@@ -599,29 +599,36 @@
                     <span style="color:{{ pc.rating_color }}; font-weight:600;">— {{ pc.rating }}</span>
                 </div>
 
-                {% if pc.history|length >= 3 %}
-                {# 計算 sparkline 座標 #}
-                {% set vals = pc.history | map(attribute='value') | list %}
-                {% set vmin = vals | min %}
-                {% set vmax = vals | max %}
-                {% set vrng = (vmax - vmin) if (vmax - vmin) > 0.01 else 0.1 %}
-                {% set npts = vals|length %}
+                {% if data.vix_history and data.vix_history|length >= 3 %}
+                {# VIX 近 1 個月走勢（取代原 Put/Call 近 N 日走勢）#}
+                {% set vix_vals = data.vix_history | map(attribute='value') | list %}
+                {% set vmin = vix_vals | min %}
+                {% set vmax = vix_vals | max %}
+                {% set vrng = (vmax - vmin) if (vmax - vmin) > 0.01 else 1.0 %}
+                {% set npts = vix_vals|length %}
+                {% set vix_last = vix_vals[-1] %}
+                {# VIX 配色：≤15 綠 / 15-20 灰 / 20-30 橙 / >30 紅 #}
+                {% if vix_last >= 30 %}{% set vix_color = '#ef4444' %}
+                {% elif vix_last >= 20 %}{% set vix_color = '#f59e0b' %}
+                {% elif vix_last >= 15 %}{% set vix_color = '#94a3b8' %}
+                {% else %}{% set vix_color = '#22c55e' %}{% endif %}
                 <svg class="pc-spark" viewBox="0 0 100 30" preserveAspectRatio="none">
-                    {% if vmin <= 1.0 <= vmax %}
-                    {% set neutral_y = 30 - (1.0 - vmin) / vrng * 28 - 1 %}
+                    {# 20 為長期均值參考線 #}
+                    {% if vmin <= 20 <= vmax %}
+                    {% set neutral_y = 30 - (20 - vmin) / vrng * 28 - 1 %}
                     <line x1="0" y1="{{ neutral_y }}" x2="100" y2="{{ neutral_y }}" stroke="rgba(255,255,255,0.15)" stroke-dasharray="2,2" stroke-width="0.5"/>
                     {% endif %}
                     <polyline
-                        points="{% for v in vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 30 - (v - vmin) / vrng * 28 - 1 }} {% endfor %}"
-                        fill="none" stroke="{{ pc.rating_color }}" stroke-width="1.5" stroke-linejoin="round"/>
-                    <circle cx="100" cy="{{ 30 - (vals[-1] - vmin) / vrng * 28 - 1 }}" r="2" fill="{{ pc.rating_color }}"/>
+                        points="{% for v in vix_vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 30 - (v - vmin) / vrng * 28 - 1 }} {% endfor %}"
+                        fill="none" stroke="{{ vix_color }}" stroke-width="1.5" stroke-linejoin="round"/>
+                    <circle cx="100" cy="{{ 30 - (vix_last - vmin) / vrng * 28 - 1 }}" r="2" fill="{{ vix_color }}"/>
                 </svg>
                 <div class="pc-spark-meta">
-                    <span>近 {{ pc.history|length }} 日走勢｜低 {{ vmin }} / 高 {{ vmax }}</span>
+                    <span>VIX 近 1 個月走勢｜低 {{ vmin }} / 高 {{ vmax }}（虛線=長均值 20）</span>
                 </div>
                 {% else %}
                 <div style="font-size:10px; color:var(--text-3); margin-top:6px; text-align:center;">
-                    走勢圖累積中（已 {{ pc.history|length }} 日，第 5 日起顯示）
+                    VIX 走勢資料載入中
                 </div>
                 {% endif %}
             </div>
