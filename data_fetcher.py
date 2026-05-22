@@ -185,6 +185,30 @@ def _get_quote(ticker_symbol: str, retries: int = 2) -> dict:
     return {"price": None, "prev_close": None, "change_pct": None}
 
 
+def _get_history(ticker_symbol: str, rng: str = "1mo") -> list:
+    """抓 Yahoo Chart 日線收盤序列，回傳 [{date: 'MM/DD', value: float}, ...]"""
+    import urllib.request as _urlr, urllib.parse as _urlp, datetime as _dt
+    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
+           f"{_urlp.quote(ticker_symbol)}?interval=1d&range={rng}")
+    try:
+        req = _urlr.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with _urlr.urlopen(req, timeout=10) as r:
+            d = json.loads(r.read())
+        result = d["chart"]["result"][0]
+        ts     = result["timestamp"]
+        closes = result["indicators"]["quote"][0]["close"]
+        out = []
+        for t, c in zip(ts, closes):
+            if c is None:
+                continue
+            out.append({"date": _dt.datetime.fromtimestamp(t).strftime("%m/%d"),
+                        "value": round(float(c), 2)})
+        return out
+    except Exception as e:
+        logger.warning(f"_get_history {ticker_symbol} {rng} failed: {e}")
+        return []
+
+
 def _fmt(price, decimals=2):
     if price is None:
         return "N/A"
@@ -1860,6 +1884,9 @@ def fetch_all() -> dict:
     vix_price = vix_item["price"] if vix_item else None
     vix_chg   = vix_item["change_pct"] if vix_item else None
 
+    # VIX 近 1 個月走勢（取代原 Put/Call 近 N 日走勢圖）
+    vix_history = _get_history(VIX_TICKER, "1mo")
+
     # 合併原物料 + 加密貨幣，按漲跌幅排序後傳入 commentary
     all_comm = comm_data["items"] + crypto_data
     all_comm_sorted = sorted(all_comm, key=lambda x: x.get("change_pct") or -999, reverse=True)
@@ -1892,6 +1919,7 @@ def fetch_all() -> dict:
         "crypto_updated_at":  crypto_ts,
         "fear_greed":    fg,
         "put_call_ratio": pc_ratio,
+        "vix_history":   vix_history,
         "sentiment_commentary": _sentiment_commentary(vix_price, vix_chg, pc_ratio),
         "fg_updated_at": fg_ts,
         "calendar":             cal_data,
