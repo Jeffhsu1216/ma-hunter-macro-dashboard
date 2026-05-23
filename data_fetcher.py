@@ -934,7 +934,23 @@ def _calendar_commentary(cal: list) -> str:
         except:
             act_num = None; fc_num = None
 
-        beat_word = "優於預期" if bi == "▲" else ("遜於預期" if bi == "▼" else "符合預期")
+        # 反向指標（數字越低越好）：▼=優於預期，▲=遜於預期
+        # 同時含中英文關鍵字（標題經 _translate_cal_title 後可能已轉中文）
+        INVERSE_INDICATORS = (
+            # 英文（FF/TV 原始）
+            "jobless claims", "initial claims", "continuing claims",
+            "unemployment rate",
+            "cpi", "inflation rate", "core inflation",
+            "pce", "ppi",
+            # 中文（_translate_cal_title 翻譯後）
+            "失業金", "失業救濟", "失業率",
+            "通膨", "核心 cpi",
+        )
+        is_inverse = any(k in title_l for k in INVERSE_INDICATORS)
+        if is_inverse:
+            beat_word = "優於預期" if bi == "▼" else ("遜於預期" if bi == "▲" else "符合預期")
+        else:
+            beat_word = "優於預期" if bi == "▲" else ("遜於預期" if bi == "▼" else "符合預期")
         unit = "%" if "%" in actual else ""
 
         if "ism services" in title_l or "non manufacturing pmi" in title_l:
