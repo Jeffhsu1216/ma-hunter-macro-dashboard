@@ -1,1 +1,13 @@
-{"foreign": 49459164170, "foreign_yi": 494.6, "inv_trust": 7941503733, "inv_trust_yi": 79.4, "dealer": 6887667131, "dealer_yi": 68.9, "total": 64288335034, "total_yi": 642.9, "date": "20260525", "unit": "億元", "source": "live"}
+{
+  "foreign": 49459164170,
+  "foreign_yi": 494.6,
+  "inv_trust": 8414059954,
+  "inv_trust_yi": 84.1,
+  "dealer": 6887667131,
+  "dealer_yi": 68.9,
+  "total": 64760891255,
+  "total_yi": 647.6,
+  "date": "20260525",
+  "unit": "億元",
+  "source": "runner_backup"
+}
