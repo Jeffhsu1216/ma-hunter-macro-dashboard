@@ -375,19 +375,11 @@
 
         <!-- 匯率 -->
         <div class="card">
-            <div class="card-title">💱 匯率（依語意分組）</div>
+            <div class="card-title">💱 匯率</div>
             <div style="font-size:10px; color:var(--text-3); margin-bottom:8px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
-                USD/XXX ↑ = 美元走強、該幣走弱｜XXX/USD ↑ = 該幣走強、美元走弱
+                X/TWD ↑ = X 對台幣升值（台幣貶值）｜DXY ↑ = 美元全面走強
             </div>
             {% for fx in data.fx %}
-            {# 分組標題：1=中國、2=歐洲三大、5=亞太四強 #}
-            {% if loop.index0 == 1 %}
-            <div class="fx-group-header">🇨🇳 中國</div>
-            {% elif loop.index0 == 2 %}
-            <div class="fx-group-header">🇪🇺 歐洲三大</div>
-            {% elif loop.index0 == 5 %}
-            <div class="fx-group-header">🌏 亞太四強</div>
-            {% endif %}
             <div class="row">
                 <div class="lbl">{{ fx.name }}</div>
                 <div class="val">
