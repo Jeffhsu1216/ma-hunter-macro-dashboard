@@ -38,23 +38,23 @@ TAIPEI_TZ        = pytz.timezone("Asia/Taipei")
 # 數據定義
 # ============================================================
 
-# (name, ticker, decimals, invert)
-# invert=True：yfinance 給 USD/XXX，需倒轉為 XXX/USD（price=1/p，change_pct 取反）
-# 顯示順序：DXY → 中國 → 歐洲三大 → 亞太四強（語意分組固定，不再依漲跌排序）
+# (name, ticker, decimals, mode)
+# mode:
+#   "dxy"        — 美元指數（不轉 TWD，直接顯示原值）
+#   "usd_twd"    — USD/TWD 本體（ticker 即 TWD=X，raw 就是 USD/TWD）
+#   "usd_base"   — yfinance 給 USD/X（如 CNY=X / JPY=X），轉成 X/TWD = (USD/TWD) / (USD/X)
+#   "quote_base" — yfinance 給 X/USD（如 EURUSD=X），轉成 X/TWD = (X/USD) × (USD/TWD)
+# 全部匯率從 TWD 視角呈現：X/TWD ↑ = X 對 TWD 升值（TWD 貶值）
 FX_TICKERS = [
-    # 錨指標
-    ("美元指數 (DXY)",       "DX-Y.NYB", 2, False),
-    # 中國
-    ("人民幣 (CNY/USD)",     "CNY=X",    4, True),
-    # 歐洲三大
-    ("歐元 (EUR/USD)",       "EURUSD=X", 4, False),
-    ("英鎊 (GBP/USD)",       "GBPUSD=X", 4, False),
-    ("瑞士法郎 (CHF/USD)",   "CHF=X",    4, True),
-    # 亞太四強
-    ("日圓 (JPY/USD)",       "JPY=X",    6, True),
-    ("韓元 (KRW/USD)",       "KRW=X",    6, True),
-    ("新台幣 (TWD/USD)",     "TWD=X",    4, True),
-    ("澳幣 (AUD/USD)",       "AUDUSD=X", 4, False),
+    ("美元指數 (DXY)",       "DX-Y.NYB", 2, "dxy"),
+    ("美元 (USD/TWD)",       "TWD=X",    3, "usd_twd"),
+    ("人民幣 (CNY/TWD)",     "CNY=X",    3, "usd_base"),
+    ("歐元 (EUR/TWD)",       "EURUSD=X", 3, "quote_base"),
+    ("英鎊 (GBP/TWD)",       "GBPUSD=X", 3, "quote_base"),
+    ("瑞士法郎 (CHF/TWD)",   "CHF=X",    3, "usd_base"),
+    ("日圓 (JPY/TWD)",       "JPY=X",    4, "usd_base"),
+    ("韓元 (KRW/TWD)",       "KRW=X",    5, "usd_base"),
+    ("澳幣 (AUD/TWD)",       "AUDUSD=X", 3, "quote_base"),
 ]
 
 # 殖利率用 FRED（官方來源，精準）
@@ -517,20 +517,17 @@ def _next_meeting(schedule: list) -> str:
 # ============================================================
 
 def _fx_commentary(fx_list: list) -> str:
-    """統一 XXX/USD 格式解釋匯率變動，敘述順序與顯示排序一致（DXY 第一，其餘按漲跌幅）
-    XXX/USD ↑ = XXX 走強、美元走弱
-    DXY ↑ = 美元走強
-    """
-    # 各幣對的中文名稱與漲/跌時的解讀
+    """從 TWD 視角解釋匯率變動：X/TWD ↑ = X 對 TWD 升值（TWD 貶值）；DXY ↑ = 美元走強。"""
+    # 各幣對的中文名稱與漲/跌時的解讀（從 TWD 視角）
     _META = {
-        "人民幣 (CNY/USD)":    ("人民幣",   "中國經濟信心回升或政策引導升值",     "中國資本外流壓力或政策寬鬆預期"),
-        "歐元 (EUR/USD)":      ("歐元",     "歐洲經濟數據優於預期或 ECB 鷹派",   "歐洲經濟疲弱或美元避險需求上升"),
-        "英鎊 (GBP/USD)":      ("英鎊",     "英國經濟韌性或 BoE 偏鷹",           "英國經濟下行壓力或脫歐後續影響"),
-        "瑞士法郎 (CHF/USD)":  ("瑞郎",     "避險資金流入、SNB 偏鷹",            "全球風險偏好回升、避險需求消退"),
-        "日圓 (JPY/USD)":      ("日圓",     "避險資金湧入日圓、日銀可能調整政策", "日本出口競爭力增但進口通膨壓力大"),
-        "韓元 (KRW/USD)":      ("韓元",     "外資回流韓股、韓元走強",             "韓國出口導向受益但外資流出壓力"),
-        "新台幣 (TWD/USD)":    ("新台幣",   "外資匯入支撐、進口成本下降",         "外資匯出壓力增、進口成本上升"),
-        "澳幣 (AUD/USD)":      ("澳幣",     "大宗商品需求回升、中國經濟改善預期", "商品價格走弱或全球風險趨避"),
+        "美元 (USD/TWD)":      ("美元",     "美元對台幣升值（外資匯出壓力增、進口成本上升）", "美元對台幣貶值（外資匯入支撐、進口成本下降）"),
+        "人民幣 (CNY/TWD)":    ("人民幣",   "人民幣對台幣升值（中國經濟信心回升或政策引導）", "人民幣對台幣貶值（中國資本外流壓力或政策寬鬆）"),
+        "歐元 (EUR/TWD)":      ("歐元",     "歐元對台幣升值（歐洲經濟優於預期或 ECB 鷹派）",   "歐元對台幣貶值（歐洲經濟疲弱或美元避險需求）"),
+        "英鎊 (GBP/TWD)":      ("英鎊",     "英鎊對台幣升值（英國經濟韌性或 BoE 偏鷹）",       "英鎊對台幣貶值（英國經濟下行壓力）"),
+        "瑞士法郎 (CHF/TWD)":  ("瑞郎",     "瑞郎對台幣升值（避險資金流入、SNB 偏鷹）",        "瑞郎對台幣貶值（全球風險偏好回升、避險消退）"),
+        "日圓 (JPY/TWD)":      ("日圓",     "日圓對台幣升值（避險資金湧入或日銀調整政策）",     "日圓對台幣貶值（日本出口導向但進口通膨壓力）"),
+        "韓元 (KRW/TWD)":      ("韓元",     "韓元對台幣升值（外資回流韓股）",                   "韓元對台幣貶值（外資流出壓力）"),
+        "澳幣 (AUD/TWD)":      ("澳幣",     "澳幣對台幣升值（大宗商品需求回升或中國經濟改善）", "澳幣對台幣貶值（商品價格走弱或全球風險趨避）"),
     }
     parts = []
 
@@ -548,15 +545,14 @@ def _fx_commentary(fx_list: list) -> str:
             else:           parts.append("DXY 持平，匯市觀望")
             continue
 
-        # ── 其餘幣對（按傳入順序，即漲跌幅排序）──
         meta = _META.get(name)
         if not meta or c is None or abs(c) < 0.2:
             continue
         cname, up_reason, dn_reason = meta
         if c > 0:
-            parts.append(f"{cname}升值 {abs(c):.2f}%（{name} ↑），{up_reason}")
+            parts.append(f"{name} ↑ {abs(c):.2f}%：{up_reason}")
         else:
-            parts.append(f"{cname}貶值 {abs(c):.2f}%（{name} ↓），{dn_reason}")
+            parts.append(f"{name} ↓ {abs(c):.2f}%：{dn_reason}")
 
     return "<br>".join(p + "。" for p in parts) if parts else "匯率整體變動不大，市場觀望氣氛濃厚。"
 
@@ -999,16 +995,44 @@ def _calendar_commentary(cal: list) -> str:
 # ============================================================
 
 def fetch_fx_data() -> dict:
-    """抓匯率，統一 XXX/USD 格式，依 FX_TICKERS 定義的語意分組順序顯示
-    （DXY → 中國 → 歐洲三大 → 亞太四強），不再依漲跌幅排序 + 解釋"""
+    """抓匯率，全部從 TWD 視角呈現（X/TWD），DXY 保留為錨指標。
+
+    精確算法：
+      X/TWD_today = USD/TWD_today / (USD/X)_today        (usd_base)
+      X/TWD_today = (X/USD)_today × USD/TWD_today        (quote_base)
+    再用 today / prev_close 各自值算 change_pct，避免 log-linear 近似誤差。
+    """
+    # Step 1：先取 USD/TWD spot + prev（其他換算都要用）
+    twd_q = _get_quote("TWD=X")
+    usdtwd_now  = twd_q["price"]
+    usdtwd_prev = twd_q["prev_close"]
+
     results = []
-    for name, ticker, dec, inv in FX_TICKERS:
-        q = _get_quote(ticker)
-        price   = q["price"]
-        chg_pct = q["change_pct"]
-        if inv and price:
-            price   = 1.0 / price
-            chg_pct = (-chg_pct) if chg_pct is not None else None
+    for name, ticker, dec, mode in FX_TICKERS:
+        if mode == "dxy":
+            q = _get_quote(ticker)
+            price   = q["price"]
+            chg_pct = q["change_pct"]
+
+        elif mode == "usd_twd":
+            price   = usdtwd_now
+            chg_pct = twd_q["change_pct"]
+
+        else:
+            q = _get_quote(ticker)
+            now, prev = q["price"], q["prev_close"]
+            if now is None or prev is None or usdtwd_now is None or usdtwd_prev is None:
+                price, chg_pct = None, None
+            else:
+                if mode == "usd_base":     # ticker 是 USD/X
+                    x_twd_now  = usdtwd_now  / now
+                    x_twd_prev = usdtwd_prev / prev
+                else:                      # quote_base：ticker 是 X/USD
+                    x_twd_now  = now  * usdtwd_now
+                    x_twd_prev = prev * usdtwd_prev
+                price   = round(x_twd_now, 6)
+                chg_pct = round((x_twd_now - x_twd_prev) / x_twd_prev * 100, 2) if x_twd_prev else None
+
         results.append({
             "name": name,
             "price": price,

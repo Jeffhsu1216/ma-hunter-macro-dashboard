@@ -163,8 +163,8 @@ def _build_flex_bubble(data: dict) -> dict:
 
     # 匯率：DXY / USD/TWD
     fx_map     = {f["name"]: f for f in data.get("fx", [])}
-    dxy        = fx_map.get("DXY 美元指數", {})
-    twd        = fx_map.get("USD/TWD", {})
+    dxy        = fx_map.get("美元指數 (DXY)", {})
+    twd        = fx_map.get("美元 (USD/TWD)", {})
 
     dxy_val    = dxy.get("price_fmt", "N/A")
     twd_val    = twd.get("price_fmt", "N/A")
@@ -407,8 +407,8 @@ def push_daily_line(dashboard_data: dict) -> bool:
     nq        = indices.get("Nasdaq", {})
     tw        = indices.get("加權指數", {})
     fx_map    = {f["name"]: f for f in dashboard_data.get("fx", [])}
-    dxy       = fx_map.get("DXY 美元指數", {})
-    twd       = fx_map.get("USD/TWD", {})
+    dxy       = fx_map.get("美元指數 (DXY)", {})
+    twd       = fx_map.get("美元 (USD/TWD)", {})
     fg        = dashboard_data.get("fear_greed", {})
     tw_mkt    = dashboard_data.get("taiwan") or {}
     total_yi  = tw_mkt.get("total_yi")

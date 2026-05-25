@@ -54,8 +54,8 @@ def _build_message(data: dict) -> str:
 
     # 匯率摘要
     fx_map = {f["name"]: f for f in data.get("fx", [])}
-    dxy  = fx_map.get("DXY 美元指數", {})
-    twd  = fx_map.get("USD/TWD", {})
+    dxy  = fx_map.get("美元指數 (DXY)", {})
+    twd  = fx_map.get("美元 (USD/TWD)", {})
 
     # Fear & Greed
     fg = data.get("fear_greed", {})
