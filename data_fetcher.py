@@ -68,6 +68,7 @@ YIELD_FRED_IDS = [
 INDEX_TICKERS = [
     ("標普 500 (S&P 500)",        "^GSPC",     "🇺🇸"),
     ("那斯達克 (Nasdaq)",          "^IXIC",     "🇺🇸"),
+    ("費城半導體 (SOX)",           "^SOX",      "🇺🇸"),
     ("英國富時 100 (FTSE 100)",    "^FTSE",     "🇬🇧"),
     ("德國 DAX (DAX)",             "^GDAXI",    "🇩🇪"),
     ("歐洲 STOXX 600 (STOXX 600)", "^STOXX",    "🇪🇺"),
