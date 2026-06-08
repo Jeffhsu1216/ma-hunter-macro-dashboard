@@ -461,15 +461,17 @@
                     </span>
                 </div>
 
-                <!-- 過去 1 個月日 K 線圖（紅漲綠跌 + 月/季/年線參考線 + hover 開高低收）-->
+                <!-- 過去 3 個月日 K 線圖（紅漲綠跌 + 月/季/年線參考線 + hover 開高低收）-->
                 <div class="tech-trend">
                     <svg class="tech-spark" viewBox="0 0 100 30" preserveAspectRatio="none">
-                        {% for m in t.ma_marks %}
-                        <line x1="0" y1="{{ m.y }}" x2="100" y2="{{ m.y }}" stroke="{{ m.color }}" stroke-dasharray="2,2" stroke-width="0.6" opacity="0.8" vector-effect="non-scaling-stroke"/>
-                        {% endfor %}
+                        {# 先畫 K 線 #}
                         {% for c in t.candles %}
                         <line x1="{{ c.cx }}" y1="{{ c.wick_hi }}" x2="{{ c.cx }}" y2="{{ c.wick_lo }}" stroke="{{ c.color }}" stroke-width="1" vector-effect="non-scaling-stroke"/>
                         <rect x="{{ c.x }}" y="{{ c.body_y }}" width="{{ c.w }}" height="{{ c.body_h }}" fill="{{ c.color }}" stroke="{{ c.color }}" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
+                        {% endfor %}
+                        {# 均線參考線疊在 K 線「之上」（否則會被密集 K 線蓋住、看起來只剩一條）#}
+                        {% for m in t.ma_marks %}
+                        <line x1="0" y1="{{ m.y }}" x2="100" y2="{{ m.y }}" stroke="{{ m.color }}" stroke-dasharray="3,2" stroke-width="1.1" opacity="0.95" vector-effect="non-scaling-stroke"/>
                         {% endfor %}
                         {% for c in t.candles %}
                         <rect class="kc-hit" x="{{ c.slot_x }}" y="0" width="{{ c.slot_w }}" height="30" fill="transparent"
