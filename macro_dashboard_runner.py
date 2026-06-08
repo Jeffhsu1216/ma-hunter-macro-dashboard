@@ -190,7 +190,7 @@ def fetch_spx_tech():
         if pct >= -30:  return '熊市邊緣'
         return '深度熊市'
 
-    for key, sym, name in [('spx', '^GSPC', '標普 500 (S&amp;P 500)'), ('ndq', '^IXIC', '那斯達克 (Nasdaq)')]:
+    for key, sym, name in [('spx', '^GSPC', '標普 500 (S&amp;P 500)'), ('sox', '^SOX', '費城半導體 (SOX)')]:
         try:
             closes = _hist(sym)
             if len(closes) < 200:
@@ -204,6 +204,13 @@ def fetch_spx_tech():
             high52w = max(closes[-252:]) if len(closes) >= 252 else max(closes)
             pct_high = (price - high52w) / high52w * 100
             trend, trend_ok = _trend_lbl(price, ma20, ma60, ma200)
+            # 過去 1 個月（≈22 交易日）走勢：unicode 區塊圖 + 月變動
+            spark   = closes[-22:]
+            mtd_pct = (price - spark[0]) / spark[0] * 100 if spark[0] else 0.0
+            _blk    = '▁▂▃▄▅▆▇█'
+            _lo, _hi = min(spark), max(spark)
+            _rng    = (_hi - _lo) or 1
+            spark_line = ''.join(_blk[min(7, int((v - _lo) / _rng * 7))] for v in spark)
             spx_tech[key] = {
                 'ok': True, 'name': name, 'price': price,
                 'ma20': ma20, 'ma60': ma60, 'ma200': ma200,
@@ -214,6 +221,7 @@ def fetch_spx_tech():
                 'high52w': high52w, 'pct_high': pct_high,
                 'high_lbl': _high_lbl(pct_high),
                 'trend': trend, 'trend_ok': trend_ok,
+                'spark_line': spark_line, 'mtd_pct': mtd_pct,
             }
         except:
             spx_tech[key] = {'ok': False}
@@ -458,10 +466,11 @@ def run(geopolitics_bullets=None):
 
     A('')
     A('📊 <b>美股技術面</b>')
-    for key in ['spx', 'ndq']:
+    for key in ['spx', 'sox']:
         t = spx_tech.get(key, {})
         if t.get('ok'):
             A(f'  <b>{t["name"]}</b>  <code>{fN(t["price"], 0)}</code>  — {t["trend"]}')
+            A(f'    近1月 <code>{t["spark_line"]}</code>  {t["mtd_pct"]:+.1f}%')
             A(f'    月線 MA20 {fN(t["ma20"], 0)}（{t["pct20"]:+.1f}%）')
             A(f'    季線 MA60 {fN(t["ma60"], 0)}（{t["pct60"]:+.1f}%）')
             A(f'    年線 MA200 {fN(t["ma200"], 0)}（{t["pct200"]:+.1f}%）')
