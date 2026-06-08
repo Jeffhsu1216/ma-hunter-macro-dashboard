@@ -1297,18 +1297,43 @@ def fetch_spx_technical() -> dict:
 
     import urllib.request as _urlr, urllib.parse as _urlp
 
+    import datetime as _dt2
+
     def _hist(symbol):
+        """回傳 [{o,h,l,c,t}, ...]（已濾掉 close=None 的列），含 OHLC 供 K 線使用"""
         url = f'https://query1.finance.yahoo.com/v8/finance/chart/{_urlp.quote(symbol)}?interval=1d&range=1y'
         req = _urlr.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with _urlr.urlopen(req, timeout=12) as r:
             d = json.loads(r.read())
-        closes = d['chart']['result'][0]['indicators']['quote'][0]['close']
-        return [x for x in closes if x is not None]
+        res = d['chart']['result'][0]
+        q   = res['indicators']['quote'][0]
+        ts  = res.get('timestamp') or []
+        o, h, l, c = q.get('open', []), q.get('high', []), q.get('low', []), q.get('close', [])
+        rows = []
+        for i in range(len(c)):
+            cv = c[i]
+            if cv is None:
+                continue
+            ov = o[i] if i < len(o) and o[i] is not None else cv
+            hv = h[i] if i < len(h) and h[i] is not None else cv
+            lv = l[i] if i < len(l) and l[i] is not None else cv
+            rows.append({'o': ov, 'h': hv, 'l': lv, 'c': cv,
+                         't': ts[i] if i < len(ts) else None})
+        return rows
+
+    def _mmdd(t):
+        if not t:
+            return ''
+        try:
+            return _dt2.datetime.utcfromtimestamp(t).strftime('%m/%d')
+        except Exception:
+            return ''
 
     result = {}
     for key, sym, name in [('spx', '^GSPC', '標普 500 (S&P 500)'), ('sox', '^SOX', '費城半導體 (SOX)')]:
         try:
-            closes = _hist(sym)
+            rows   = _hist(sym)
+            closes = [r['c'] for r in rows]
             if len(closes) < 200:
                 result[key] = {'ok': False, 'name': name}
                 continue
@@ -1325,11 +1350,13 @@ def fetch_spx_technical() -> dict:
             range_pos = (price - low52w) / (high52w - low52w) * 100 if high52w > low52w else 50
             trend, trend_ok = _trend_lbl(price, ma20, ma60, ma200)
 
-            # ── 過去 1 個月（≈22 交易日）走勢 sparkline + 均線參考線幾何 ──
+            # ── 過去 1 個月（≈22 交易日）K 線 + 均線參考線幾何 ──
             # viewBox 0 0 100 30；y = 30 - (v-d_lo)/d_rng*28 - 1（上下各留 1 邊距）
-            spark   = closes[-22:]
-            mtd_pct = (price - spark[0]) / spark[0] * 100 if spark[0] else 0.0
-            s_lo, s_hi = min(spark), max(spark)
+            cdl     = rows[-22:]                                   # 含 OHLC 的日 K
+            spark   = [r['c'] for r in cdl]
+            mtd_pct = (spark[-1] - spark[0]) / spark[0] * 100 if spark[0] else 0.0
+            s_lo    = min(r['l'] for r in cdl)                     # 月內最低（影線）
+            s_hi    = max(r['h'] for r in cdl)                     # 月內最高（影線）
             s_mid   = (s_lo + s_hi) / 2 or price
             # 只把「離本月區間中點 ≤10%」的均線納入 y 值域，避免遠端年線把走勢壓扁
             inc = [m for m in (ma20, ma60, ma200) if s_mid and abs(m - s_mid) / s_mid <= 0.10]
@@ -1340,13 +1367,34 @@ def fetch_spx_technical() -> dict:
             d_rng = (d_hi - d_lo) or 1
             def _y(v):
                 return round(30 - (v - d_lo) / d_rng * 28 - 1, 2)
-            n = len(spark)
-            spark_pts = ' '.join(
-                f'{round(i / (n - 1) * 100, 2) if n > 1 else 50},{_y(v)}'
-                for i, v in enumerate(spark)
-            )
+
+            n    = len(cdl)
+            slot = 100.0 / n
+            bw   = slot * 0.62                                     # 實體寬度
+            candles = []
+            for i, r in enumerate(cdl):
+                o_, h_, l_, c_ = r['o'], r['h'], r['l'], r['c']
+                up = c_ >= o_                                      # 台股慣例：紅漲綠跌
+                top = _y(max(o_, c_)); bot = _y(min(o_, c_))
+                candles.append({
+                    'x':      round((i + 0.5) * slot - bw / 2, 2), # 實體左緣
+                    'cx':     round((i + 0.5) * slot, 2),          # 影線中心
+                    'slot_x': round(i * slot, 2),                  # hover 區左緣
+                    'w':      round(bw, 2),
+                    'slot_w': round(slot, 2),
+                    'body_y': round(top, 2),
+                    'body_h': round(max(bot - top, 0.5), 2),       # 最小實體高（十字線可見）
+                    'wick_hi': _y(h_),
+                    'wick_lo': _y(l_),
+                    'up':     up,
+                    'color':  '#ef4444' if up else '#22c55e',
+                    'd':      _mmdd(r['t']),
+                    'o': round(o_, 2), 'h': round(h_, 2),
+                    'l': round(l_, 2), 'c': round(c_, 2),
+                })
+
             ma_marks, ma_out = [], []   # 落在框內畫虛線 / 超出框外只列文字
-            for lbl, mv, col in [('月線', ma20, '#60a5fa'), ('季線', ma60, '#f59e0b'), ('年線', ma200, '#ef4444')]:
+            for lbl, mv, col in [('月線', ma20, '#60a5fa'), ('季線', ma60, '#a78bfa'), ('年線', ma200, '#f59e0b')]:
                 item = {'label': lbl, 'val': round(mv, 2),
                         'pct': round((price - mv) / mv * 100, 1), 'color': col,
                         'side': '上方' if mv > price else '下方'}
@@ -1375,10 +1423,8 @@ def fetch_spx_technical() -> dict:
                 'range_pos': round(range_pos, 1),  # 現價在 52W 區間的位置 0~100
                 'trend':    trend,
                 'trend_ok': trend_ok,
-                # 過去 1 個月走勢
-                'spark_pts': spark_pts,
-                'last_y':    _y(price),
-                'spark_up':  spark[-1] >= spark[0],
+                # 過去 1 個月 K 線
+                'candles':   candles,
                 'mtd_pct':   round(mtd_pct, 1),
                 'spark_lo':  round(s_lo, 2),
                 'spark_hi':  round(s_hi, 2),
