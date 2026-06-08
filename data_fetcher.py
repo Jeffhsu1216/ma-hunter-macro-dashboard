@@ -1350,19 +1350,16 @@ def fetch_spx_technical() -> dict:
             range_pos = (price - low52w) / (high52w - low52w) * 100 if high52w > low52w else 50
             trend, trend_ok = _trend_lbl(price, ma20, ma60, ma200)
 
-            # ── 過去 1 個月（≈22 交易日）K 線 + 均線參考線幾何 ──
+            # ── 過去 3 個月（≈60 交易日）K 線 + 均線參考線幾何 ──
             # viewBox 0 0 100 30；y = 30 - (v-d_lo)/d_rng*28 - 1（上下各留 1 邊距）
-            cdl     = rows[-22:]                                   # 含 OHLC 的日 K
+            cdl     = rows[-60:]                                   # 含 OHLC 的日 K
             spark   = [r['c'] for r in cdl]
             mtd_pct = (spark[-1] - spark[0]) / spark[0] * 100 if spark[0] else 0.0
-            s_lo    = min(r['l'] for r in cdl)                     # 月內最低（影線）
-            s_hi    = max(r['h'] for r in cdl)                     # 月內最高（影線）
-            s_mid   = (s_lo + s_hi) / 2 or price
-            # 只把「離本月區間中點 ≤10%」的均線納入 y 值域，避免遠端年線把走勢壓扁
-            inc = [m for m in (ma20, ma60, ma200) if s_mid and abs(m - s_mid) / s_mid <= 0.10]
-            d_lo = min([s_lo] + inc)
-            d_hi = max([s_hi] + inc)
-            pad  = (d_hi - d_lo) * 0.08 if d_hi > d_lo else (d_hi * 0.01 or 1)
+            s_lo    = min(r['l'] for r in cdl)                     # 三月內最低（影線）
+            s_hi    = max(r['h'] for r in cdl)                     # 三月內最高（影線）
+            # 值域貼齊 K 線本身的高低 + 6% 緩衝；不為了塞均線而拉寬值域（避免 K 線被壓扁、看不出趨勢）
+            d_lo, d_hi = s_lo, s_hi
+            pad  = (d_hi - d_lo) * 0.06 if d_hi > d_lo else (d_hi * 0.01 or 1)
             d_lo -= pad; d_hi += pad
             d_rng = (d_hi - d_lo) or 1
             def _y(v):

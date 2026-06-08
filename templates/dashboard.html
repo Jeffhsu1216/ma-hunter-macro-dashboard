@@ -167,7 +167,7 @@
         }
         /* ── 過去 1 個月日 K 線圖（紅漲綠跌 + 月/季/年線參考線 + hover OHLC）── */
         .tech-trend {
-            position: relative; height: 88px; margin: 12px 2px 4px;
+            position: relative; height: 120px; margin: 12px 2px 4px;
             border-radius: 6px; padding: 2px 0;
             background: rgba(255,255,255,0.02);
             border: 1px solid rgba(255,255,255,0.05);
@@ -283,6 +283,11 @@
         }
         .pc-plain b { color: var(--text); font-size: 12px; }
         .pc-spark { width: 100%; height: 36px; display: block; margin-top: 6px; }
+        .vix-spark {
+            width: 100%; height: 78px; display: block; margin-top: 8px;
+            border-radius: 6px; background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
         .pc-spark-meta {
             display: flex; justify-content: space-between;
             font-size: 9px; color: var(--text-3); margin-top: 2px;
@@ -439,7 +444,7 @@
         <div class="card">
             <div class="card-title">📊 美股技術面</div>
             <div style="font-size:10px; color:var(--text-3); margin-bottom:6px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
-                過去 1 個月日 K（紅漲綠跌，滑鼠移上看開高低收）｜月線 MA20／季線 MA60／年線 MA200 參考線（虛線）｜RSI(21) 動能
+                過去 3 個月日 K（60 個交易日，紅漲綠跌，滑鼠移上看開高低收）｜月線 MA20／季線 MA60／年線 MA200 參考線（虛線）｜RSI(21) 動能
             </div>
             {% for key in ['spx', 'sox'] %}
             {% set t = data.spx_tech.get(key, {}) %}
@@ -476,7 +481,7 @@
 
                 <!-- 走勢 meta + 均線圖例 -->
                 <div class="tech-meta">
-                    <span>近 1 個月 <b class="chg {{ 'up' if t.mtd_pct >= 0 else 'down' }}">{{ "%+.1f"|format(t.mtd_pct) }}%</b>
+                    <span>近 3 個月 <b class="chg {{ 'up' if t.mtd_pct >= 0 else 'down' }}">{{ "%+.1f"|format(t.mtd_pct) }}%</b>
                         <span style="color:var(--text-3); margin-left:6px;">區間 {{ "{:,.0f}".format(t.spark_lo) }}–{{ "{:,.0f}".format(t.spark_hi) }}</span></span>
                     <span style="color:var(--text-3);">距 52W 高 <span class="chg {{ 'up' if t.pct_high >= -3 else 'down' }}">{{ t.pct_high }}%</span></span>
                 </div>
@@ -638,19 +643,30 @@
                 {% elif vix_last >= 20 %}{% set vix_color = '#f59e0b' %}
                 {% elif vix_last >= 15 %}{% set vix_color = '#94a3b8' %}
                 {% else %}{% set vix_color = '#22c55e' %}{% endif %}
-                <svg class="pc-spark" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <svg class="vix-spark" viewBox="0 0 100 36" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="vixGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="{{ vix_color }}" stop-opacity="0.32"/>
+                            <stop offset="100%" stop-color="{{ vix_color }}" stop-opacity="0.02"/>
+                        </linearGradient>
+                    </defs>
+                    {# y = 34 - (v-vmin)/vrng*30 - 2（上下各留 2 邊距）#}
                     {# 20 為長期均值參考線 #}
                     {% if vmin <= 20 <= vmax %}
-                    {% set neutral_y = 30 - (20 - vmin) / vrng * 28 - 1 %}
-                    <line x1="0" y1="{{ neutral_y }}" x2="100" y2="{{ neutral_y }}" stroke="rgba(255,255,255,0.15)" stroke-dasharray="2,2" stroke-width="0.5"/>
+                    {% set neutral_y = 34 - (20 - vmin) / vrng * 30 - 2 %}
+                    <line x1="0" y1="{{ neutral_y }}" x2="100" y2="{{ neutral_y }}" stroke="rgba(255,255,255,0.25)" stroke-dasharray="3,2" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
                     {% endif %}
+                    {# 面積填充凸顯走勢 #}
+                    <polygon fill="url(#vixGrad)" stroke="none"
+                        points="0,36 {% for v in vix_vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 34 - (v - vmin) / vrng * 30 - 2 }} {% endfor %} 100,36"/>
+                    {# 折線（non-scaling-stroke 保持任何寬度都清晰）#}
                     <polyline
-                        points="{% for v in vix_vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 30 - (v - vmin) / vrng * 28 - 1 }} {% endfor %}"
-                        fill="none" stroke="{{ vix_color }}" stroke-width="1.5" stroke-linejoin="round"/>
-                    <circle cx="100" cy="{{ 30 - (vix_last - vmin) / vrng * 28 - 1 }}" r="2" fill="{{ vix_color }}"/>
+                        points="{% for v in vix_vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 34 - (v - vmin) / vrng * 30 - 2 }} {% endfor %}"
+                        fill="none" stroke="{{ vix_color }}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+                    <circle cx="100" cy="{{ 34 - (vix_last - vmin) / vrng * 30 - 2 }}" r="2.2" fill="{{ vix_color }}" stroke="#0d0f14" stroke-width="0.8"/>
                 </svg>
                 <div class="pc-spark-meta">
-                    <span>VIX 近 1 個月走勢｜低 {{ vmin }} / 高 {{ vmax }}（虛線=長均值 20）</span>
+                    <span>VIX 近 1 個月走勢｜現值 <b style="color:{{ vix_color }};">{{ vix_last }}</b>｜低 {{ vmin }} / 高 {{ vmax }}（虛線=長均值 20）</span>
                 </div>
                 {% else %}
                 <div style="font-size:10px; color:var(--text-3); margin-top:6px; text-align:center;">
