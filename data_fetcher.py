@@ -662,9 +662,9 @@ def _sentiment_commentary(vix_price: float = None, vix_chg: float = None,
 
 
 def _tech_commentary(tech: dict) -> str:
-    """根據美股技術面數據生成 SPX/NDQ 文字總結"""
+    """根據美股技術面數據生成 SPX/SOX 文字總結"""
     parts = []
-    for key in ('spx', 'ndq'):
+    for key in ('spx', 'sox'):
         t = tech.get(key, {})
         if not t.get('ok'):
             continue
@@ -1256,8 +1256,8 @@ def fetch_cb_rates() -> dict:
 
 
 def fetch_spx_technical() -> dict:
-    """美股技術面（針對月度投資週期）：S&P 500 + Nasdaq
-    5 個指標：MA20（月線）/ MA60（季線）/ MA200（年線）/ RSI(21) / 距 52W 高
+    """美股技術面（針對月度投資週期）：S&P 500 + 費城半導體 (SOX)
+    指標：MA20（月線）/ MA60（季線）/ MA200（年線）/ RSI(21) / 過去 1 個月走勢 / 距 52W 高
     統計學原理：觀察窗 ≈ 投資週期 時訊號雜訊比最佳；月度持倉用 21 天 RSI 比 14 天乾淨"""
     def _rsi(closes, period=21):
         deltas = [closes[i] - closes[i-1] for i in range(1, len(closes))]
@@ -1306,7 +1306,7 @@ def fetch_spx_technical() -> dict:
         return [x for x in closes if x is not None]
 
     result = {}
-    for key, sym, name in [('spx', '^GSPC', '標普 500 (S&P 500)'), ('ndq', '^IXIC', '那斯達克 (Nasdaq)')]:
+    for key, sym, name in [('spx', '^GSPC', '標普 500 (S&P 500)'), ('sox', '^SOX', '費城半導體 (SOX)')]:
         try:
             closes = _hist(sym)
             if len(closes) < 200:
@@ -1324,6 +1324,38 @@ def fetch_spx_technical() -> dict:
             # 價格軸定位圖：現價在 52W 區間的相對位置 (0~100%)
             range_pos = (price - low52w) / (high52w - low52w) * 100 if high52w > low52w else 50
             trend, trend_ok = _trend_lbl(price, ma20, ma60, ma200)
+
+            # ── 過去 1 個月（≈22 交易日）走勢 sparkline + 均線參考線幾何 ──
+            # viewBox 0 0 100 30；y = 30 - (v-d_lo)/d_rng*28 - 1（上下各留 1 邊距）
+            spark   = closes[-22:]
+            mtd_pct = (price - spark[0]) / spark[0] * 100 if spark[0] else 0.0
+            s_lo, s_hi = min(spark), max(spark)
+            s_mid   = (s_lo + s_hi) / 2 or price
+            # 只把「離本月區間中點 ≤10%」的均線納入 y 值域，避免遠端年線把走勢壓扁
+            inc = [m for m in (ma20, ma60, ma200) if s_mid and abs(m - s_mid) / s_mid <= 0.10]
+            d_lo = min([s_lo] + inc)
+            d_hi = max([s_hi] + inc)
+            pad  = (d_hi - d_lo) * 0.08 if d_hi > d_lo else (d_hi * 0.01 or 1)
+            d_lo -= pad; d_hi += pad
+            d_rng = (d_hi - d_lo) or 1
+            def _y(v):
+                return round(30 - (v - d_lo) / d_rng * 28 - 1, 2)
+            n = len(spark)
+            spark_pts = ' '.join(
+                f'{round(i / (n - 1) * 100, 2) if n > 1 else 50},{_y(v)}'
+                for i, v in enumerate(spark)
+            )
+            ma_marks, ma_out = [], []   # 落在框內畫虛線 / 超出框外只列文字
+            for lbl, mv, col in [('月線', ma20, '#60a5fa'), ('季線', ma60, '#f59e0b'), ('年線', ma200, '#ef4444')]:
+                item = {'label': lbl, 'val': round(mv, 2),
+                        'pct': round((price - mv) / mv * 100, 1), 'color': col,
+                        'side': '上方' if mv > price else '下方'}
+                if d_lo <= mv <= d_hi:
+                    item['y'] = _y(mv)
+                    ma_marks.append(item)
+                else:
+                    ma_out.append(item)
+
             result[key] = {
                 'ok':       True,
                 'name':     name,
@@ -1343,6 +1375,15 @@ def fetch_spx_technical() -> dict:
                 'range_pos': round(range_pos, 1),  # 現價在 52W 區間的位置 0~100
                 'trend':    trend,
                 'trend_ok': trend_ok,
+                # 過去 1 個月走勢
+                'spark_pts': spark_pts,
+                'last_y':    _y(price),
+                'spark_up':  spark[-1] >= spark[0],
+                'mtd_pct':   round(mtd_pct, 1),
+                'spark_lo':  round(s_lo, 2),
+                'spark_hi':  round(s_hi, 2),
+                'ma_marks':  ma_marks,
+                'ma_out':    ma_out,
             }
         except Exception as e:
             logger.warning(f"fetch_spx_technical {sym}: {e}")

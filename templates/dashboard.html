@@ -165,6 +165,30 @@
             position: absolute; top: 4px; font-size: 11px; font-weight: 700;
             transform: translateX(-50%); white-space: nowrap; z-index: 6;
         }
+        /* ── 過去 1 個月走勢圖（價格折線 + 月/季/年線參考線）── */
+        .tech-trend {
+            position: relative; height: 64px; margin: 12px 2px 4px;
+            border-radius: 6px; padding: 2px 0;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .tech-spark { width: 100%; height: 100%; display: block; }
+        .tech-meta {
+            display: flex; justify-content: space-between; align-items: baseline;
+            font-size: 10px; color: var(--text-2);
+            font-variant-numeric: tabular-nums; margin: 2px 2px 4px;
+        }
+        .ma-legend {
+            display: flex; flex-wrap: wrap; gap: 4px 12px;
+            font-size: 10px; color: var(--text-2);
+            font-variant-numeric: tabular-nums; margin: 0 2px 4px;
+        }
+        .ma-legend span { display: inline-flex; align-items: center; white-space: nowrap; }
+        .ma-legend i {
+            display: inline-block; width: 12px; height: 0;
+            border-top: 2px dashed currentColor; margin-right: 4px;
+        }
+        .ma-legend .chg { margin-left: 4px; }
         /* ── RSI gauge ── */
         .rsi-wrap { margin: 8px 0 4px; }
         .rsi-track {
@@ -402,17 +426,12 @@
         <div class="card">
             <div class="card-title">📊 美股技術面</div>
             <div style="font-size:10px; color:var(--text-3); margin-bottom:6px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
-                現價在 52W 區間的相對位置｜MA20/60/200 為均線錨點｜RSI(21) 動能
+                過去 1 個月走勢｜月線 MA20／季線 MA60／年線 MA200 參考線（虛線）｜RSI(21) 動能
             </div>
-            {% for key in ['spx', 'ndq'] %}
+            {% for key in ['spx', 'sox'] %}
             {% set t = data.spx_tech.get(key, {}) %}
             {% if t.get('ok') %}
-            {% set rng = (t.high52w - t.low52w) %}
-            {% set pos_ma200 = ((t.ma200 - t.low52w) / rng * 100) if rng > 0 else 50 %}
-            {% set pos_ma60  = ((t.ma60  - t.low52w) / rng * 100) if rng > 0 else 50 %}
-            {% set pos_ma20  = ((t.ma20  - t.low52w) / rng * 100) if rng > 0 else 50 %}
-            {% set pos_now   = t.range_pos %}
-            {% set marker_color = '#22c55e' if t.price > t.ma20 else ('#ef4444' if t.price < t.ma200 else '#eab308') %}
+            {% set line_color = '#22c55e' if t.spark_up else '#ef4444' %}
             <div style="margin-bottom:18px;">
                 <!-- 標題 -->
                 <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;">
@@ -425,33 +444,30 @@
                     </span>
                 </div>
 
-                <!-- 價格軸定位圖 -->
-                <div class="pat-wrap">
-                    <!-- 左右端標籤 -->
-                    <div class="pat-end" style="left:0;">52W 低</div>
-                    <div class="pat-end" style="right:0;">52W 高</div>
-                    <div class="pat-end-val" style="left:0;">{{ "{:,.0f}".format(t.low52w) }}</div>
-                    <div class="pat-end-val" style="right:0;">{{ "{:,.0f}".format(t.high52w) }}</div>
+                <!-- 過去 1 個月走勢圖（價格折線 + 月/季/年線參考線）-->
+                <div class="tech-trend">
+                    <svg class="tech-spark" viewBox="0 0 100 30" preserveAspectRatio="none">
+                        {% for m in t.ma_marks %}
+                        <line x1="0" y1="{{ m.y }}" x2="100" y2="{{ m.y }}" stroke="{{ m.color }}" stroke-dasharray="2,2" stroke-width="0.6" opacity="0.75"/>
+                        {% endfor %}
+                        <polyline points="{{ t.spark_pts }}" fill="none" stroke="{{ line_color }}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+                        <circle cx="100" cy="{{ t.last_y }}" r="2" fill="{{ line_color }}"/>
+                    </svg>
+                </div>
 
-                    <!-- 主軸 -->
-                    <div class="pat-track"></div>
-
-                    <!-- MA tick marks（按相對位置定位）-->
-                    <div class="pat-tick" style="left:{{ pos_ma200 }}%;"></div>
-                    <div class="pat-tick-label" style="left:{{ pos_ma200 }}%;">年線</div>
-                    <div class="pat-tick-value" style="left:{{ pos_ma200 }}%;">{{ "{:,.0f}".format(t.ma200) }}</div>
-
-                    <div class="pat-tick" style="left:{{ pos_ma60 }}%;"></div>
-                    <div class="pat-tick-label" style="left:{{ pos_ma60 }}%;">季線</div>
-                    <div class="pat-tick-value" style="left:{{ pos_ma60 }}%;">{{ "{:,.0f}".format(t.ma60) }}</div>
-
-                    <div class="pat-tick" style="left:{{ pos_ma20 }}%;"></div>
-                    <div class="pat-tick-label" style="left:{{ pos_ma20 }}%;">月線</div>
-                    <div class="pat-tick-value" style="left:{{ pos_ma20 }}%;">{{ "{:,.0f}".format(t.ma20) }}</div>
-
-                    <!-- 現價 marker -->
-                    <div class="pat-marker-label" style="left:{{ pos_now }}%; color:{{ marker_color }};">▼</div>
-                    <div class="pat-marker" style="left:{{ pos_now }}%; background:{{ marker_color }}; color:{{ marker_color }};"></div>
+                <!-- 走勢 meta + 均線圖例 -->
+                <div class="tech-meta">
+                    <span>近 1 個月 <b class="chg {{ 'up' if t.mtd_pct >= 0 else 'down' }}">{{ "%+.1f"|format(t.mtd_pct) }}%</b>
+                        <span style="color:var(--text-3); margin-left:6px;">區間 {{ "{:,.0f}".format(t.spark_lo) }}–{{ "{:,.0f}".format(t.spark_hi) }}</span></span>
+                    <span style="color:var(--text-3);">距 52W 高 <span class="chg {{ 'up' if t.pct_high >= -3 else 'down' }}">{{ t.pct_high }}%</span></span>
+                </div>
+                <div class="ma-legend">
+                    {% for m in t.ma_marks %}
+                    <span style="color:{{ m.color }};"><i></i><span style="color:var(--text-2);">{{ m.label }} {{ "{:,.0f}".format(m.val) }}</span><span class="chg {{ 'up' if m.pct >= 0 else 'down' }}">{{ "%+.1f"|format(m.pct) }}%</span></span>
+                    {% endfor %}
+                    {% for m in t.ma_out %}
+                    <span style="color:{{ m.color }}; opacity:0.6;"><i></i><span style="color:var(--text-3);">{{ m.label }} {{ "{:,.0f}".format(m.val) }}（框{{ m.side }}）</span></span>
+                    {% endfor %}
                 </div>
 
                 <!-- RSI gauge -->
@@ -460,7 +476,6 @@
                         <span style="color:var(--text-2);">RSI(21)</span>
                         <span><b style="color:var(--text);">{{ t.rsi }}</b>
                             <span style="color:var(--text-3); font-size:10px; margin-left:4px;">{{ t.rsi_lbl }}</span>
-                            <span style="color:var(--text-3); font-size:10px; margin-left:6px;">距高 <span class="chg {{ 'up' if t.pct_high >= -3 else 'down' }}">{{ t.pct_high }}%</span></span>
                         </span>
                     </div>
                     <div class="rsi-track">
