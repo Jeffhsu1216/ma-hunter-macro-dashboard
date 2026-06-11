@@ -559,8 +559,9 @@
             {% if idx.get('is_vix') %}
             {% set vix_pos = ((idx.price or 0) / 50 * 100) %}
             {% if vix_pos > 100 %}{% set vix_pos = 100 %}{% endif %}
-            {% set vix_lbl = '極度恐慌' if idx.price >= 30 else ('緊張' if idx.price >= 20 else ('穩定' if idx.price >= 15 else '平靜')) %}
-            {% set vix_color = '#ef4444' if idx.price >= 30 else ('#f97316' if idx.price >= 20 else ('#eab308' if idx.price >= 15 else '#22c55e')) %}
+            {% set vix_val = idx.price or 0 %}
+            {% set vix_lbl = ('極度恐慌' if vix_val >= 30 else ('緊張' if vix_val >= 20 else ('穩定' if vix_val >= 15 else '平靜'))) if idx.price else 'N/A' %}
+            {% set vix_color = '#ef4444' if vix_val >= 30 else ('#f97316' if vix_val >= 20 else ('#eab308' if vix_val >= 15 else '#22c55e')) %}
             <div class="vix-wrap">
                 <div class="vix-head">
                     <span class="vix-lbl"><b style="color:var(--text); font-size:13px;">📉 VIX 恐慌指數</b></span>
