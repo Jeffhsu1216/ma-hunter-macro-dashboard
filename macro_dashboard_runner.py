@@ -1,12 +1,13 @@
 """
-總經儀表板 Runner v5（已優化）
+總經儀表板 Runner v6（已優化｜HTML-only，移除 Telegram）
 執行：python3 macro_dashboard_runner.py
 - threading 並行抓取所有數據（~8s）
 - CNN Fear & Greed → alternative.me（無反爬）
 - 三大法人 → TWSE BFI82U（金額彙總，正確欄位）
 - 國際局勢 → Claude WebSearch 層補充
-- 輸出 Telegram 推送
+- 輸出：生成靜態 HTML → push docs/ → GitHub Pages 即時更新
 - 三大法人成功後自動寫入 taiwan_backup.json + git push（供 Render fallback）
+- 註：Telegram 推送已停用（v6 起）；run() 訊息組裝函式保留為備用，主流程不再呼叫
 """
 
 import urllib.request, urllib.parse, json, datetime, threading, time, os, subprocess, re
@@ -802,12 +803,5 @@ if __name__ == '__main__':
     except Exception as e:
         print(f'⚠️  geopolitics.json 讀取失敗：{e}')
 
-    # Step 4：送 Telegram
-    ok, msg = run(geopolitics_bullets=geo_bullets)
-    print('✅ Telegram 傳送成功' if ok else '❌ Telegram 傳送失敗')
-
-    # Step 5：更新 GitHub Pages 靜態 HTML
-    _push_docs_html(geo_bullets=geo_bullets)
-
-    # 生成靜態 HTML → 推送至 GitHub Pages
+    # Step 4：生成靜態 HTML → 推送至 GitHub Pages（即時更新；Telegram 已停用）
     _push_docs_html(geo_bullets=geo_bullets)
