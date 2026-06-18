@@ -1220,12 +1220,11 @@ def fetch_cb_rates() -> dict:
 
     ecb_rate = _resolve("歐洲央行 (ECB)", _ecb_fred, _scrape_ecb_official, "2.00")
 
-    # ── BOJ ──
-    def _boj_fred():
-        r = _get_fred_csv("IRSTJPN156N", 3)
-        return f"{r[-1][1]:.2f}" if r else ""
-
-    boj_rate = _resolve("日本央行 (BOJ)", _boj_fred, _scrape_boj_official, "0.50")
+    # ── BOJ（釘住政策利率，手動維護）──
+    # 不靠 FRED IRSTJPN156N：該序列為舊貼現率定義、嚴重落後，會與真實政策利率日日打架。
+    # BOJ 一年僅 8 次會，利率為已知離散值；每次會後（見 BOJ_DATES_2026）手動更新此值。
+    # 2026/06/16 升息一碼至 1.00%（7-1 票，1995/9 以來最高）。
+    boj_rate = "1.00"
 
     # ── BoE（英國央行 Bank Rate）──
     boe_rate = _resolve("英國央行 (BoE)", _scrape_boe_official, _scrape_boe_tradingeconomics, "4.25")

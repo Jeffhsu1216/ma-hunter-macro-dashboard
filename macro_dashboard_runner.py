@@ -108,12 +108,9 @@ def fetch_fed_rate():
     except:
         cb_res['boe'] = _scrape_te_rate('united-kingdom') or '4.25'
 
-    # BOJ
-    try:
-        boj = _fred_csv('IRSTJPN156N')
-        cb_res['boj'] = f'{boj[-1]:.2f}' if boj else '0.75'
-    except:
-        cb_res['boj'] = '0.75'
+    # BOJ（釘住政策利率，手動維護；不靠 FRED IRSTJPN156N 落後序列）
+    # 2026/06/16 升息一碼至 1.00%（7-1 票，1995/9 以來最高）。每次 BOJ 會後手動更新。
+    cb_res['boj'] = '1.00'
 
     # PBOC（中國央行 7 天逆回購 — 對標其他央行政策利率）
     cb_res['pboc'] = _scrape_te_rate('china') or '1.40'
@@ -515,7 +512,7 @@ def run(geopolitics_bullets=None):
     fed  = cb_res.get('fed',  '3.50–3.75')
     ecb  = cb_res.get('ecb',  '2.00')
     boe  = cb_res.get('boe',  '4.25')
-    boj  = cb_res.get('boj',  '0.75')
+    boj  = cb_res.get('boj',  '1.00')
     pboc = cb_res.get('pboc', '1.40')
     cbc  = cb_res.get('cbc',  '2.00')
     A('🏦 <b>央行利率</b>（6 大央行）')
