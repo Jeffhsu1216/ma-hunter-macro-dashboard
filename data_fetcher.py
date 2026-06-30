@@ -122,7 +122,7 @@ BOJ_DATES_2026 = [
 # 2026 全年 BoE MPC 會議日程（決議日，源：bankofengland.co.uk）
 BOE_DATES_2026 = [
     date(2026, 2, 5),  date(2026, 3, 19), date(2026, 5, 7),
-    date(2026, 6, 18), date(2026, 8, 6),  date(2026, 9, 17),
+    date(2026, 6, 18), date(2026, 7, 30), date(2026, 9, 17),
     date(2026, 11, 5), date(2026, 12, 17),
 ]
 
@@ -131,6 +131,21 @@ CBC_DATES_2026 = [
     date(2026, 3, 19), date(2026, 6, 18),
     date(2026, 9, 17), date(2026, 12, 17),
 ]
+
+# ── 各央行「上次決議 + 下次預期」（手動維護，與利率釘住值同源）──────────────────
+# 央行會議稀疏、決議為已知離散值，手動釘住比抓不穩 API 可靠（同 BOJ 做法）。
+# 每次該央行會後（見上方各 _DATES_2026）更新對應條目：
+#   last_action：升息 / 降息 / 維持   last_bps：本次變動基點（維持填 0）
+#   last_date：決議日 M/D            forecast：下次會議市場預期（一句話）
+# 最後更新：2026/06/30（依各央行 6 月會議結果；BOJ 6/16 升息、ECB 6/11 升息）
+CB_DECISION_META = {
+    "聯準會 (Fed)":    {"last_action": "維持", "last_bps": 0,  "last_date": "6/17", "forecast": "維持（CME FedWatch 約 70%）"},
+    "歐洲央行 (ECB)":  {"last_action": "升息", "last_bps": 25, "last_date": "6/11", "forecast": "觀望，數據依賴（無前瞻指引）"},
+    "英國央行 (BoE)":  {"last_action": "維持", "last_bps": 0,  "last_date": "6/18", "forecast": "維持偏鷹（7–2 票，2 票主張升息）"},
+    "日本央行 (BOJ)":  {"last_action": "升息", "last_bps": 25, "last_date": "6/16", "forecast": "維持，下次升息估 Q4"},
+    "中國央行 (PBOC)": {"last_action": "維持", "last_bps": 0,  "last_date": "6/22", "forecast": "傾向降息（券商估 7 月 LPR 調降）"},
+    "中央銀行 (CBC)":  {"last_action": "維持", "last_bps": 0,  "last_date": "6/18", "forecast": "維持（連 8 凍，通膨溫和）"},
+}
 
 # PBOC 沒有固定會議日程；LPR 每月 20 日例行公布（遇假日順延）
 # OMO（7 天逆回購）為主要政策利率，與 LPR 同步公布或央行臨時調整
@@ -1218,7 +1233,7 @@ def fetch_cb_rates() -> dict:
         r = _get_fred_csv("ECBDFR", 3)
         return f"{r[-1][1]:.2f}" if r else ""
 
-    ecb_rate = _resolve("歐洲央行 (ECB)", _ecb_fred, _scrape_ecb_official, "2.00")
+    ecb_rate = _resolve("歐洲央行 (ECB)", _ecb_fred, _scrape_ecb_official, "2.25")
 
     # ── BOJ（釘住政策利率，手動維護）──
     # 不靠 FRED IRSTJPN156N：該序列為舊貼現率定義、嚴重落後，會與真實政策利率日日打架。
@@ -1227,7 +1242,7 @@ def fetch_cb_rates() -> dict:
     boj_rate = "1.00"
 
     # ── BoE（英國央行 Bank Rate）──
-    boe_rate = _resolve("英國央行 (BoE)", _scrape_boe_official, _scrape_boe_tradingeconomics, "4.25")
+    boe_rate = _resolve("英國央行 (BoE)", _scrape_boe_official, _scrape_boe_tradingeconomics, "3.75")
 
     # ── PBOC（中國央行 7 天逆回購）──
     pboc_rate = _resolve("中國央行 (PBOC)", _scrape_pboc_omo, None, "1.40")
@@ -1250,6 +1265,11 @@ def fetch_cb_rates() -> dict:
     result["日本央行 (BOJ)"]  = {"rate": boj_rate,  "next": _next_meeting(BOJ_DATES_2026)}
     result["中國央行 (PBOC)"] = {"rate": pboc_rate, "next": _next_pboc_lpr_date() + "（LPR）"}
     result["中央銀行 (CBC)"]  = {"rate": cbc_rate,  "next": _next_meeting(CBC_DATES_2026)}
+
+    # 合併「上次決議 + 下次預期」（手動維護的離散資料）→ 每行多出 last_action/last_bps/last_date/forecast
+    for _name, _meta in CB_DECISION_META.items():
+        if _name in result:
+            result[_name].update(_meta)
 
     return result
 

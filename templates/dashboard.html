@@ -62,7 +62,13 @@
         }
         .cb-card .cb-name  { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
         .cb-card .cb-rate  { font-size: 20px; font-weight: 700; color: var(--gold); line-height: 1.2; }
-        .cb-card .cb-next  { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+        .cb-card .cb-last      { font-size: 10px; font-weight: 600; margin-top: 4px; }
+        .cb-card .cb-last.up   { color: #ef4444; }       /* 升息＝緊縮＝紅 */
+        .cb-card .cb-last.down { color: #22c55e; }       /* 降息＝寬鬆＝綠 */
+        .cb-card .cb-last.hold { color: var(--text-2); } /* 維持＝中性 */
+        .cb-card .cb-last .cb-date { color: var(--text-3); font-weight: 400; }
+        .cb-card .cb-next  { font-size: 10px; color: var(--text-3); margin-top: 3px; }
+        .cb-card .cb-fore  { font-size: 10px; color: var(--text-3); margin-top: 1px; line-height: 1.35; }
 
         /* 匯率分組標題 */
         .fx-group-header {
@@ -404,7 +410,9 @@
         <div class="cb-card">
             <div class="cb-name">{{ name }}</div>
             <div class="cb-rate">{{ info.rate }}%</div>
+            <div class="cb-last {{ 'up' if info.last_action == '升息' else 'down' if info.last_action == '降息' else 'hold' }}">{% if info.last_action == '升息' %}▲ 升息 {{ info.last_bps }}bps{% elif info.last_action == '降息' %}▼ 降息 {{ info.last_bps }}bps{% else %}─ 維持{% endif %} <span class="cb-date">· {{ info.last_date }}</span></div>
             <div class="cb-next">下次會議 {{ info.next }}</div>
+            <div class="cb-fore">📊 預期：{{ info.forecast }}</div>
         </div>
         {% endfor %}
     </div>
