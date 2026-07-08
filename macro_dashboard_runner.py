@@ -674,27 +674,63 @@ def _push_docs_html(geo_bullets=None):
     except Exception as e:
         print(f'⚠️  docs HTML 生成失敗：{e}')
 
-def _push_geopolitics_json():
-    """把 geopolitics.json git commit + push 供 Render 即時更新國際局勢區塊"""
+def _geo_content_changed():
+    """比對 geopolitics.json 的實質內容（排除 updated 時間戳）與 git HEAD 版本。
+    回傳 True＝bullets/categories 真有更動、值得推送；
+    False＝只有時間戳會變或毫無差異 → 不可製造『舊聞冠上新時間戳冒充當日』的假更新。"""
+    if not os.path.exists(GEO_PATH):
+        return False
     try:
-        now = now_tw()
-        date_str = now.strftime('%Y%m%d')
-        # 自動把 updated 欄位更新為「YYYY/MM/DD HH:MM 台北時間」
-        if os.path.exists(GEO_PATH):
-            with open(GEO_PATH, 'r', encoding='utf-8') as f:
-                geo = json.load(f)
-            geo['updated'] = now.strftime('%Y/%m/%d %H:%M') + ' 台北時間'
-            with open(GEO_PATH, 'w', encoding='utf-8') as f:
-                json.dump(geo, f, ensure_ascii=False, indent=2)
-        subprocess.run(['git', '-C', SCRIPT_DIR, 'add', 'geopolitics.json'], check=True)
-        subprocess.run(['git', '-C', SCRIPT_DIR, 'commit', '-m',
-                        f'[auto] 更新國際局勢 {date_str}'], check=True)
-        subprocess.run(['git', '-C', SCRIPT_DIR, 'push'], check=True)
-        print(f'✅ geopolitics.json 已更新並推送（{date_str}）')
-    except subprocess.CalledProcessError as e:
-        print(f'⚠️  geopolitics.json git push 失敗：{e}')
+        with open(GEO_PATH, 'r', encoding='utf-8') as f:
+            cur = json.load(f)
+    except Exception:
+        return False
+    cur_body = json.dumps({k: v for k, v in cur.items() if k != 'updated'},
+                          ensure_ascii=False, sort_keys=True)
+    try:
+        head_raw = subprocess.run(
+            ['git', '-C', SCRIPT_DIR, 'show', 'HEAD:geopolitics.json'],
+            capture_output=True, text=True, check=True).stdout
+        head = json.loads(head_raw)
+        head_body = json.dumps({k: v for k, v in head.items() if k != 'updated'},
+                               ensure_ascii=False, sort_keys=True)
+    except Exception:
+        return True  # HEAD 無此檔或無法讀取 → 視為有更動
+    return cur_body != head_body
+
+
+def _commit_geo():
+    """更新 updated 時間戳、git add + commit geopolitics.json（不 push；push 交由主流程）。
+    僅在 _geo_content_changed() 為 True 時呼叫才有意義。"""
+    now = now_tw()
+    date_str = now.strftime('%Y%m%d')
+    with open(GEO_PATH, 'r', encoding='utf-8') as f:
+        geo = json.load(f)
+    geo['updated'] = now.strftime('%Y/%m/%d %H:%M') + ' 台北時間'
+    with open(GEO_PATH, 'w', encoding='utf-8') as f:
+        json.dump(geo, f, ensure_ascii=False, indent=2)
+    subprocess.run(['git', '-C', SCRIPT_DIR, 'add', 'geopolitics.json'], check=True)
+    subprocess.run(['git', '-C', SCRIPT_DIR, 'commit', '-m',
+                    f'[auto] 更新國際局勢 {date_str}'], check=True)
+
+
+def _git_sync():
+    """同步遠端：優先 pull --rebase --autostash；若因衝突中斷則 abort 並改用
+    偏好本機（-X ours）的 merge，確保本機最新地緣政治內容不被遠端舊版覆蓋。"""
+    try:
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'pull', '--rebase', '--autostash'],
+                       check=True, capture_output=True)
+        return
+    except subprocess.CalledProcessError:
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'rebase', '--abort'],
+                       capture_output=True)   # 復原中斷的 rebase（無進行中則忽略）
+    try:
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'pull', '--no-rebase',
+                        '-X', 'ours', '--no-edit'],
+                       check=True, capture_output=True)
+        print('ℹ️  遠端有分歧，已以本機版本為準完成合併')
     except Exception as e:
-        print(f'⚠️  geopolitics.json 推送異常：{e}')
+        print(f'⚠️  git 同步失敗（保留本機版本續行）：{e}')
 
 def _auto_fetch_geopolitics():
     """Claude API + web_search 自動抓取當日重大地緣政治事件，更新 geopolitics.json"""
@@ -776,20 +812,37 @@ def _auto_fetch_geopolitics():
 
 
 if __name__ == '__main__':
-    # 先同步遠端，避免後續 push 被 reject
-    try:
-        subprocess.run(['git', '-C', SCRIPT_DIR, 'pull', '--rebase', '--autostash'],
-                       check=True, capture_output=True)
-    except Exception:
-        pass  # pull 失敗不阻斷主流程
-
-    # Step 1：Claude API 自動抓取當日地緣政治事件（寫入 geopolitics.json）
+    # Step 1：Claude API 自動抓取當日地緣政治事件（無 API key → no-op，不動檔）
+    #         放在 sync 前，讓（API 或 Claude 層手寫的）新內容先就緒。
     _auto_fetch_geopolitics()
 
-    # Step 2：推送 geopolitics.json（含更新 updated 時間戳）
-    _push_geopolitics_json()
+    # Step 2：若 geopolitics.json 實質內容較 HEAD 有更動 → bump 時間戳 + 本機 commit。
+    #         「先 commit 再 sync」讓工作區保持乾淨，避免 pull --autostash 把未提交
+    #         的手寫檔 stash/pop 與遠端撞成衝突（歷史踩過的 git race）。
+    #         內容未變則完全不動 → 杜絕「舊聞冠新時間戳」的假更新。
+    geo_committed = False
+    try:
+        if _geo_content_changed():
+            _commit_geo()
+            geo_committed = True
+    except Exception as e:
+        print(f'⚠️  地緣政治提交失敗（續行）：{e}')
 
-    # Step 3：讀取 geo_bullets
+    # Step 3：同步遠端（本機已 commit，衝突時以本機最新版為準）
+    _git_sync()
+
+    # Step 4：推送本機地緣政治 commit（有更動才推；無更動明確跳過）
+    if geo_committed:
+        try:
+            subprocess.run(['git', '-C', SCRIPT_DIR, 'push'],
+                           check=True, capture_output=True)
+            print(f'✅ geopolitics.json 已更新並推送（{now_tw().strftime("%Y%m%d")}）')
+        except subprocess.CalledProcessError as e:
+            print(f'⚠️  geopolitics.json push 失敗：{e}')
+    else:
+        print('ℹ️  地緣政治內容與線上版相同，未變更、不推送（避免假更新）')
+
+    # Step 5：讀取 geo_bullets
     geo_bullets = None
     try:
         if os.path.exists(GEO_PATH):
@@ -800,5 +853,5 @@ if __name__ == '__main__':
     except Exception as e:
         print(f'⚠️  geopolitics.json 讀取失敗：{e}')
 
-    # Step 4：生成靜態 HTML → 推送至 GitHub Pages（即時更新；Telegram 已停用）
+    # Step 6：生成靜態 HTML → 推送至 GitHub Pages（即時更新；Telegram 已停用）
     _push_docs_html(geo_bullets=geo_bullets)
