@@ -664,13 +664,19 @@ def _push_docs_html(geo_bullets=None):
             f.write(html)
 
         date_str = now_tw().strftime('%Y%m%d')
-        subprocess.run(['git', '-C', SCRIPT_DIR, 'add', 'docs/'], check=True)
-        # 先判斷 docs/ 是否真有變動，區分「無檔可 commit」（良性）與真失敗
+        # docs/ 為靜態站；pc_ratio_history.json 為每跑 append 一筆的 P/C 歷史，
+        # 供儀表板走勢圖 + Render 讀取，須一併 commit+push（否則線上歷史停在舊版、
+        # 且工作區永遠殘留未提交檔，埋下後續 autostash 撞檔的火種）。
+        add_paths = ['docs/']
+        if os.path.exists(os.path.join(SCRIPT_DIR, 'pc_ratio_history.json')):
+            add_paths.append('pc_ratio_history.json')
+        subprocess.run(['git', '-C', SCRIPT_DIR, 'add'] + add_paths, check=True)
+        # 先判斷是否真有變動，區分「無檔可 commit」（良性）與真失敗
         staged = subprocess.run(
-            ['git', '-C', SCRIPT_DIR, 'diff', '--cached', '--name-only', '--', 'docs/'],
+            ['git', '-C', SCRIPT_DIR, 'diff', '--cached', '--name-only', '--'] + add_paths,
             capture_output=True, text=True).stdout.strip()
         if not staged:
-            print('ℹ️  儀表板 HTML 無變動，略過推送')
+            print('ℹ️  儀表板無變動，略過推送')
             return
         subprocess.run(['git', '-C', SCRIPT_DIR, 'commit', '-m',
                         f'[auto] 更新儀表板 {date_str}'], check=True)
@@ -743,7 +749,7 @@ def _auto_fetch_geopolitics():
     """Claude API + web_search 自動抓取當日重大地緣政治事件，更新 geopolitics.json"""
     api_key = os.environ.get('ANTHROPIC_API_KEY')
     if not api_key:
-        print('⚠️  ANTHROPIC_API_KEY 未設定，跳過地緣政治自動更新')
+        print('ℹ️  未設 ANTHROPIC_API_KEY，略過 API 自動抓取（地緣政治由 Claude 層手寫供給，屬正常）')
         return
 
     try:
