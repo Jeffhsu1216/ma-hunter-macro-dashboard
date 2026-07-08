@@ -665,12 +665,19 @@ def _push_docs_html(geo_bullets=None):
 
         date_str = now_tw().strftime('%Y%m%d')
         subprocess.run(['git', '-C', SCRIPT_DIR, 'add', 'docs/'], check=True)
+        # 先判斷 docs/ 是否真有變動，區分「無檔可 commit」（良性）與真失敗
+        staged = subprocess.run(
+            ['git', '-C', SCRIPT_DIR, 'diff', '--cached', '--name-only', '--', 'docs/'],
+            capture_output=True, text=True).stdout.strip()
+        if not staged:
+            print('ℹ️  儀表板 HTML 無變動，略過推送')
+            return
         subprocess.run(['git', '-C', SCRIPT_DIR, 'commit', '-m',
                         f'[auto] 更新儀表板 {date_str}'], check=True)
         subprocess.run(['git', '-C', SCRIPT_DIR, 'push'], check=True)
         print(f'✅ GitHub Pages 已更新：{DASHBOARD_URL}')
     except subprocess.CalledProcessError as e:
-        print(f'⚠️  docs HTML git push 失敗（可能無異動）：{e}')
+        print(f'⚠️  docs HTML git push 失敗：{e}')
     except Exception as e:
         print(f'⚠️  docs HTML 生成失敗：{e}')
 
