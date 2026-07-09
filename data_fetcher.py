@@ -20,7 +20,7 @@ import yfinance as yf
 import requests
 import pytz
 from datetime import datetime, timedelta, date
-import json, os, logging, re, urllib.request
+import json, os, logging, re, urllib.request, time
 
 logger = logging.getLogger(__name__)
 
@@ -233,15 +233,23 @@ def _fmt(price, decimals=2):
     return f"{price:,.{decimals}f}"
 
 
-def _get_fred_csv(series_id: str, n_rows: int = 10, retries: int = 2) -> list:
-    """從 FRED 抓 CSV，回傳最後 n 筆 [(date_str, value_float), ...]；含 retry"""
-    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+def _get_fred_csv(series_id: str, n_rows: int = 10, retries: int = 1) -> list:
+    """從 FRED 抓 CSV，回傳最後 n 筆 [(date_str, value_float), ...]；含 retry。
+    只抓近兩年（cosd）以縮小 payload：整條序列（如 DFEDTARU 回溯 1982、DGS10 回溯 1962）
+    動輒上千列，在 FRED 間歇卡讀取時大幅拉高逾時機率；近兩年足以取得最後 n 筆。
+    FRED 從本機行為呈雙峰（<1s 回應，或整段卡死）→ read timeout 壓到 6s、retries=1，
+    卡住時 ~12s 內快速 fail 到央行利率的官網 secondary；逾時本身已具間隔，
+    只在 HTTP 非 200（如限流）時短暫 backoff，逾時不再額外 sleep（避免拖慢整體）。"""
+    cosd = (date.today() - timedelta(days=730)).strftime("%Y-%m-%d")
+    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}&cosd={cosd}"
     last_err = None
     for attempt in range(retries + 1):
         try:
-            resp = requests.get(url, timeout=(10, 30), headers={"User-Agent": "Mozilla/5.0"})
+            resp = requests.get(url, timeout=(5, 6), headers={"User-Agent": "Mozilla/5.0"})
             if resp.status_code != 200:
                 last_err = f"HTTP {resp.status_code}"
+                if attempt < retries:
+                    time.sleep(0.8)
                 continue
             lines = resp.text.strip().split("\n")[1:]
             results = []
@@ -1244,8 +1252,12 @@ def fetch_cb_rates() -> dict:
     # ── BoE（英國央行 Bank Rate）──
     boe_rate = _resolve("英國央行 (BoE)", _scrape_boe_official, _scrape_boe_tradingeconomics, "3.75")
 
-    # ── PBOC（中國央行 7 天逆回購）──
-    pboc_rate = _resolve("中國央行 (PBOC)", _scrape_pboc_omo, None, "1.40")
+    # ── PBOC（中國央行 7 天逆回購，釘住手動維護）──
+    # 不靠 tradingeconomics：TE「China interest rate」＝1 年期 LPR（3.00%），
+    # 並非本卡要顯示的 7 天逆回購政策利率（對標 Fed Funds / ECB DFR）。
+    # 7 天逆回購為離散政策利率、變動於已知日程；每次 PBOC 調整後手動更新此值。
+    # 2025/05 降至 1.40%（CB_DECISION_META 手動追蹤 PBOC 決議與 LPR 預期）。
+    pboc_rate = "1.40"
 
     # ── CBC（台灣央行重貼現率）──
     def _cbc_official():
