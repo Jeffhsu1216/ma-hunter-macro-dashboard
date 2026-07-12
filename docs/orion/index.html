@@ -106,7 +106,7 @@
   <span id="market-badge" class="mk-closed">— </span>
 </div>
 
-<div id="hint" class="hud card">拖曳<b>旋轉</b>｜滾輪<b>縮放</b>｜<b>點擊建築</b>查看真實數據｜🛸 可駕駛獵戶號</div>
+<div id="hint" class="hud card">拖曳<b>旋轉</b>｜滾輪<b>縮放</b>｜<b>點擊建築</b>看數據｜🚶 走路探索｜🛸 駕駛獵戶號</div>
 
 <div id="time-ctl" class="hud card">
   <button data-h="live" class="on">即時</button>
@@ -114,6 +114,7 @@
   <button data-h="12.5">午</button>
   <button data-h="18.1">暮</button>
   <button data-h="22.5">夜</button>
+  <button id="btn-walk">🚶 探索</button>
   <button id="btn-drive">🛸 駕駛</button>
 </div>
 
@@ -129,7 +130,7 @@
 </div>
 
 <script>
-window.VILLAGE_DATA = {"meta": {"village": "獵戶村 ORION VILLAGE", "owner": "Jeff Hsu（徐家恩）", "generated_at": "2026-07-11 23:44", "data_date": "2026/07/09"}, "level": {"lv": 20, "title": "弓箭手", "emoji": "🏹", "next_title": "獵人", "next_need": 10, "route": ["弓箭手 Lv.10", "獵人 Lv.30", "遊俠 Lv.70", "箭神 Lv.120"]}, "clients": [{"name": "客戶 01", "owner": "Josh", "type": "Fee-Based", "color": "#6A5ACD", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 6, "top_holding": null, "loan": null, "size": 0.501}, {"name": "客戶 02", "owner": "Josh", "type": "Non-Fee", "color": "#8B1A1A", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 11, "top_holding": null, "loan": null, "size": 0.995}, {"name": "客戶 03", "owner": "Josh", "type": "自營", "color": "#C05A20", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 11, "top_holding": null, "loan": null, "size": 1.107}, {"name": "客戶 04", "owner": "Josh", "type": "Fee-Based", "color": "#3F6EAD", "vip": false, "start_date": "2026-05-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 10, "top_holding": null, "loan": null, "size": 0.969}, {"name": "客戶 05", "owner": "Josh", "type": "Fee-Based", "color": "#7B3F9B", "vip": false, "start_date": "2026-05-18", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 12, "top_holding": null, "loan": null, "size": 1.123}, {"name": "客戶 06", "owner": "Jeff", "type": "Fee-Based", "color": "#A0527F", "vip": false, "start_date": "2026-04-16", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 9, "top_holding": null, "loan": null, "size": 1.226}, {"name": "客戶 07", "owner": "Jeff", "type": "Fee-Based", "color": "#5B8B3A", "vip": true, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 14, "top_holding": null, "loan": null, "size": 1.252}, {"name": "客戶 08", "owner": "Jeff", "type": "Fee-Based", "color": "#C8A951", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 13, "top_holding": null, "loan": null, "size": 1.312}, {"name": "客戶 09", "owner": "Jeff", "type": "Fee-Based", "color": "#B94C4C", "vip": false, "start_date": "2026-05-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 7, "top_holding": null, "loan": null, "size": 0.852}, {"name": "客戶 10", "owner": "Jeff", "type": "Non-Fee", "color": "#B8860B", "vip": false, "start_date": "2026-05-18", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 9, "top_holding": null, "loan": null, "size": 0.769}, {"name": "客戶 11", "owner": "Jeff", "type": "Fee-Based", "color": "#C87030", "vip": false, "start_date": "2026-06-15", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 7, "top_holding": null, "loan": null, "size": 0.649}, {"name": "客戶 12", "owner": "Jeff", "type": "Fee-Based", "color": "#4C9BD1", "vip": false, "start_date": "2026-07-09", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 0, "top_holding": null, "loan": null, "size": 0.816}, {"name": "客戶 13", "owner": "Jeff", "type": "自營", "color": "#2E8B8B", "vip": false, "start_date": "2026-03-31", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 17, "top_holding": null, "loan": null, "size": 1.576}], "totals": {"clients_n": 13, "aum": null, "principal": null, "pnl": null, "cash": null, "loan": null, "ret": null, "cash_pct": null}, "skills": [{"name": "研究報告", "module": "EquityResearch", "count": 27, "bar": "▓▓▓░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "公司摘要", "module": "CompanySummary (= TeaserPPT+Comps+DCF)", "count": 6, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "Teaser(保密項目)", "module": "Teaser (168公司網)", "count": 7, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "168公司網"}, {"name": "盡調清單", "module": "DueDiligence", "count": 4, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "併購案件後續追蹤", "module": "PastDealsTracking", "count": 7, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "法說會感謝信", "module": "Thank_You_Letter", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "拜訪客戶"}, {"name": "會議紀錄", "module": "Meeting_Minutes", "count": 3, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "行政事務"}, {"name": "本週工作彙整", "module": "WeeklyReview", "count": 4, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "行政事務"}, {"name": "每週併購新聞", "module": "MA_Weekly", "count": 18, "bar": "▓▓▓░░", "cat": "Youtuber", "subcat": null}, {"name": "會前Q&A準備", "module": "MeetingPrep", "count": 6, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "拜訪客戶"}, {"name": "每日盤後", "module": "DailyClose", "count": 110, "bar": "▓▓▓▓▓", "cat": "個人基金", "subcat": null}, {"name": "月選股資金配置", "module": "MonthlyAllocation", "count": 4, "bar": "▓░░░░", "cat": "個人基金", "subcat": null}, {"name": "月初下單策略", "module": "MonthlyOrderStrategy", "count": 9, "bar": "▓▓░░░", "cat": "個人基金", "subcat": null}, {"name": "月初選股分析", "module": "Screening", "count": 9, "bar": "▓▓░░░", "cat": "投資分析", "subcat": null}, {"name": "公司研究追蹤", "module": "CompanyOverview_AutoAppend", "count": 10, "bar": "▓▓░░░", "cat": "投資分析", "subcat": null}, {"name": "每日總經儀表板", "module": "MacroDashboard", "count": 84, "bar": "▓▓▓▓▓", "cat": "Youtuber", "subcat": null}, {"name": "製作Shorts", "module": "MAContentCreator", "count": 1, "bar": "░░░░░", "cat": "Youtuber", "subcat": null}, {"name": "財報更新", "module": "EarningsUpdate", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "CIM", "module": "CIM", "count": 2, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "168公司網"}, {"name": "基金獎金分成", "module": "ReferralBonus", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}], "subskills": [{"name": "Teaser(PPT)", "module": "TeaserPPT", "parent": "公司摘要", "count": 12}, {"name": "同業比較", "module": "Comps", "parent": "公司摘要", "count": 21}, {"name": "DCF Model", "module": "DCF", "parent": "公司摘要", "count": 11}], "companies": [{"code": "1440", "name": "南紡"}, {"code": "1582", "name": "信錦"}, {"code": "1597", "name": "直得"}, {"code": "1785", "name": "光洋科"}, {"code": "3017", "name": "奇鋐"}, {"code": "3529", "name": "力旺"}, {"code": "3675", "name": "德微"}, {"code": "4542", "name": "科嶠"}, {"code": "4577", "name": "達航科技"}, {"code": "4722", "name": "國精化"}, {"code": "4919", "name": "新唐"}, {"code": "5228", "name": "鈺鎧"}, {"code": "5285", "name": "界霖"}, {"code": "6182", "name": "合晶"}, {"code": "6206", "name": "飛捷科技"}, {"code": "6257", "name": "矽格"}, {"code": "6278", "name": "台表科"}, {"code": "6651", "name": "全宇昕"}, {"code": "6706", "name": "惠特"}, {"code": "6715", "name": "嘉基"}, {"code": "6727", "name": "亞泰金屬"}, {"code": "6830", "name": "汎銓"}, {"code": "6869", "name": "雲豹能源"}, {"code": "7722", "name": "連加網路"}, {"code": "8027", "name": "鈦昇"}, {"code": "8042", "name": "金山電"}, {"code": "8103", "name": "瀚荃"}, {"code": "8261", "name": "富鼎"}], "schedule": [{"name": "每日總經儀表板", "cron": "每日 08:00／20:00（早晚班 cron）", "desc": "抓 Yahoo/FRED 數據 → 生成 HTML → push GitHub Pages", "last_run": "2026-07-11 20:10", "auto": true}, {"name": "每日盤後", "cron": "收盤後手動觸發「每日盤後」", "desc": "股價更新 → 13 位客戶報告 → AUM 彙總 → 現金水位 → 持股風險", "last_run": "2026-07-11 23:36", "data_date": "2026/07/09", "auto": false}, {"name": "本週工作彙整", "cron": "每週五 15:00（cron）", "desc": "三大業務 × 三層狀態，兩頁 PDF", "last_run": "2026-06-05 15:00", "auto": true}, {"name": "月初下單策略", "cron": "每月初手動觸發", "desc": "全客戶再平衡：目標曝險 → 整張優化 → 處置股查核 → 6 頁 PDF", "last_run": null, "auto": false}, {"name": "每週併購新聞", "cron": "手動觸發「併購週報」", "desc": "台灣／大陸港股／全球三線掃描，YouTube M&A Hunter 素材", "last_run": null, "auto": false}], "events": {"order_day": false, "earnings_season": false, "labels": []}, "holidays": ["2026-07-10"], "links": {"dashboard": "https://jeffhsu1216.github.io/ma-hunter-macro-dashboard/"}, "anon": true};
+window.VILLAGE_DATA = {"meta": {"village": "獵戶村 ORION VILLAGE", "owner": "Jeff Hsu（徐家恩）", "generated_at": "2026-07-12 19:19", "data_date": "2026/07/09"}, "level": {"lv": 21, "title": "弓箭手", "emoji": "🏹", "next_title": "獵人", "next_need": 9, "route": ["弓箭手 Lv.10", "獵人 Lv.30", "遊俠 Lv.70", "箭神 Lv.120"]}, "clients": [{"name": "客戶 01", "owner": "Josh", "type": "Fee-Based", "color": "#6A5ACD", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 6, "top_holding": null, "loan": null, "size": 0.501}, {"name": "客戶 02", "owner": "Josh", "type": "Non-Fee", "color": "#8B1A1A", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 11, "top_holding": null, "loan": null, "size": 0.995}, {"name": "客戶 03", "owner": "Josh", "type": "自營", "color": "#C05A20", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 11, "top_holding": null, "loan": null, "size": 1.107}, {"name": "客戶 04", "owner": "Josh", "type": "Fee-Based", "color": "#3F6EAD", "vip": false, "start_date": "2026-05-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 10, "top_holding": null, "loan": null, "size": 0.969}, {"name": "客戶 05", "owner": "Josh", "type": "Fee-Based", "color": "#7B3F9B", "vip": false, "start_date": "2026-05-18", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 12, "top_holding": null, "loan": null, "size": 1.123}, {"name": "客戶 06", "owner": "Jeff", "type": "Fee-Based", "color": "#A0527F", "vip": false, "start_date": "2026-04-16", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 9, "top_holding": null, "loan": null, "size": 1.226}, {"name": "客戶 07", "owner": "Jeff", "type": "Fee-Based", "color": "#5B8B3A", "vip": true, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 14, "top_holding": null, "loan": null, "size": 1.252}, {"name": "客戶 08", "owner": "Jeff", "type": "Fee-Based", "color": "#C8A951", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 13, "top_holding": null, "loan": null, "size": 1.312}, {"name": "客戶 09", "owner": "Jeff", "type": "Fee-Based", "color": "#B94C4C", "vip": false, "start_date": "2026-05-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 7, "top_holding": null, "loan": null, "size": 0.852}, {"name": "客戶 10", "owner": "Jeff", "type": "Non-Fee", "color": "#B8860B", "vip": false, "start_date": "2026-05-18", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 9, "top_holding": null, "loan": null, "size": 0.769}, {"name": "客戶 11", "owner": "Jeff", "type": "Fee-Based", "color": "#C87030", "vip": false, "start_date": "2026-06-15", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 7, "top_holding": null, "loan": null, "size": 0.649}, {"name": "客戶 12", "owner": "Jeff", "type": "Fee-Based", "color": "#4C9BD1", "vip": false, "start_date": "2026-07-09", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 0, "top_holding": null, "loan": null, "size": 0.816}, {"name": "客戶 13", "owner": "Jeff", "type": "自營", "color": "#2E8B8B", "vip": false, "start_date": "2026-03-31", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 17, "top_holding": null, "loan": null, "size": 1.576}], "totals": {"clients_n": 13, "aum": null, "principal": null, "pnl": null, "cash": null, "loan": null, "ret": null, "cash_pct": null}, "skills": [{"name": "研究報告", "module": "EquityResearch", "count": 27, "bar": "▓▓▓░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "公司摘要", "module": "CompanySummary (= TeaserPPT+Comps+DCF)", "count": 6, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "Teaser(保密項目)", "module": "Teaser (168公司網)", "count": 7, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "168公司網"}, {"name": "盡調清單", "module": "DueDiligence", "count": 4, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "併購案件後續追蹤", "module": "PastDealsTracking", "count": 7, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "法說會感謝信", "module": "Thank_You_Letter", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "拜訪客戶"}, {"name": "會議紀錄", "module": "Meeting_Minutes", "count": 3, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "行政事務"}, {"name": "本週工作彙整", "module": "WeeklyReview", "count": 4, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "行政事務"}, {"name": "每週併購新聞", "module": "MA_Weekly", "count": 19, "bar": "▓▓▓░░", "cat": "Youtuber", "subcat": null}, {"name": "會前Q&A準備", "module": "MeetingPrep", "count": 6, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "拜訪客戶"}, {"name": "每日盤後", "module": "DailyClose", "count": 110, "bar": "▓▓▓▓▓", "cat": "個人基金", "subcat": null}, {"name": "月選股資金配置", "module": "MonthlyAllocation", "count": 4, "bar": "▓░░░░", "cat": "個人基金", "subcat": null}, {"name": "月初下單策略", "module": "MonthlyOrderStrategy", "count": 10, "bar": "▓▓░░░", "cat": "個人基金", "subcat": null}, {"name": "月初選股分析", "module": "Screening", "count": 9, "bar": "▓▓░░░", "cat": "投資分析", "subcat": null}, {"name": "公司研究追蹤", "module": "CompanyOverview_AutoAppend", "count": 10, "bar": "▓▓░░░", "cat": "投資分析", "subcat": null}, {"name": "每日總經儀表板", "module": "MacroDashboard", "count": 85, "bar": "▓▓▓▓▓", "cat": "Youtuber", "subcat": null}, {"name": "製作Shorts", "module": "MAContentCreator", "count": 1, "bar": "░░░░░", "cat": "Youtuber", "subcat": null}, {"name": "財報更新", "module": "EarningsUpdate", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "CIM", "module": "CIM", "count": 2, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "168公司網"}, {"name": "基金獎金分成", "module": "ReferralBonus", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "獵戶村", "module": "OrionVillage", "count": 1, "bar": "░░░░░", "cat": "其他", "subcat": null}], "subskills": [{"name": "Teaser(PPT)", "module": "TeaserPPT", "parent": "公司摘要", "count": 12}, {"name": "同業比較", "module": "Comps", "parent": "公司摘要", "count": 21}, {"name": "DCF Model", "module": "DCF", "parent": "公司摘要", "count": 11}], "companies": [{"code": "1440", "name": "南紡"}, {"code": "1582", "name": "信錦"}, {"code": "1597", "name": "直得"}, {"code": "1785", "name": "光洋科"}, {"code": "3017", "name": "奇鋐"}, {"code": "3529", "name": "力旺"}, {"code": "3675", "name": "德微"}, {"code": "4542", "name": "科嶠"}, {"code": "4577", "name": "達航科技"}, {"code": "4722", "name": "國精化"}, {"code": "4919", "name": "新唐"}, {"code": "5228", "name": "鈺鎧"}, {"code": "5285", "name": "界霖"}, {"code": "6182", "name": "合晶"}, {"code": "6206", "name": "飛捷科技"}, {"code": "6257", "name": "矽格"}, {"code": "6278", "name": "台表科"}, {"code": "6651", "name": "全宇昕"}, {"code": "6706", "name": "惠特"}, {"code": "6715", "name": "嘉基"}, {"code": "6727", "name": "亞泰金屬"}, {"code": "6830", "name": "汎銓"}, {"code": "6869", "name": "雲豹能源"}, {"code": "7722", "name": "連加網路"}, {"code": "8027", "name": "鈦昇"}, {"code": "8042", "name": "金山電"}, {"code": "8103", "name": "瀚荃"}, {"code": "8261", "name": "富鼎"}], "schedule": [{"name": "每日總經儀表板", "cron": "每日 08:00／20:00（早晚班 cron）", "desc": "抓 Yahoo/FRED 數據 → 生成 HTML → push GitHub Pages", "last_run": "2026-07-12 08:13", "auto": true}, {"name": "每日盤後", "cron": "收盤後手動觸發「每日盤後」", "desc": "股價更新 → 13 位客戶報告 → AUM 彙總 → 現金水位 → 持股風險", "last_run": "2026-07-11 23:36", "data_date": "2026/07/09", "auto": false}, {"name": "本週工作彙整", "cron": "每週五 15:00（cron）", "desc": "三大業務 × 三層狀態，兩頁 PDF", "last_run": "2026-06-05 15:00", "auto": true}, {"name": "月初下單策略", "cron": "每月初手動觸發", "desc": "全客戶再平衡：目標曝險 → 整張優化 → 處置股查核 → 6 頁 PDF", "last_run": null, "auto": false}, {"name": "每週併購新聞", "cron": "手動觸發「併購週報」", "desc": "台灣／大陸港股／全球三線掃描，YouTube M&A Hunter 素材", "last_run": null, "auto": false}], "events": {"order_day": false, "earnings_season": false, "labels": []}, "halls": {"macro": {"kpis": [{"label": "三大法人買賣超（07/09）", "val": "-350.2 億", "chg": -350.2}, {"label": "　外資", "val": "-472.5 億", "chg": -472.5}, {"label": "　投信", "val": "+199.0 億", "chg": 199.0}, {"label": "S&P 500", "val": "7,575（多頭排列）", "chg": null}, {"label": "S&P RSI", "val": "58.3（中性偏多）", "chg": null}, {"label": "美元／台幣", "val": "32.099", "chg": -0.01}, {"label": "VIX（07/10）", "val": "15.03", "chg": null}, {"label": "Fear & Greed", "val": "26（Fear）", "chg": null}, {"label": "Put/Call Ratio", "val": "0.55", "chg": null}, {"label": "黃金", "val": "4,114", "chg": -0.65}], "updated": "2026/07/12 08:13", "market_date": "2026/07/10"}, "industry": {"tagged": 206, "tier3_n": 85, "pools_ge3": 36, "tier1_top": [["電子上游", 71], ["半導體", 37], ["電子下游", 35], ["傳產", 16], ["電子中游", 12], ["金融", 10]], "version": "v0.1", "updated": "2026-04-30", "themes": ["BBU", "BMC晶片", "CCL", "CPO", "CPU", "IC封測", "Micro LED CPO", "PCB", "低軌衛星", "先進封裝", "功率元件/導線架", "半導體設備", "散熱", "機器人/半導體設備", "滑軌", "特化", "矽晶圓", "矽智財(IP)/ASIC", "被動元件"]}, "stocks": {"list": [{"code": "1440", "name": "南紡", "files": 1}, {"code": "1582", "name": "信錦", "files": 4}, {"code": "1597", "name": "直得", "files": 1}, {"code": "1785", "name": "光洋科", "files": 1}, {"code": "3017", "name": "奇鋐", "files": 1}, {"code": "3529", "name": "力旺", "files": 1}, {"code": "3675", "name": "德微", "files": 4}, {"code": "4542", "name": "科嶠", "files": 1}, {"code": "4577", "name": "達航科技", "files": 1}, {"code": "4722", "name": "國精化", "files": 1}, {"code": "4919", "name": "新唐", "files": 5}, {"code": "5228", "name": "鈺鎧", "files": 2}, {"code": "5285", "name": "界霖", "files": 4}, {"code": "6182", "name": "合晶", "files": 4}, {"code": "6206", "name": "飛捷科技", "files": 5}, {"code": "6257", "name": "矽格", "files": 8}, {"code": "6278", "name": "台表科", "files": 4}, {"code": "6651", "name": "全宇昕", "files": 4}, {"code": "6706", "name": "惠特", "files": 1}, {"code": "6715", "name": "嘉基", "files": 1}, {"code": "6727", "name": "亞泰金屬", "files": 1}, {"code": "6830", "name": "汎銓", "files": 5}, {"code": "6869", "name": "雲豹能源", "files": 2}, {"code": "7722", "name": "連加網路", "files": 0}, {"code": "8027", "name": "鈦昇", "files": 4}, {"code": "8042", "name": "金山電", "files": 5}, {"code": "8103", "name": "瀚荃", "files": 4}, {"code": "8261", "name": "富鼎", "files": 4}], "total_files": 79}, "teaching": {"courses": [{"t": "這座村是什麼", "d": "零虛構觀察站 — 每棟建築對應一個真實運轉中的系統，數據與內部報告同源"}, {"t": "估值方法論", "d": "80% P/E（五大類規則庫：成長／獲利／護城河／風險／流動性）＋ 20% DCF 交叉驗證"}, {"t": "高成長題材估值", "d": "CAGR ≥25% 適用 PEG 1.0 為合理價底；R/R ≥3.0 才進 conviction trade"}, {"t": "風險紀律", "d": "HHI 集中度／Beta（2Y 週線 vs 加權）／年化波動率，每日盤後自動掃描"}, {"t": "月初再平衡", "d": "目標曝險（順序＝優先序）→ 整張優化 ±1.5pp → 處置股查核 → 分日下單"}]}}, "holidays": ["2026-07-10"], "links": {"dashboard": "https://jeffhsu1216.github.io/ma-hunter-macro-dashboard/"}, "anon": true};
 </script>
 <script>
 /**
@@ -1279,13 +1280,16 @@ function mesh(geo, mat, x, y, z) {
 function box(w, h, d, mat, x, y, z) { return mesh(new THREE.BoxGeometry(w, h, d), mat, x, y, z); }
 function cyl(rt, rb, h, seg, mat, x, y, z) { return mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat, x, y, z); }
 
-/* 共用「窗燈」材質 — 夜晚集體點亮 */
+/* 共用「窗燈」材質 ×3 — 夜晚集體點亮，暖/暗/冷三色差異化 + 微閃爍 */
 const winMat = new THREE.MeshStandardMaterial({ color: 0x18222e, emissive: 0xffc86e, emissiveIntensity: 0, roughness: .6 });
+const winMatB = new THREE.MeshStandardMaterial({ color: 0x16202b, emissive: 0xd8a34e, emissiveIntensity: 0, roughness: .6 });
+const winMatC = new THREE.MeshStandardMaterial({ color: 0x18222e, emissive: 0x9fd0e8, emissiveIntensity: 0, roughness: .6 });
+const winMats = [winMat, winMatB, winMatC];
 function addWindows(g, w, h, d, rows, cols, y0) {
   const gw = 0.55, gh = 0.7;
   for (const face of [1, -1]) {
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-      const win = new THREE.Mesh(new THREE.BoxGeometry(gw, gh, 0.06), winMat);
+      const win = new THREE.Mesh(new THREE.BoxGeometry(gw, gh, 0.06), winMats[(r * 7 + c * 3 + (face > 0 ? 0 : 1)) % 3]);
       win.position.set(-w/2 + (c+1) * w/(cols+1), y0 + r * (h / rows), face * (d/2 + 0.04));
       g.add(win);
     }
@@ -1341,11 +1345,12 @@ districtPlate(66, 8, 70, 52, 0x5d7050);     // 個人基金（東）
 districtPlate(-2, 68, 62, 36, 0x50645d);    // 投資研究（南）
 districtPlate(-62, 0, 42, 62, 0x5c566b);    // 傳播區（西）
 districtPlate(52, -52, 30, 26, 0x6e5b4a);   // 技能祭壇（東北）
+districtPlate(-54, 48, 42, 30, 0x565a70);   // 展示特區（西南，四大大廳原型）
 
 /* 環形道 + 放射道 */
 const roadMat = M(0x2c3038, { rough: 1 });
 const ring = mesh(new THREE.RingGeometry(24, 29, 64), roadMat); ring.rotation.x = -Math.PI/2; ring.position.y = 0.05; ring.castShadow = false; scene.add(ring);
-const RADIALS = [ -Math.PI/2, 0, Math.PI/2, Math.PI, -Math.PI/4 ]; // N E S W NE
+const RADIALS = [ -Math.PI/2, 0, Math.PI/2, Math.PI, -Math.PI/4, Math.PI * 0.75 ]; // N E S W NE SW(展示特區)
 for (const a of RADIALS) {
   const len = 42, r0 = 26.5 + len / 2;
   const rd = box(4, 0.1, len, roadMat, 0, 0.05, 0);
@@ -1376,6 +1381,7 @@ districtSign('🏦 個人基金區', 66, 8, 15);
 districtSign('🔭 投資研究區', -2, 68, 15);
 districtSign('📡 M&A HUNTER 傳播區', -62, 0, 22);
 districtSign('💎 技能祭壇', 52, -52, 14);
+districtSign('🏟 展示特區（大廳原型）', -54, 48, 16);
 
 /* ══════════════════════════════════════════════════════════
    北區：圖靈金融
@@ -1491,8 +1497,8 @@ function buildFundDistrict() {
         + '<div class="note">屋子大小 ∝ 真實 AUM，屋頂顏色 = AUM 報告專屬配色。數據與每日盤後報告同源。</div>',
     });
   }
-  josh.forEach((c, i) => house(c, 40 + i * 11.5, -8, Math.PI));
-  jeff.forEach((c, i) => house(c, 37 + (i % 4) * 11.5, i < 4 ? 18 : 34, 0));
+  josh.forEach((c, i) => house(c, 40 + i * 11.5, -8, 0));                       // 門面朝街（南）
+  jeff.forEach((c, i) => house(c, 37 + (i % 4) * 11.5, i < 4 ? 18 : 34, Math.PI)); // 門面朝街（北）
 
   /* 盤後工廠 */
   const f = new THREE.Group();
@@ -1732,6 +1738,130 @@ function buildMedia() {
 }
 
 /* ══════════════════════════════════════════════════════════
+   西南：展示特區 — 四大大廳原型（未來「教學與展示版」核心）
+   揭露性分級：🟢 可公開｜🟡 部分公開｜🔴 內部限定
+   ══════════════════════════════════════════════════════════ */
+let hallGlobe = null, tickerTex = null;
+function chipDisc(level, note) {
+  const map = { g: ['🟢 對外可公開', 'rgba(94,203,123,.15)', '#5ecb7b'],
+                y: ['🟡 部分公開', 'rgba(200,169,81,.15)', '#C8A951'],
+                r: ['🔴 內部限定', 'rgba(231,76,60,.15)', '#E74C3C'] }[level];
+  return `<div style="margin:10px 0 4px"><span class="chip" style="background:${map[1]};border-color:${map[2]};color:${map[2]}">${map[0]}</span>
+    <span style="font-size:11.5px;color:#9e8e7e">${note}</span></div>`;
+}
+function buildHalls() {
+  const H = D.halls || {};
+
+  /* 教學大廳 — 圓形講堂（柱廊 + 玻璃穹頂） */
+  const te = new THREE.Group();
+  te.add(cyl(4.6, 5, 1, 20, M(0xb9b2a2, { rough: .8 }), 0, 0.5, 0));
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2;
+    te.add(cyl(0.24, 0.28, 3.2, 8, M(0xd8d2c2), Math.cos(a) * 3.4, 2.6, Math.sin(a) * 3.4));
+  }
+  te.add(cyl(4.2, 4.2, 0.5, 20, M(0x8a8478), 0, 4.4, 0));
+  te.add(mesh(new THREE.SphereGeometry(3.6, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    M(0x7fd8c8, { rough: .2, metal: .3, alpha: .75 }), 0, 4.6, 0));
+  te.position.set(-66, 0, 40); scene.add(te);
+  const teach = (H.teaching || {}).courses || [];
+  register(te, {
+    tag: '🏟 展示特區', title: '教學大廳（Teaching Hall）', accent: '#7fd8c8',
+    tooltip: '教學大廳｜方法論課綱 ' + teach.length + ' 講',
+    html: chipDisc('g', '未來教學展示版的入口')
+      + '<div class="sec">課綱（' + teach.length + ' 講）</div><div class="list">'
+      + teach.map(c => `<div><b style="color:#e8ddc8">${esc(c.t)}</b><br><span style="color:#9e8e7e;font-size:12px">${esc(c.d)}</span></div>`).join('')
+      + '</div><div class="note">給訪客的第一站：這座村怎麼運作、估值與風險的方法論。內容策展自內部規範，不含任何客戶數據。</div>',
+  });
+
+  /* 總經大廳 — 屋頂地球儀 + 金環 */
+  const ma = new THREE.Group();
+  ma.add(box(7.5, 4, 6, M(0x4a5568, { rough: .6 }), 0, 2, 0));
+  ma.add(box(8.1, 0.5, 6.6, M(0x333c4a), 0, 4.25, 0));
+  addWindows(ma, 6.5, 2.4, 6.1, 1, 3, 1.9);
+  hallGlobe = new THREE.Group();
+  hallGlobe.add(mesh(new THREE.SphereGeometry(1.9, 18, 14), M(0x3a6ea8, { rough: .5, flat: true }), 0, 0, 0));
+  const ringT = mesh(new THREE.TorusGeometry(2.5, 0.09, 8, 32), M(0xC8A951, { metal: .8, rough: .3 }), 0, 0, 0);
+  ringT.rotation.x = Math.PI / 2.6; hallGlobe.add(ringT);
+  hallGlobe.position.y = 6.6; ma.add(hallGlobe);
+  ma.position.set(-42, 0, 37); ma.rotation.y = 0.4; scene.add(ma);
+  const mk = (H.macro || {});
+  const kpiRows = (mk.kpis || []).map(k =>
+    kv(esc(k.label), esc(k.val), k.chg == null ? '' : (k.chg >= 0 ? 'up' : 'down'))).join('');
+  register(ma, {
+    tag: '🏟 展示特區', title: '總經大廳（Macro Hall）', accent: '#5ecb7b',
+    tooltip: '總經大廳｜' + (mk.kpis || []).length + ' 項即時指標',
+    html: chipDisc('g', '數據源已是公開網站（GitHub Pages）')
+      + kv('數據更新', mk.updated || '—') + kv('市場日期', mk.market_date || '—')
+      + '<div class="sec">即時儀表</div>' + (kpiRows || '<div class="note">cache 無資料</div>')
+      + `<a class="linkbtn" href="${D.links && D.links.dashboard || '#'}" target="_blank">開啟完整總經儀表板 →</a>`,
+  });
+
+  /* 產業大廳 — 六角蜂巢塔群（一柱一產業層） */
+  const ind = (H.industry || {});
+  const ig = new THREE.Group();
+  const hexCols = [0xC8A951, 0x3F6EAD, 0x7B3F9B, 0x5ecb7b, 0xB94C4C];
+  const hexPos = [[0, 0], [2.6, 1.5], [-2.6, 1.5], [1.3, -2.2], [-1.3, -2.2]];
+  hexPos.forEach(([hx, hz], i) => {
+    const h = 2.5 + ((i * 37) % 4) * 1.2;
+    const hex = cyl(1.35, 1.35, h, 6, M(hexCols[i % hexCols.length], { rough: .5, flat: true }), hx, h / 2, hz);
+    ig.add(hex);
+  });
+  ig.position.set(-64, 0, 57); scene.add(ig);
+  const t1 = (ind.tier1_top || []).map(([n, c]) => `<div>${esc(n)} <span class="mono" style="float:right">×${c}</span></div>`).join('');
+  register(ig, {
+    tag: '🏟 展示特區', title: '產業大廳（Industry Hall）', accent: '#3F6EAD',
+    tooltip: `產業大廳｜${ind.tagged || '—'} 家已標記`,
+    html: chipDisc('y', '分類藍圖可展示；與選股連動的部分內部')
+      + kv('已標記', (ind.tagged || '—') + ' 家上市櫃')
+      + kv('第三層分類', (ind.tier3_n || '—') + ' 個 tier3')
+      + kv('同業池（≥3 家）', (ind.pools_ge3 || '—') + ' 池')
+      + kv('藍圖版本', `${ind.version || '—'}（${ind.updated || '—'}）`)
+      + '<div class="sec">Tier1 分佈（前 6）</div><div class="list">' + t1 + '</div>'
+      + '<div class="sec">追蹤題材（' + ((ind.themes || []).length) + '）</div><div>'
+      + (ind.themes || []).map(t => `<span class="chip">${esc(t)}</span>`).join('') + '</div>',
+  });
+
+  /* 個股大廳 — 展廊 + 全息跑馬燈 */
+  const st = (H.stocks || { list: [] });
+  const sg = new THREE.Group();
+  sg.add(box(11, 3.6, 6, M(0x2f3542, { rough: .5, metal: .2 }), 0, 1.8, 0));
+  sg.add(box(11.6, 0.4, 6.6, M(0x22262e), 0, 3.8, 0));
+  addWindows(sg, 10, 2, 6.1, 1, 5, 1.7);
+  /* 跑馬燈 */
+  const tcv = document.createElement('canvas'); tcv.width = 2048; tcv.height = 96;
+  const tcx = tcv.getContext('2d');
+  tcx.fillStyle = '#0a0e16'; tcx.fillRect(0, 0, 2048, 96);
+  tcx.font = 'bold 52px Menlo, "PingFang TC"'; tcx.textBaseline = 'middle';
+  let tx = 20;
+  (st.list || []).forEach((s, i) => {
+    tcx.fillStyle = i % 2 ? '#7fd8c8' : '#ffd27a';
+    const str = `${s.code} ${s.name} ×${s.files}　`;
+    tcx.fillText(str, tx, 48);
+    tx += tcx.measureText(str).width;
+  });
+  tickerTex = new THREE.CanvasTexture(tcv);
+  tickerTex.wrapS = THREE.RepeatWrapping;
+  const tickerMat = new THREE.MeshStandardMaterial({ map: tickerTex, emissive: 0xffffff, emissiveMap: tickerTex, emissiveIntensity: .8 });
+  for (const face of [1, -1]) {
+    const strip = new THREE.Mesh(new THREE.PlaneGeometry(10.4, 0.62), tickerMat);
+    strip.position.set(0, 3.1, face * 3.06); strip.rotation.y = face > 0 ? 0 : Math.PI;
+    sg.add(strip);
+  }
+  sg.position.set(-40, 0, 58); sg.rotation.y = -0.35; scene.add(sg);
+  const topFiles = (st.list || []).slice().sort((a, b) => b.files - a.files).slice(0, 8);
+  register(sg, {
+    tag: '🏟 展示特區', title: '個股大廳（Stock Hall）', accent: '#ffd27a',
+    tooltip: `個股大廳｜${(st.list || []).length} 家研究・${st.total_files || 0} 件產出`,
+    html: chipDisc('r', '選股資料 — 外版僅保留教學示例')
+      + kv('研究名錄', (st.list || []).length + ' 家（＝公司樹林）')
+      + kv('累積產出', (st.total_files || 0) + ' 件檔案（Teaser／Comps／DCF／報告）')
+      + '<div class="sec">產出最多（前 8）</div><div class="list">'
+      + topFiles.map(s => `<div>${s.code}TT ${esc(s.name)} <span class="mono" style="float:right">×${s.files}</span></div>`).join('')
+      + '</div><div class="note">跑馬燈滾動的是真實研究名錄與每家產出檔數。這一廳在外部版會被降級成教學示例——主軸④的揭露性分級。</div>',
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
    東北：技能祭壇（20 根水晶 = 20 項技能，高度 ∝ 熟練度）
    ══════════════════════════════════════════════════════════ */
 const CAT_COLOR = { '圖靈金融': 0xC8A951, '個人基金': 0x8B1A1A, '投資分析': 0x3F6EAD, 'Youtuber': 0x7B3F9B, '其他': 0x888888 };
@@ -1948,35 +2078,88 @@ function buildVillagers() {
     }
     scene.add(g);
     const mode = i < 8 ? 'ring' : 'radial';
-    villagers.push({
+    const v = {
       g, mode, isWatch,
       angle: Math.random() * Math.PI * 2,
       speed: (0.05 + Math.random() * 0.07) * (Math.random() > .5 ? 1 : -1),
       radial: RADIALS[i % RADIALS.length],
       t: Math.random(), dir: 1,
       wspeed: 0.1 + Math.random() * 0.1,
-    });
+      spot: { a: i / 14 * Math.PI * 2, r: 8.5 + (i % 3) * 1.8 },   // 廣場聚集點
+    };
+    /* 初始就定位在路網上（避免隱藏期間堆在原點、轉場齊步走） */
+    if (mode === 'ring') g.position.set(Math.cos(v.angle) * 26.5, 0, Math.sin(v.angle) * 26.5);
+    else { const r0 = 15 + v.t * 40; g.position.set(Math.cos(v.radial) * r0, 0, Math.sin(v.radial) * r0); }
+    villagers.push(v);
   }
 }
-function updateVillagers(dt, open, nightF) {
-  const activeN = open ? 14 : (nightF > 0.6 ? 1 : 6);
+
+/* 村民時段行程（真實台北時間驅動；__orion.forcePhase 可預覽） */
+let phaseOverride = null, _phase = 'work', _phaseAt = -99;
+function villagePhase(now, open) {
+  const wd = now.getDay(), h = now.getHours() + now.getMinutes() / 60;
+  const weekday = wd >= 1 && wd <= 5 && !isHoliday(now);
+  if (currentNightF > 0.75 || h < 5.5) return 'night';
+  if (weekday) {
+    if (h >= 8.4 && h < 9.5) return 'rush';       // 開盤衝刺
+    if (open) return 'work';                       // 盤中
+    if (h >= 13.5 && h < 15) return 'plaza';       // 收盤廣場聚集
+    if (h >= 5.5 && h < 8.4) return 'evening';     // 清晨零星
+    if (h >= 15 && h < 19.5) return 'evening';     // 收工
+    return 'night';
+  }
+  return (h >= 8.5 && h < 19) ? 'holiday' : 'night';
+}
+function updateVillagers(dt, phase, nightF) {
+  const cfg = {
+    night:   { n: 0,  mult: 0 },
+    rush:    { n: 14, mult: 1.8 },
+    work:    { n: 14, mult: 1.0 },
+    plaza:   { n: 14, mult: 1.0, gather: true },
+    evening: { n: 7,  mult: 0.6 },
+    holiday: { n: 8,  mult: 0.5, mixed: true },
+  }[phase] || { n: 8, mult: 1 };
   villagers.forEach((v, i) => {
-    const active = v.isWatch ? nightF > 0.6 || open === false && i === 13 : i < activeN;
-    v.g.visible = v.isWatch ? (nightF > 0.5) : (i < activeN);
+    if (v.isWatch) {   // 值班員：夜間獨走（= 無人值守 cron）
+      v.g.visible = nightF > 0.5;
+      if (!v.g.visible) return;
+      v.angle += 0.04 * dt;
+      v.g.position.set(Math.cos(v.angle) * 26.5, 0, Math.sin(v.angle) * 26.5);
+      v.g.rotation.y = -v.angle - Math.PI / 2;
+      v.g.position.y = Math.abs(Math.sin(v.angle * 40 + i)) * 0.1;
+      return;
+    }
+    v.g.visible = i < cfg.n;
     if (!v.g.visible) return;
+    const gatherThis = cfg.gather || (cfg.mixed && i % 2 === 0);
+    if (gatherThis) {   // 走向廣場聚集點，抵達後原地小晃
+      const tx = Math.cos(v.spot.a) * v.spot.r, tz = Math.sin(v.spot.a) * v.spot.r;
+      const dx = tx - v.g.position.x, dz = tz - v.g.position.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist > 0.4) {
+        v.g.position.x += dx / dist * 2.4 * dt;
+        v.g.position.z += dz / dist * 2.4 * dt;
+        v.g.rotation.y = Math.atan2(dx, dz);
+        v.g.position.y = Math.abs(Math.sin(clock3.elapsedTime * 8 + i)) * 0.12;
+      } else {
+        v.g.rotation.y = Math.atan2(-v.g.position.x, -v.g.position.z);  // 面向雕像
+        v.g.position.y = Math.abs(Math.sin(clock3.elapsedTime * 2.2 + i)) * 0.05;
+      }
+      return;
+    }
     if (v.mode === 'ring') {
-      v.angle += v.speed * dt;
+      v.angle += v.speed * cfg.mult * dt;
       const r = 26.5;
       v.g.position.set(Math.cos(v.angle) * r, 0, Math.sin(v.angle) * r);
       v.g.rotation.y = -v.angle + (v.speed > 0 ? -Math.PI / 2 : Math.PI / 2);
     } else {
-      v.t += v.wspeed * dt * v.dir;
+      v.t += v.wspeed * cfg.mult * dt * v.dir;
       if (v.t > 1) { v.t = 1; v.dir = -1; } if (v.t < 0) { v.t = 0; v.dir = 1; }
       const r = 15 + v.t * 40;
       v.g.position.set(Math.cos(v.radial) * r, 0, Math.sin(v.radial) * r);
       v.g.rotation.y = -v.radial + (v.dir > 0 ? Math.PI : 0) + Math.PI / 2;
     }
-    v.g.position.y = Math.abs(Math.sin((v.angle + v.t * 6) * 4 + i)) * 0.12;
+    v.g.position.y = Math.abs(Math.sin((v.angle + v.t * 6) * 4 + i)) * 0.12 * Math.max(0.4, cfg.mult);
   });
 }
 
@@ -2054,6 +2237,425 @@ function updateTrucks(dt) {
 }
 
 /* ══════════════════════════════════════════════════════════
+   科幻城市細節 pass1：霓虹／廣場家具／全息柱／岩石灌木／懸浮車
+   ══════════════════════════════════════════════════════════ */
+const neonMats = [], holoMats = [], hovercars = [];
+let holoPillar = null, holoSprite = null;
+function buildCityDetail() {
+  const neon = (c) => {
+    const m = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: .4, roughness: .4 });
+    neonMats.push(m); return m;
+  };
+  /* 101 塔四角霓虹邊條 */
+  for (const [dx, dz] of [[3.5, 0], [-3.5, 0], [0, 3.5], [0, -3.5]]) {
+    scene.add(mesh(new THREE.BoxGeometry(0.16, 26, 0.16), neon(0x19e0c8), dx, 17, -64 + dz));
+  }
+  /* 廣播塔霓虹環 */
+  for (const [h, r] of [[6, 1.45], [11, 1.16]]) {
+    const t = mesh(new THREE.TorusGeometry(r, 0.07, 6, 24), neon(0xff4fd8), -66, h, -6);
+    t.rotation.x = Math.PI / 2; scene.add(t);
+  }
+  /* 廣場長椅 ×4 */
+  for (let i = 0; i < 4; i++) {
+    const a = i / 4 * Math.PI * 2 + Math.PI / 4;
+    const b = new THREE.Group();
+    b.add(box(2.2, 0.12, 0.55, M(0x8a6f4d), 0, 0.5, 0));
+    b.add(box(2.2, 0.5, 0.1, M(0x7a5f42), 0, 0.85, -0.26));
+    b.add(box(0.12, 0.5, 0.5, M(0x4a4038), -0.95, 0.25, 0));
+    b.add(box(0.12, 0.5, 0.5, M(0x4a4038), 0.95, 0.25, 0));
+    b.position.set(Math.cos(a) * 10.5, 0, Math.sin(a) * 10.5);
+    b.rotation.y = -a - Math.PI / 2;
+    scene.add(b);
+  }
+  /* 內環光樁 ×6 */
+  for (let i = 0; i < 6; i++) {
+    const a = i / 6 * Math.PI * 2 + 0.5;
+    const p = new THREE.Group();
+    p.add(cyl(0.12, 0.16, 1.1, 6, M(0x33383f), 0, 0.55, 0));
+    p.add(mesh(new THREE.SphereGeometry(0.16, 8, 8), neon(0x9fe8ff), 0, 1.2, 0));
+    p.position.set(Math.cos(a) * 15.5, 0, Math.sin(a) * 15.5);
+    scene.add(p);
+  }
+  /* 全息資訊柱（賽博公告欄） */
+  const hg = new THREE.Group();
+  hg.add(cyl(0.9, 1.1, 0.5, 12, M(0x2b3240, { metal: .5, rough: .3 }), 0, 0.25, 0));
+  const holoMat = new THREE.MeshBasicMaterial({ color: 0x66d8ff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  holoMats.push(holoMat);
+  holoPillar = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 4.4, 24, 1, true), holoMat);
+  holoPillar.position.y = 2.8; hg.add(holoPillar);
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 320;
+  const cx = cv.getContext('2d');
+  cx.fillStyle = 'rgba(8,20,32,.55)'; cx.fillRect(0, 0, 512, 320);
+  cx.strokeStyle = '#66d8ff'; cx.lineWidth = 4; cx.strokeRect(6, 6, 500, 308);
+  cx.fillStyle = '#bfeaff'; cx.font = 'bold 44px "PingFang TC"'; cx.textAlign = 'center';
+  cx.fillText('ORION VILLAGE', 256, 62);
+  cx.font = '36px "PingFang TC"';
+  const tt = D.totals || {}, lv2 = D.level || {};
+  cx.fillText(D.anon ? `客戶 ${tt.clients_n || 0} 位` : `AUM ${fmtMoney(tt.aum)}`, 256, 128);
+  cx.fillText(`技能 Lv.${lv2.lv || '—'}｜公司 ${(D.companies || []).length} 家`, 256, 186);
+  cx.fillText('守望者：Orion 🏹', 256, 244);
+  cx.fillStyle = '#7fd8c8'; cx.font = '28px "PingFang TC"';
+  cx.fillText('— 零虛構觀察站 —', 256, 296);
+  holoSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, opacity: 0.92, depthWrite: false }));
+  holoSprite.scale.set(7, 4.4, 1); holoSprite.position.y = 5.6;
+  hg.add(holoSprite);
+  hg.position.set(-8.5, 0, 7.5);
+  scene.add(hg);
+  register(hg, {
+    tag: '⛲ 中央廣場', title: '全息資訊柱', accent: '#66d8ff', tooltip: '全息資訊柱｜村莊即時概況',
+    html: kv('顯示', '村莊即時概況（AUM／Lv.／公司數）')
+      + '<div class="note">賽博村的公告欄，與 HUD 同源。每日盤後 Step 7 重生數據後自動更新。</div>',
+  });
+  /* 岩石與灌木（黃金角散布，避開放射道） */
+  const rockMat = M(0x8d9096, { flat: true }), bushMat = M(0x2f5f3f, { flat: true });
+  for (let i = 0; i < 26; i++) {
+    const a = (i * 2.399) % (Math.PI * 2);
+    const nearRoad = RADIALS.some(ra => {
+      let d = Math.abs(a - ((ra + Math.PI * 2) % (Math.PI * 2)));
+      d = Math.min(d, Math.PI * 2 - d);
+      return d < 0.15;
+    });
+    if (nearRoad) continue;
+    const r = i % 2 ? 34 + (i * 13 % 12) : 74 + (i * 17 % 22);
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (i % 3 === 0) {
+      const rk = mesh(new THREE.IcosahedronGeometry(0.4 + (i % 4) * 0.16, 0), rockMat, x, 0.3, z);
+      rk.rotation.set(i, i * 2, 0); scene.add(rk);
+    } else {
+      const bu = new THREE.Group();
+      bu.add(mesh(new THREE.SphereGeometry(0.55, 7, 6), bushMat, 0, 0.45, 0));
+      bu.add(mesh(new THREE.SphereGeometry(0.4, 7, 6), bushMat, 0.4, 0.35, 0.15));
+      bu.position.set(x, 0, z); scene.add(bu);
+    }
+  }
+  /* 懸浮通勤車 ×2（環道上空） */
+  for (let i = 0; i < 2; i++) {
+    const g = new THREE.Group();
+    const col = i ? 0xd8b04a : 0x4ab0d8;
+    g.add(box(2.1, 0.42, 1.05, M(col, { metal: .6, rough: .3 }), 0, 0, 0));
+    g.add(mesh(new THREE.SphereGeometry(0.5, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), M(0xaad8e8, { rough: .15, metal: .3, alpha: .8 }), 0.2, 0.2, 0));
+    const gl = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.9), new THREE.MeshBasicMaterial({ color: 0x66d8ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false }));
+    gl.rotation.x = -Math.PI / 2; gl.position.y = -0.35; g.add(gl);
+    scene.add(g);
+    hovercars.push({ g, a: i * Math.PI, dir: i ? 1 : -1, speed: 0.22 + i * 0.06 });
+  }
+}
+function updateHovercars(dt, el) {
+  hovercars.forEach((h, i) => {
+    h.a += h.speed * dt * h.dir;
+    const r = 26.5;
+    h.g.position.set(Math.cos(h.a) * r, 5.4 + Math.sin(el * 2 + i * 3) * 0.35, Math.sin(h.a) * r);
+    h.g.rotation.y = -h.a + (h.dir > 0 ? -Math.PI / 2 : Math.PI / 2);
+    h.g.rotation.z = h.dir * 0.12;
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   科幻密度 pass2：全息數據流／101 光柱／穿梭艇／傳送門網絡
+   ══════════════════════════════════════════════════════════ */
+const dataStreams = [], shuttles = [], portals = [];
+let beam101 = null, camTween = null;
+
+function addDataStream(x, z, topY, color) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  for (let i = 0; i < 8; i++) {
+    const q = new THREE.Mesh(new THREE.PlaneGeometry(.3, .3), mat);
+    q.userData.t = i / 8;
+    g.add(q);
+  }
+  g.position.set(x, 0, z);
+  scene.add(g);
+  dataStreams.push({ g, topY, mat });
+}
+function updateDataStreams(dt) {
+  dataStreams.forEach(s => {
+    s.mat.opacity = 0.12 + currentNightF * 0.45;
+    s.g.children.forEach(q => {
+      q.userData.t = (q.userData.t + dt * 0.1) % 1;
+      q.position.y = 2.5 + q.userData.t * s.topY;
+      const sc = 0.5 + Math.sin(q.userData.t * Math.PI) * 0.9;
+      q.scale.set(sc, sc, 1);
+      q.quaternion.copy(camera.quaternion);
+    });
+  });
+}
+
+function buildSciFi2() {
+  /* 全息數據流 — 高度 ∝ log₂(真實數字)，零虛構 */
+  const dcN = (((D.skills || []).find(s => s.module === 'DailyClose')) || { count: 0 }).count;
+  const mdN = (((D.skills || []).find(s => s.module === 'MacroDashboard')) || { count: 0 }).count;
+  const stF = ((D.halls || {}).stocks || {}).total_files || 0;
+  const coN = (D.companies || []).length;
+  const lvN = (D.level || {}).lv || 0;
+  addDataStream(64, 48, 6 + Math.log2(dcN + 1) * 2.0, 0xff8a7a);      // 盤後工廠 ×110
+  addDataStream(-54, -28, 6 + Math.log2(mdN + 1) * 2.0, 0x5ecb7b);    // 總經看板 ×84
+  addDataStream(-40, 58, 6 + Math.log2(stF + 1) * 2.0, 0xffd27a);     // 個股大廳 ×79 件
+  addDataStream(-4, 66, 6 + Math.log2(coN + 1) * 2.0, 0x9db8e8);      // 天文台 ×28 家
+  addDataStream(52, -52, 6 + Math.log2(lvN + 1) * 2.0, 0xC8A951);     // 技能祭壇 Lv.21
+
+  /* 101 塔頂光柱（夜間） */
+  beam101 = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.85, 46, 12, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0x8fe8d8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  beam101.position.set(0, 66, -64);
+  scene.add(beam101);
+
+  /* 跨區穿梭艇 ×2（航線=真實區點連線） */
+  const routes = [
+    [[0, 10, -52], [2, 12, 0], [-48, 10, 42], [-52, 11, 0]],
+    [[58, 9, 8], [46, 10, -46], [4, 11, -50], [6, 9, 6]],
+  ];
+  routes.forEach((pts, ri) => {
+    const g = new THREE.Group();
+    const col = ri ? 0xc87a4a : 0x7a9bd8;
+    g.add(box(2.8, 0.45, 0.95, M(col, { metal: .65, rough: .3 }), 0, 0, 0));
+    g.add(mesh(new THREE.SphereGeometry(0.42, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), M(0xaad8e8, { rough: .15, alpha: .8 }), 0.5, 0.2, 0));
+    g.add(mesh(new THREE.ConeGeometry(0.3, 0.8, 8), M(col, { metal: .6, rough: .3 }), 1.75, 0, 0)).children;
+    const nose = g.children[g.children.length - 1]; nose.rotation.z = -Math.PI / 2;
+    const tail = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.5), new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }));
+    tail.position.set(-1.9, 0, 0); g.add(tail);
+    scene.add(g);
+    shuttles.push({ g, pts: pts.map(p => new THREE.Vector3(...p)), seg: 0, t: ri * 0.5, speed: 0.09 + ri * 0.03 });
+  });
+
+  /* 傳送門網絡（點擊瞬移；走路模式=人到，觀察模式=鏡頭飛過去） */
+  const P = [
+    ['⛲ 中央廣場', 10, -9, 0, 0],
+    ['🏛 圖靈金融', 6, -46, 0, -58],
+    ['🏦 個人基金', 44, 5, 58, 12],
+    ['🔭 投資研究', 4, 50, -4, 62],
+    ['📡 傳播區', -46, -4, -56, -4],
+    ['🏟 展示特區', -38, 42, -52, 48],
+    ['💎 技能祭壇', 40, -40, 52, -52],
+  ];
+  P.forEach(([label, px, pz, tx, tz]) => {
+    const g = new THREE.Group();
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0x66d8ff, emissive: 0x66d8ff, emissiveIntensity: 1.1, roughness: .3 });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.11, 10, 32), ringMat);
+    ring.position.y = 2.0; g.add(ring);
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(1.36, 24),
+      new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: .16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    disc.position.y = 2.0; g.add(disc);
+    g.add(box(0.9, 0.35, 0.9, M(0x2b3240, { metal: .4 }), 0, 0.17, 0));
+    const hit = new THREE.Mesh(new THREE.CircleGeometry(3.0, 12),   // 加大點擊範圍（近乎隱形）
+      new THREE.MeshBasicMaterial({ color: 0x66d8ff, transparent: true, opacity: 0.02, depthWrite: false, side: THREE.DoubleSide }));
+    hit.position.y = 2.2; g.add(hit);
+    const lbl = textSprite(label, { fs: 32, color: '#bfeaff', scale: 0.018 });
+    lbl.position.y = 4.0; g.add(lbl);
+    g.position.set(px, 0, pz);
+    g.lookAt(new THREE.Vector3(0, 0, 0)); g.rotation.x = 0; g.rotation.z = 0;
+    scene.add(g);
+    register(g, {
+      tag: '🌀 傳送門', title: '傳送 → ' + label, accent: '#66d8ff',
+      tooltip: '🌀 點擊傳送 → ' + label,
+      portalTo: { x: tx, z: tz, label },
+    });
+    portals.push({ g, ring });
+  });
+}
+function doTeleport(t) {
+  if (walking) {
+    walker.position.set(t.x + 3, 0, t.z + 3);
+    camera.position.set(t.x + 9, 5, t.z + 12);
+    controls.target.set(t.x + 3, 1.5, t.z + 3);
+    controls.update();
+  } else {
+    camTween = {
+      t: 0, dur: 0.9,
+      fromPos: camera.position.clone(), toPos: new THREE.Vector3(t.x + 24, 21, t.z + 28),
+      fromTgt: controls.target.clone(), toTgt: new THREE.Vector3(t.x, 5, t.z),
+    };
+  }
+}
+function updateSciFi2(dt, el) {
+  if (beam101) {
+    beam101.material.opacity = currentNightF * (0.16 + Math.sin(el * 1.2) * 0.05);
+    beam101.rotation.y += dt * 0.4;
+  }
+  portals.forEach((p, i) => {
+    p.ring.rotation.z += dt * (0.8 + i * 0.07);
+    p.ring.material.emissiveIntensity = 0.7 + currentNightF * 0.8 + Math.sin(el * 3 + i) * 0.2;
+  });
+  shuttles.forEach(s => {
+    const a = s.pts[s.seg], b = s.pts[(s.seg + 1) % s.pts.length];
+    const segLen = a.distanceTo(b);
+    s.t += (s.speed * 30 * dt) / Math.max(1, segLen);
+    if (s.t >= 1) { s.t = 0; s.seg = (s.seg + 1) % s.pts.length; return; }
+    s.g.position.lerpVectors(a, b, s.t);
+    s.g.position.y += Math.sin(el * 2.2) * 0.25;
+    const dir = b.clone().sub(a);
+    s.g.rotation.y = Math.atan2(dir.x, dir.z) - Math.PI / 2;   // 機首(+x)朝航向
+  });
+  if (camTween) {
+    camTween.t += dt / camTween.dur;
+    const k = camTween.t >= 1 ? 1 : (1 - Math.pow(1 - camTween.t, 3));   // easeOutCubic
+    camera.position.lerpVectors(camTween.fromPos, camTween.toPos, k);
+    controls.target.lerpVectors(camTween.fromTgt, camTween.toTgt, k);
+    controls.update();
+    if (camTween.t >= 1) camTween = null;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   Orion NPC 巡村（點擊對話）＋ 晨鳥夜螢
+   ══════════════════════════════════════════════════════════ */
+let orionNPC = null, orionAngle = 2.1;
+const birdFlocks = [], fireflies = [];
+function buildOrionNPC() {
+  orionNPC = new THREE.Group();
+  const gold = M(0xC8A951, { metal: .8, rough: .35 });
+  orionNPC.add(cyl(0.3, 0.4, 1.2, 8, gold, 0, 0.6, 0));
+  orionNPC.add(mesh(new THREE.SphereGeometry(0.3, 10, 8), M(0xE8DDC8, { metal: .3 }), 0, 1.5, 0));
+  const bow = mesh(new THREE.TorusGeometry(0.55, 0.04, 6, 16, Math.PI), gold, 0.32, 1.0, 0);
+  bow.rotation.y = Math.PI / 2; bow.rotation.z = 0.4; orionNPC.add(bow);
+  const np = textSprite('ORION 🏹', { fs: 34, bold: true, color: '#ffe9ad', scale: 0.018 });
+  np.position.y = 2.5; orionNPC.add(np);
+  scene.add(orionNPC);
+  register(orionNPC, {
+    tag: '🏹 守望者', title: 'Orion（巡村中）', accent: '#C8A951',
+    tooltip: 'Orion｜點擊交談', dialog: true,
+  });
+}
+function orionDialog() {
+  const mk = marketState(taipeiNow());
+  const dc = (((D.skills || []).find(s => s.module === 'DailyClose')) || { count: 0 }).count;
+  const lines = [
+    `今天${mk.label.replace('● ', '')}。${mk.open ? '盯緊法人動向，收盤見。' : '市場休息，正好巡村。'}`,
+    `距離 2 轉「獵人」還差 ${(D.level || {}).next_need != null ? D.level.next_need : '—'} 個技能。快了。`,
+    `祭壇最高那根酒紅水晶是「每日盤後」×${dc} —— 那是村子的心跳。`,
+    `夜裡抬頭，獵戶座在西南天空。我的箭一直指著它。`,
+    `公司樹林已經 ${(D.companies || []).length} 棵了。樹只增不減，這是知識的複利。`,
+    (EV.earnings_season ? '財報季，天文台通宵。研究員的燈籠不會滅。' : '等財報季一到，天文台就要通宵了。'),
+    `全村 AUM ${fmtMoney((D.totals || {}).aum)}，${(D.totals || {}).clients_n || 0} 座宅邸。守護它們是我的工作。`,
+  ];
+  const pick = [];
+  while (pick.length < 2) {
+    const l = lines[Math.floor(Math.random() * lines.length)];
+    if (!pick.includes(l)) pick.push(l);
+  }
+  openPanel({
+    tag: '🏹 守望者', title: 'Orion', accent: '#C8A951',
+    html: pick.map(l => `<div class="kv" style="display:block;padding:8px 0"><span style="color:#e8ddc8">「${esc(l)}」</span></div>`).join('')
+      + '<div class="note">再點一次我，聽別的。守望者常駐村中，如同背景裡的排程。</div>',
+  });
+}
+function buildAmbient() {
+  /* 晨鳥 ×2 群（白天） */
+  for (let f = 0; f < 2; f++) {
+    const flock = { g: new THREE.Group(), cx: f ? -30 : 40, cz: f ? 30 : -20, rx: 34 + f * 8, rz: 24 + f * 6, h: 26 + f * 6, sp: 0.14 + f * 0.04, ph: f * 2 };
+    for (let i = 0; i < 5; i++) {
+      const b = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.24), new THREE.MeshBasicMaterial({ color: 0x24303a, side: THREE.DoubleSide }));
+      b.userData.off = i;
+      flock.g.add(b);
+    }
+    scene.add(flock.g); birdFlocks.push(flock);
+  }
+  /* 夜螢 ×16 */
+  const cv = document.createElement('canvas'); cv.width = cv.height = 32;
+  const cx = cv.getContext('2d');
+  const gr = cx.createRadialGradient(16, 16, 1, 16, 16, 14);
+  gr.addColorStop(0, 'rgba(220,255,160,1)'); gr.addColorStop(1, 'rgba(220,255,160,0)');
+  cx.fillStyle = gr; cx.fillRect(0, 0, 32, 32);
+  const ftex = new THREE.CanvasTexture(cv);
+  for (let i = 0; i < 16; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: ftex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    sp.scale.set(0.7, 0.7, 1);
+    const a = (i * 2.399) % (Math.PI * 2), r = 38 + (i * 11 % 46);
+    fireflies.push({ sp, x: Math.cos(a) * r, z: Math.sin(a) * r, sp1: 0.4 + (i % 5) * 0.13, ph: i * 1.7 });
+    scene.add(sp);
+  }
+}
+function updateAmbient(dt, el, nightF) {
+  const dayVis = nightF < 0.35;
+  birdFlocks.forEach(fl => {
+    fl.g.visible = dayVis;
+    if (!dayVis) return;
+    const a = el * fl.sp + fl.ph;
+    fl.g.children.forEach(b => {
+      const oa = a - b.userData.off * 0.13;
+      b.position.set(fl.cx + Math.cos(oa) * fl.rx, fl.h + Math.sin(oa * 2) * 1.6 + b.userData.off * 0.4, fl.cz + Math.sin(oa) * fl.rz);
+      b.rotation.y = -oa;
+      b.scale.y = 0.5 + Math.abs(Math.sin(el * 9 + b.userData.off)) * 0.9;   // 拍翅
+    });
+  });
+  const fVis = nightF > 0.55;
+  fireflies.forEach(f => {
+    f.sp.material.opacity = fVis ? (0.35 + Math.sin(el * f.sp1 * 4 + f.ph) * 0.3) * nightF : 0;
+    if (!fVis) return;
+    f.sp.position.set(
+      f.x + Math.sin(el * f.sp1 + f.ph) * 2.2,
+      1 + Math.abs(Math.sin(el * f.sp1 * 0.7 + f.ph * 2)) * 1.8,
+      f.z + Math.cos(el * f.sp1 * 0.8 + f.ph) * 2.2);
+  });
+}
+function updateOrionNPC(dt, el) {
+  if (!orionNPC) return;
+  orionAngle += dt * 0.045;
+  const r = 28.8;
+  orionNPC.position.set(Math.cos(orionAngle) * r, Math.abs(Math.sin(el * 5)) * 0.08, Math.sin(orionAngle) * r);
+  orionNPC.rotation.y = -orionAngle - Math.PI / 2;
+}
+
+/* ══════════════════════════════════════════════════════════
+   🚶 走路探索模式（第三人稱跟隨鏡頭）
+   ══════════════════════════════════════════════════════════ */
+let walker = null, walking = false, prevCam = null;
+function buildWalker() {
+  walker = new THREE.Group();
+  walker.add(cyl(0.3, 0.38, 1.15, 8, M(0x2E8B8B, { rough: .7 }), 0, 0.58, 0));
+  walker.add(mesh(new THREE.SphereGeometry(0.28, 10, 8), M(0xe8c9a8), 0, 1.4, 0));
+  const bow = mesh(new THREE.TorusGeometry(0.5, 0.035, 6, 16, Math.PI), M(0xC8A951, { metal: .7 }), 0, 0.9, -0.32);
+  bow.rotation.z = Math.PI / 2; walker.add(bow);
+  walker.visible = false;
+  scene.add(walker);
+}
+function toggleWalk() {
+  if (driving) toggleDrive();
+  walking = !walking;
+  $('btn-walk').classList.toggle('driving', walking);
+  $('btn-walk').textContent = walking ? '🚶 探索中（Esc 退出）' : '🚶 探索';
+  walker.visible = walking;
+  if (walking) {
+    prevCam = { pos: camera.position.clone(), tgt: controls.target.clone(), minD: controls.minDistance };
+    walker.position.set(6, 0, 10);
+    controls.minDistance = 3;
+    camera.position.set(13, 5.5, 19);
+    openPanel({
+      tag: '🚶 探索模式', title: '你正走在獵戶村裡', accent: '#2E8B8B',
+      html: kv('移動', 'W A S D／方向鍵（相對鏡頭方向）') + kv('奔跑', 'Shift')
+        + kv('視角', '滑鼠拖曳環繞・滾輪縮放') + kv('退出', 'Esc 或再按「🚶 探索」')
+        + '<div class="note">走近任何建築點擊即可查看數據。夜裡記得抬頭——獵戶座就在西南天空。</div>',
+    });
+  } else if (prevCam) {
+    controls.minDistance = prevCam.minD;
+    camera.position.copy(prevCam.pos); controls.target.copy(prevCam.tgt); controls.update();
+  }
+}
+const _wDir = new THREE.Vector3(), _wRight = new THREE.Vector3(), _wMove = new THREE.Vector3();
+function updateWalk(dt, el) {
+  if (!walking) return;
+  camera.getWorldDirection(_wDir); _wDir.y = 0; _wDir.normalize();
+  _wRight.crossVectors(_wDir, new THREE.Vector3(0, 1, 0));
+  _wMove.set(0, 0, 0);
+  if (keys['w'] || keys['arrowup']) _wMove.add(_wDir);
+  if (keys['s'] || keys['arrowdown']) _wMove.sub(_wDir);
+  if (keys['a'] || keys['arrowleft']) _wMove.sub(_wRight);
+  if (keys['d'] || keys['arrowright']) _wMove.add(_wRight);
+  if (_wMove.lengthSq() > 0) {
+    _wMove.normalize().multiplyScalar((keys['shift'] ? 10.5 : 4.4) * dt);
+    walker.position.add(_wMove);
+    const rr = Math.hypot(walker.position.x, walker.position.z);
+    if (rr > 146) { walker.position.x *= 146 / rr; walker.position.z *= 146 / rr; }
+    walker.rotation.y = Math.atan2(_wMove.x, _wMove.z);
+    walker.position.y = Math.abs(Math.sin(el * 9)) * 0.09;
+  } else {
+    walker.position.y = 0;
+  }
+  const tgt = walker.position.clone(); tgt.y += 1.5;
+  controls.target.lerp(tgt, 0.3);
+}
+
+/* ══════════════════════════════════════════════════════════
    日夜引擎
    ══════════════════════════════════════════════════════════ */
 const TIME_KEYS = [
@@ -2089,8 +2691,13 @@ function applyTime(h) {
   starsMat.opacity = starsF * 0.95;
   if (orionGroup) orionGroup.userData.mats.forEach((m, i) => { m.opacity = starsF * (i < 7 ? 1 : (i === orionGroup.children.length - 1 ? 0.75 : 0.4)); });
   const winF = a.win + (b.win - a.win) * f;
+  const _el = clock3 ? clock3.elapsedTime : 0;
   winMat.emissiveIntensity = winF * 1.25;
+  winMatB.emissiveIntensity = winF * 0.85 * (0.9 + 0.1 * Math.sin(_el * 6.3));   // 微閃爍
+  winMatC.emissiveIntensity = winF * 1.05;
   lampMat.emissiveIntensity = winF * 1.5;
+  neonMats.forEach(m => { m.emissiveIntensity = 0.3 + winF * 1.5; });
+  holoMats.forEach(m => { m.opacity = 0.08 + winF * 0.1; });
   moon.intensity = starsF * 0.22;
   currentNightF = winF;
   if (lighthouseBeams) lighthouseBeams.visible = winF > 0.15;
@@ -2175,7 +2782,18 @@ renderer.domElement.addEventListener('pointerup', e => {
   const hits = raycaster.intersectObjects(pickables, false);
   if (hits.length) {
     const root = hits[0].object.userData.pickRoot;
-    if (root && root.userData.info) openPanel(root.userData.info);
+    if (root && root.userData.info) {
+      const info = root.userData.info;
+      if (info.portalTo) {           // 傳送門：直接行動，不開面板
+        doTeleport(info.portalTo);
+        return;
+      }
+      if (info.dialog) {             // Orion NPC：每次對話都不同
+        orionDialog();
+        return;
+      }
+      openPanel(info);
+    }
   }
 });
 renderer.domElement.addEventListener('pointermove', e => {
@@ -2210,10 +2828,14 @@ let driving = false;
 const keys = {};
 addEventListener('keydown', e => {
   keys[e.key.toLowerCase()] = true;
-  if (e.key === 'Escape' && driving) toggleDrive();
+  if (e.key === 'Escape') {
+    if (driving) toggleDrive();
+    else if (walking) toggleWalk();
+  }
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 function toggleDrive() {
+  if (!driving && walking) toggleWalk();
   driving = !driving;
   $('btn-drive').classList.toggle('driving', driving);
   $('btn-drive').textContent = driving ? '🛸 駕駛中（Esc 退出）' : '🛸 駕駛';
@@ -2225,6 +2847,7 @@ function toggleDrive() {
   });
 }
 $('btn-drive').onclick = toggleDrive;
+$('btn-walk').onclick = toggleWalk;
 const saucerVel = new THREE.Vector3();
 function updateSaucer(dt) {
   if (!driving) {
@@ -2270,6 +2893,7 @@ buildAdmin();
 buildFundDistrict();
 buildResearch();
 buildMedia();
+buildHalls();
 buildAltar();
 buildStatue();
 buildClock();
@@ -2277,6 +2901,11 @@ buildSaucer();
 buildVillagers();
 buildSmoke();
 buildTrucks();
+buildCityDetail();
+buildSciFi2();
+buildOrionNPC();
+buildAmbient();
+buildWalker();
 initHud();
 let mkState = updateClock();
 setInterval(() => { mkState = updateClock(); }, 15000);
@@ -2318,10 +2947,25 @@ function animate() {
   if (lighthouseBeams) lighthouseBeams.rotation.y += dt * 0.9;
 
   const open = mkState && mkState.open;
-  updateVillagers(dt, open, currentNightF);
+  try {
+    if (el - _phaseAt > 5) { _phase = villagePhase(taipeiNow(), open); _phaseAt = el; }
+    updateVillagers(dt, phaseOverride || _phase, currentNightF);
+    updateOrionNPC(dt, el);
+    updateAmbient(dt, el, currentNightF);
+  } catch (err) {
+    console.error('[village-loop]', err.message, err.stack && err.stack.split('\n')[1]);
+  }
   updateSmoke(dt, open ? 1 : 0.45);
   updateSaucer(dt);
   updateTrucks(dt);
+  updateHovercars(dt, el);
+  updateWalk(dt, el);
+  if (holoPillar) holoPillar.rotation.y += dt * 0.6;
+  if (holoSprite) holoSprite.position.y = 5.6 + Math.sin(el * 1.5) * 0.15;
+  if (hallGlobe) hallGlobe.rotation.y += dt * 0.4;
+  if (tickerTex) tickerTex.offset.x = (tickerTex.offset.x + dt * 0.045) % 1;
+  updateDataStreams(dt);
+  updateSciFi2(dt, el);
 
   /* 財報季：通宵觀測（光柱與研究員只在夜間現身） */
   const es = EV.earnings_season;
@@ -2345,7 +2989,11 @@ addEventListener('resize', () => {
 
 /* 除錯掛鉤（console 用）：__orion.lookOrion() 直視獵戶座、__orion.reset() 回預設視角 */
 window.__orion = {
-  camera, controls,
+  camera, controls, keys, villagers,
+  phase() { return phaseOverride || _phase; },
+  walk() { toggleWalk(); },
+  forcePhase(p) { phaseOverride = p; },   // 'rush'|'work'|'plaza'|'evening'|'holiday'|'night'|null
+  talk() { orionDialog(); },
   setHour(h) { timeMode = String(h); },
   lookOrion() { controls.target.set(-130, 105, 130); camera.position.set(52, 22, -52); controls.update(); },
   reset() { controls.target.set(0, 6, 0); camera.position.set(78, 62, 118); controls.update(); },
