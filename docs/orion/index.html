@@ -3,35 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>獵戶村 ORION VILLAGE｜Jeff 的賽博莊園</title>
+<title>獵戶村 ORION VILLAGE｜遊戲化投資村莊</title>
 <style>
   :root{
-    --gold:#C8A951; --wine:#8B1A1A; --ink:#0d1117;
-    --glass:rgba(13,17,23,.78); --line:rgba(200,169,81,.35);
+    --gold:#C8A951; --wine:#8B1A1A; --teal:#2E8B8B;
+    --glass:rgba(13,17,23,.80); --line:rgba(200,169,81,.35);
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html,body{width:100%;height:100%;overflow:hidden;background:#0a1030;
     font-family:"PingFang TC","Heiti TC","Microsoft JhengHei",sans-serif;color:#f5f0e8;}
   canvas{display:block;}
-
   .hud{position:fixed;z-index:10;pointer-events:none;}
   .card{background:var(--glass);border:1px solid var(--line);border-radius:14px;
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
     box-shadow:0 8px 32px rgba(0,0,0,.45);}
 
-  #hud-title{top:16px;left:16px;padding:12px 18px;max-width:78vw;}
-  #hud-title h1{font-size:19px;letter-spacing:1px;color:var(--gold);font-weight:700;}
-  #hud-title h1 span{font-size:12px;color:#9e8e7e;letter-spacing:2px;margin-left:8px;}
-  #hud-title .sub{font-size:12px;color:#c9bfae;margin-top:3px;}
-  #hud-title .stats{font-size:12px;color:#e8ddc8;margin-top:7px;padding-top:7px;
-    border-top:1px dashed rgba(200,169,81,.25);}
-  #hud-title .stats b{color:var(--gold);font-weight:600;}
-  #hud-title .up{color:#ff6b5e;} #hud-title .down{color:#5ecb7b;}
+  #hud-title{top:16px;left:16px;padding:11px 16px;max-width:76vw;}
+  #hud-title h1{font-size:18px;letter-spacing:1px;color:var(--gold);font-weight:700;}
+  #hud-title h1 span{font-size:11px;color:#9e8e7e;letter-spacing:2px;margin-left:8px;}
+  #hud-title .sub{font-size:11.5px;color:#c9bfae;margin-top:3px;}
+  #hud-badge{margin-top:7px;padding-top:7px;border-top:1px dashed rgba(200,169,81,.25);
+    font-size:12px;color:#e8ddc8;}
+  #hud-badge b{color:var(--gold);}
+  #hud-badge .xpbar{display:inline-block;width:90px;height:7px;background:rgba(255,255,255,.1);
+    border-radius:4px;margin:0 6px;vertical-align:middle;overflow:hidden;}
+  #hud-badge .xpbar i{display:block;height:100%;background:linear-gradient(90deg,#C8A951,#ffd27a);}
 
-  #hud-clock{top:16px;right:16px;padding:10px 16px;text-align:right;}
-  #clock-time{font-size:22px;font-weight:700;color:#fff;letter-spacing:1px;font-variant-numeric:tabular-nums;}
-  #clock-date{font-size:11px;color:#9e8e7e;margin-top:2px;}
-  #market-badge{display:inline-block;margin-top:6px;font-size:11px;padding:3px 10px;
+  #hud-clock{top:16px;right:16px;padding:9px 14px;text-align:right;}
+  #clock-time{font-size:20px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;}
+  #clock-date{font-size:10.5px;color:#9e8e7e;margin-top:2px;}
+  #market-badge{display:inline-block;margin-top:5px;font-size:10.5px;padding:2px 9px;
     border-radius:20px;border:1px solid;letter-spacing:1px;}
   .mk-open{color:#ff8a7a;border-color:#ff8a7a;animation:pulse 2s infinite;}
   .mk-closed{color:#8a94a6;border-color:#5a6478;}
@@ -41,21 +42,51 @@
     font-size:12px;color:#c9bfae;white-space:nowrap;}
   #hint b{color:var(--gold);}
 
-  #time-ctl{bottom:14px;left:16px;padding:8px;display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;max-width:60vw;}
-  #time-ctl button{background:rgba(255,255,255,.06);border:1px solid rgba(200,169,81,.3);
+  #ctl{bottom:14px;left:16px;padding:8px;display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;max-width:64vw;}
+  #ctl button{background:rgba(255,255,255,.06);border:1px solid rgba(200,169,81,.3);
     color:#e8ddc8;font-size:12px;padding:6px 11px;border-radius:8px;cursor:pointer;
     font-family:inherit;transition:.15s;}
-  #time-ctl button:hover{background:rgba(200,169,81,.2);}
-  #time-ctl button.on{background:var(--gold);color:#1a0a0a;font-weight:700;border-color:var(--gold);}
-  #btn-drive.driving{background:var(--wine);color:#fff;border-color:#ff8a7a;font-weight:700;}
+  #ctl button:hover{background:rgba(200,169,81,.2);}
+  #ctl button.on{background:var(--gold);color:#1a0a0a;font-weight:700;border-color:var(--gold);}
 
   #tooltip{position:fixed;z-index:30;pointer-events:none;display:none;
     background:rgba(13,17,23,.92);border:1px solid var(--line);border-radius:8px;
-    padding:6px 12px;font-size:12.5px;color:#f5f0e8;white-space:pre;max-width:320px;
-    box-shadow:0 4px 18px rgba(0,0,0,.5);}
+    padding:6px 12px;font-size:12.5px;color:#f5f0e8;white-space:pre;max-width:320px;}
 
-  #panel{position:fixed;z-index:20;top:0;right:0;height:100%;width:360px;max-width:92vw;
-    background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  /* NPC 導覽字幕列 */
+  #caption{position:fixed;z-index:25;bottom:72px;left:50%;transform:translateX(-50%);
+    max-width:640px;width:88vw;padding:14px 20px;display:none;
+    background:rgba(13,17,23,.88);border:1px solid var(--gold);border-radius:14px;
+    backdrop-filter:blur(10px);font-size:15px;line-height:1.7;color:#f5f0e8;
+    box-shadow:0 8px 32px rgba(0,0,0,.5);}
+  #caption .who{color:var(--gold);font-weight:700;font-size:12.5px;letter-spacing:2px;margin-bottom:4px;}
+  #caption .next{color:#9e8e7e;font-size:11px;margin-top:8px;text-align:right;}
+
+  /* XP toast */
+  #toast{position:fixed;z-index:40;top:76px;left:50%;transform:translateX(-50%);
+    padding:9px 20px;background:rgba(200,169,81,.94);color:#1a0a0a;font-weight:700;
+    border-radius:22px;font-size:13.5px;display:none;box-shadow:0 6px 24px rgba(0,0,0,.4);}
+
+  /* 註冊 modal */
+  #modal{position:fixed;z-index:50;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(4,6,12,.6);backdrop-filter:blur(4px);}
+  #modal .box{width:380px;max-width:92vw;padding:26px 28px;background:var(--glass);
+    border:1px solid var(--gold);border-radius:18px;box-shadow:0 16px 60px rgba(0,0,0,.6);}
+  #modal h2{color:var(--gold);font-size:19px;margin-bottom:4px;}
+  #modal .d{font-size:12.5px;color:#c9bfae;margin-bottom:16px;line-height:1.6;}
+  #modal label{display:block;font-size:12px;color:#9e8e7e;margin:12px 0 4px;}
+  #modal input,#modal select{width:100%;padding:9px 12px;border-radius:9px;font-size:14px;
+    background:rgba(255,255,255,.07);border:1px solid rgba(200,169,81,.35);color:#fff;
+    font-family:inherit;outline:none;}
+  #modal input:focus{border-color:var(--gold);}
+  #modal button{width:100%;margin-top:20px;padding:11px;border-radius:10px;border:none;
+    background:var(--gold);color:#1a0a0a;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;}
+  #modal button:hover{filter:brightness(1.08);}
+  #modal .skip{background:none;border:none;color:#9e8e7e;font-size:12px;margin-top:10px;cursor:pointer;width:100%;}
+
+  /* 場館面板 */
+  #panel{position:fixed;z-index:20;top:0;right:0;height:100%;width:370px;max-width:92vw;
+    background:var(--glass);backdrop-filter:blur(14px);
     border-left:1px solid var(--line);transform:translateX(105%);transition:transform .3s ease;
     display:flex;flex-direction:column;}
   #panel.open{transform:translateX(0);}
@@ -68,7 +99,6 @@
   #panel-body{padding:14px 20px 30px;overflow-y:auto;flex:1;font-size:13.5px;line-height:1.7;}
   #panel-body::-webkit-scrollbar{width:6px;}
   #panel-body::-webkit-scrollbar-thumb{background:rgba(200,169,81,.3);border-radius:3px;}
-
   .kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;
     border-bottom:1px dashed rgba(255,255,255,.08);}
   .kv .k{color:#9e8e7e;flex-shrink:0;}
@@ -84,41 +114,70 @@
     margin:2px 3px 2px 0;}
   a.linkbtn{display:block;text-align:center;margin-top:12px;padding:9px;border-radius:9px;
     background:var(--gold);color:#1a0a0a;font-weight:700;text-decoration:none;font-size:13px;}
-  a.linkbtn:hover{filter:brightness(1.1);}
+  #panel-body input.inline{width:62%;padding:8px 10px;border-radius:8px;font-size:13px;
+    background:rgba(255,255,255,.07);border:1px solid rgba(200,169,81,.35);color:#fff;font-family:inherit;outline:none;}
+  #panel-body button.inline{padding:8px 14px;border-radius:8px;border:none;background:var(--gold);
+    color:#1a0a0a;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-left:6px;}
 
   @media (max-width:640px){
-    #hud-title h1{font-size:15px;} #hud-title{max-width:62vw;}
+    #hud-title h1{font-size:15px;} #hud-title{max-width:60vw;}
     #hint{display:none;} #panel{width:100vw;}
-    #clock-time{font-size:17px;}
+    #clock-time{font-size:16px;} #caption{bottom:64px;font-size:14px;}
   }
 </style>
 </head>
 <body>
 <div id="hud-title" class="hud card">
   <h1>🛸 獵戶村 <span>ORION VILLAGE</span></h1>
-  <div class="sub">Jeff Hsu 的賽博莊園 — 每棟建築都是真實運轉中的系統</div>
-  <div class="stats" id="hud-stats"></div>
+  <div class="sub">遊戲化投資村莊 — 由守望者 Orion 帶你入村</div>
+  <div id="hud-badge">尚未入村 — 跟著 NPC 完成村民登錄</div>
 </div>
 
 <div id="hud-clock" class="hud card">
   <div id="clock-time">--:--</div>
   <div id="clock-date">台北時間</div>
-  <span id="market-badge" class="mk-closed">— </span>
+  <span id="market-badge" class="mk-closed">—</span>
 </div>
 
-<div id="hint" class="hud card">拖曳<b>旋轉</b>｜滾輪<b>縮放</b>｜<b>點擊建築</b>看數據｜🚶 走路探索｜🛸 駕駛獵戶號</div>
+<div id="hint" class="hud card">🖱 拖曳<b>環繞</b>｜WASD <b>走路</b>｜走近或點擊<b>場館</b>進入｜點 <b>NPC</b> 對話</div>
 
-<div id="time-ctl" class="hud card">
+<div id="ctl" class="hud card">
   <button data-h="live" class="on">即時</button>
   <button data-h="6.4">晨</button>
   <button data-h="12.5">午</button>
   <button data-h="18.1">暮</button>
   <button data-h="22.5">夜</button>
-  <button id="btn-walk">🚶 探索</button>
-  <button id="btn-drive">🛸 駕駛</button>
+  <button id="btn-view">🔭 俯瞰</button>
 </div>
 
 <div id="tooltip"></div>
+<div id="toast"></div>
+
+<div id="caption">
+  <div class="who" id="cap-who">🏹 ORION</div>
+  <div id="cap-text"></div>
+  <div class="next">點擊畫面任意處繼續 ▸</div>
+</div>
+
+<div id="modal">
+  <div class="box">
+    <h2>🎫 村民登錄</h2>
+    <div class="d">成為獵戶村村民：每日回村 +10 XP，升等解鎖新區域。你的持股會用來量身訂做導覽（Tailor Made，只存在你的瀏覽器）。</div>
+    <label>暱稱 *</label>
+    <input id="reg-name" maxlength="12" placeholder="例如：獵人一號">
+    <label>主要持股（台股代號，逗號分隔，可留空）</label>
+    <input id="reg-holdings" placeholder="例如：6651, 8103, 2330">
+    <label>主要投資市場</label>
+    <select id="reg-market">
+      <option value="台股">台股</option>
+      <option value="美股">美股</option>
+      <option value="台股+美股">台股＋美股</option>
+      <option value="其他">其他</option>
+    </select>
+    <button id="reg-go">成為村民 🏹</button>
+    <button class="skip" id="reg-skip">先逛逛就好（以路人身分）</button>
+  </div>
+</div>
 
 <div id="panel">
   <div id="panel-head">
@@ -130,7 +189,7 @@
 </div>
 
 <script>
-window.VILLAGE_DATA = {"meta": {"village": "獵戶村 ORION VILLAGE", "owner": "Jeff Hsu（徐家恩）", "generated_at": "2026-07-12 19:19", "data_date": "2026/07/09"}, "level": {"lv": 21, "title": "弓箭手", "emoji": "🏹", "next_title": "獵人", "next_need": 9, "route": ["弓箭手 Lv.10", "獵人 Lv.30", "遊俠 Lv.70", "箭神 Lv.120"]}, "clients": [{"name": "客戶 01", "owner": "Josh", "type": "Fee-Based", "color": "#6A5ACD", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 6, "top_holding": null, "loan": null, "size": 0.501}, {"name": "客戶 02", "owner": "Josh", "type": "Non-Fee", "color": "#8B1A1A", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 11, "top_holding": null, "loan": null, "size": 0.995}, {"name": "客戶 03", "owner": "Josh", "type": "自營", "color": "#C05A20", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 11, "top_holding": null, "loan": null, "size": 1.107}, {"name": "客戶 04", "owner": "Josh", "type": "Fee-Based", "color": "#3F6EAD", "vip": false, "start_date": "2026-05-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 10, "top_holding": null, "loan": null, "size": 0.969}, {"name": "客戶 05", "owner": "Josh", "type": "Fee-Based", "color": "#7B3F9B", "vip": false, "start_date": "2026-05-18", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 12, "top_holding": null, "loan": null, "size": 1.123}, {"name": "客戶 06", "owner": "Jeff", "type": "Fee-Based", "color": "#A0527F", "vip": false, "start_date": "2026-04-16", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 9, "top_holding": null, "loan": null, "size": 1.226}, {"name": "客戶 07", "owner": "Jeff", "type": "Fee-Based", "color": "#5B8B3A", "vip": true, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 14, "top_holding": null, "loan": null, "size": 1.252}, {"name": "客戶 08", "owner": "Jeff", "type": "Fee-Based", "color": "#C8A951", "vip": false, "start_date": "2026-04-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 13, "top_holding": null, "loan": null, "size": 1.312}, {"name": "客戶 09", "owner": "Jeff", "type": "Fee-Based", "color": "#B94C4C", "vip": false, "start_date": "2026-05-01", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 7, "top_holding": null, "loan": null, "size": 0.852}, {"name": "客戶 10", "owner": "Jeff", "type": "Non-Fee", "color": "#B8860B", "vip": false, "start_date": "2026-05-18", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 9, "top_holding": null, "loan": null, "size": 0.769}, {"name": "客戶 11", "owner": "Jeff", "type": "Fee-Based", "color": "#C87030", "vip": false, "start_date": "2026-06-15", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 7, "top_holding": null, "loan": null, "size": 0.649}, {"name": "客戶 12", "owner": "Jeff", "type": "Fee-Based", "color": "#4C9BD1", "vip": false, "start_date": "2026-07-09", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 0, "top_holding": null, "loan": null, "size": 0.816}, {"name": "客戶 13", "owner": "Jeff", "type": "自營", "color": "#2E8B8B", "vip": false, "start_date": "2026-03-31", "found": true, "aum": null, "principal": null, "pnl": null, "ret": null, "cash": null, "holdings_n": 17, "top_holding": null, "loan": null, "size": 1.576}], "totals": {"clients_n": 13, "aum": null, "principal": null, "pnl": null, "cash": null, "loan": null, "ret": null, "cash_pct": null}, "skills": [{"name": "研究報告", "module": "EquityResearch", "count": 27, "bar": "▓▓▓░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "公司摘要", "module": "CompanySummary (= TeaserPPT+Comps+DCF)", "count": 6, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "Teaser(保密項目)", "module": "Teaser (168公司網)", "count": 7, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "168公司網"}, {"name": "盡調清單", "module": "DueDiligence", "count": 4, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "併購案件後續追蹤", "module": "PastDealsTracking", "count": 7, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "法說會感謝信", "module": "Thank_You_Letter", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "拜訪客戶"}, {"name": "會議紀錄", "module": "Meeting_Minutes", "count": 3, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "行政事務"}, {"name": "本週工作彙整", "module": "WeeklyReview", "count": 4, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "行政事務"}, {"name": "每週併購新聞", "module": "MA_Weekly", "count": 19, "bar": "▓▓▓░░", "cat": "Youtuber", "subcat": null}, {"name": "會前Q&A準備", "module": "MeetingPrep", "count": 6, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "拜訪客戶"}, {"name": "每日盤後", "module": "DailyClose", "count": 110, "bar": "▓▓▓▓▓", "cat": "個人基金", "subcat": null}, {"name": "月選股資金配置", "module": "MonthlyAllocation", "count": 4, "bar": "▓░░░░", "cat": "個人基金", "subcat": null}, {"name": "月初下單策略", "module": "MonthlyOrderStrategy", "count": 10, "bar": "▓▓░░░", "cat": "個人基金", "subcat": null}, {"name": "月初選股分析", "module": "Screening", "count": 9, "bar": "▓▓░░░", "cat": "投資分析", "subcat": null}, {"name": "公司研究追蹤", "module": "CompanyOverview_AutoAppend", "count": 10, "bar": "▓▓░░░", "cat": "投資分析", "subcat": null}, {"name": "每日總經儀表板", "module": "MacroDashboard", "count": 85, "bar": "▓▓▓▓▓", "cat": "Youtuber", "subcat": null}, {"name": "製作Shorts", "module": "MAContentCreator", "count": 1, "bar": "░░░░░", "cat": "Youtuber", "subcat": null}, {"name": "財報更新", "module": "EarningsUpdate", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "CIM", "module": "CIM", "count": 2, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "168公司網"}, {"name": "基金獎金分成", "module": "ReferralBonus", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "獵戶村", "module": "OrionVillage", "count": 1, "bar": "░░░░░", "cat": "其他", "subcat": null}], "subskills": [{"name": "Teaser(PPT)", "module": "TeaserPPT", "parent": "公司摘要", "count": 12}, {"name": "同業比較", "module": "Comps", "parent": "公司摘要", "count": 21}, {"name": "DCF Model", "module": "DCF", "parent": "公司摘要", "count": 11}], "companies": [{"code": "1440", "name": "南紡"}, {"code": "1582", "name": "信錦"}, {"code": "1597", "name": "直得"}, {"code": "1785", "name": "光洋科"}, {"code": "3017", "name": "奇鋐"}, {"code": "3529", "name": "力旺"}, {"code": "3675", "name": "德微"}, {"code": "4542", "name": "科嶠"}, {"code": "4577", "name": "達航科技"}, {"code": "4722", "name": "國精化"}, {"code": "4919", "name": "新唐"}, {"code": "5228", "name": "鈺鎧"}, {"code": "5285", "name": "界霖"}, {"code": "6182", "name": "合晶"}, {"code": "6206", "name": "飛捷科技"}, {"code": "6257", "name": "矽格"}, {"code": "6278", "name": "台表科"}, {"code": "6651", "name": "全宇昕"}, {"code": "6706", "name": "惠特"}, {"code": "6715", "name": "嘉基"}, {"code": "6727", "name": "亞泰金屬"}, {"code": "6830", "name": "汎銓"}, {"code": "6869", "name": "雲豹能源"}, {"code": "7722", "name": "連加網路"}, {"code": "8027", "name": "鈦昇"}, {"code": "8042", "name": "金山電"}, {"code": "8103", "name": "瀚荃"}, {"code": "8261", "name": "富鼎"}], "schedule": [{"name": "每日總經儀表板", "cron": "每日 08:00／20:00（早晚班 cron）", "desc": "抓 Yahoo/FRED 數據 → 生成 HTML → push GitHub Pages", "last_run": "2026-07-12 08:13", "auto": true}, {"name": "每日盤後", "cron": "收盤後手動觸發「每日盤後」", "desc": "股價更新 → 13 位客戶報告 → AUM 彙總 → 現金水位 → 持股風險", "last_run": "2026-07-11 23:36", "data_date": "2026/07/09", "auto": false}, {"name": "本週工作彙整", "cron": "每週五 15:00（cron）", "desc": "三大業務 × 三層狀態，兩頁 PDF", "last_run": "2026-06-05 15:00", "auto": true}, {"name": "月初下單策略", "cron": "每月初手動觸發", "desc": "全客戶再平衡：目標曝險 → 整張優化 → 處置股查核 → 6 頁 PDF", "last_run": null, "auto": false}, {"name": "每週併購新聞", "cron": "手動觸發「併購週報」", "desc": "台灣／大陸港股／全球三線掃描，YouTube M&A Hunter 素材", "last_run": null, "auto": false}], "events": {"order_day": false, "earnings_season": false, "labels": []}, "halls": {"macro": {"kpis": [{"label": "三大法人買賣超（07/09）", "val": "-350.2 億", "chg": -350.2}, {"label": "　外資", "val": "-472.5 億", "chg": -472.5}, {"label": "　投信", "val": "+199.0 億", "chg": 199.0}, {"label": "S&P 500", "val": "7,575（多頭排列）", "chg": null}, {"label": "S&P RSI", "val": "58.3（中性偏多）", "chg": null}, {"label": "美元／台幣", "val": "32.099", "chg": -0.01}, {"label": "VIX（07/10）", "val": "15.03", "chg": null}, {"label": "Fear & Greed", "val": "26（Fear）", "chg": null}, {"label": "Put/Call Ratio", "val": "0.55", "chg": null}, {"label": "黃金", "val": "4,114", "chg": -0.65}], "updated": "2026/07/12 08:13", "market_date": "2026/07/10"}, "industry": {"tagged": 206, "tier3_n": 85, "pools_ge3": 36, "tier1_top": [["電子上游", 71], ["半導體", 37], ["電子下游", 35], ["傳產", 16], ["電子中游", 12], ["金融", 10]], "version": "v0.1", "updated": "2026-04-30", "themes": ["BBU", "BMC晶片", "CCL", "CPO", "CPU", "IC封測", "Micro LED CPO", "PCB", "低軌衛星", "先進封裝", "功率元件/導線架", "半導體設備", "散熱", "機器人/半導體設備", "滑軌", "特化", "矽晶圓", "矽智財(IP)/ASIC", "被動元件"]}, "stocks": {"list": [{"code": "1440", "name": "南紡", "files": 1}, {"code": "1582", "name": "信錦", "files": 4}, {"code": "1597", "name": "直得", "files": 1}, {"code": "1785", "name": "光洋科", "files": 1}, {"code": "3017", "name": "奇鋐", "files": 1}, {"code": "3529", "name": "力旺", "files": 1}, {"code": "3675", "name": "德微", "files": 4}, {"code": "4542", "name": "科嶠", "files": 1}, {"code": "4577", "name": "達航科技", "files": 1}, {"code": "4722", "name": "國精化", "files": 1}, {"code": "4919", "name": "新唐", "files": 5}, {"code": "5228", "name": "鈺鎧", "files": 2}, {"code": "5285", "name": "界霖", "files": 4}, {"code": "6182", "name": "合晶", "files": 4}, {"code": "6206", "name": "飛捷科技", "files": 5}, {"code": "6257", "name": "矽格", "files": 8}, {"code": "6278", "name": "台表科", "files": 4}, {"code": "6651", "name": "全宇昕", "files": 4}, {"code": "6706", "name": "惠特", "files": 1}, {"code": "6715", "name": "嘉基", "files": 1}, {"code": "6727", "name": "亞泰金屬", "files": 1}, {"code": "6830", "name": "汎銓", "files": 5}, {"code": "6869", "name": "雲豹能源", "files": 2}, {"code": "7722", "name": "連加網路", "files": 0}, {"code": "8027", "name": "鈦昇", "files": 4}, {"code": "8042", "name": "金山電", "files": 5}, {"code": "8103", "name": "瀚荃", "files": 4}, {"code": "8261", "name": "富鼎", "files": 4}], "total_files": 79}, "teaching": {"courses": [{"t": "這座村是什麼", "d": "零虛構觀察站 — 每棟建築對應一個真實運轉中的系統，數據與內部報告同源"}, {"t": "估值方法論", "d": "80% P/E（五大類規則庫：成長／獲利／護城河／風險／流動性）＋ 20% DCF 交叉驗證"}, {"t": "高成長題材估值", "d": "CAGR ≥25% 適用 PEG 1.0 為合理價底；R/R ≥3.0 才進 conviction trade"}, {"t": "風險紀律", "d": "HHI 集中度／Beta（2Y 週線 vs 加權）／年化波動率，每日盤後自動掃描"}, {"t": "月初再平衡", "d": "目標曝險（順序＝優先序）→ 整張優化 ±1.5pp → 處置股查核 → 分日下單"}]}}, "holidays": ["2026-07-10"], "links": {"dashboard": "https://jeffhsu1216.github.io/ma-hunter-macro-dashboard/"}, "anon": true};
+window.VILLAGE_DATA = {"meta": {"village": "獵戶村 ORION VILLAGE", "owner": "Jeff Hsu（徐家恩）", "generated_at": "2026-07-14 15:55", "data_date": "2026/07/14"}, "level": {"lv": 21, "title": "弓箭手", "emoji": "🏹", "next_title": "獵人", "next_need": 9, "route": ["弓箭手 Lv.10", "獵人 Lv.30", "遊俠 Lv.70", "箭神 Lv.120"]}, "clients": [], "totals": {"clients_n": 13, "aum": 58717872, "ret": 33.66, "principal": null, "pnl": null, "cash": null, "loan": null, "cash_pct": null}, "skills": [{"name": "研究報告", "module": "EquityResearch", "count": 27, "bar": "▓▓▓░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "公司摘要", "module": "CompanySummary (= TeaserPPT+Comps+DCF)", "count": 6, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "Teaser(保密項目)", "module": "Teaser (168公司網)", "count": 7, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "168公司網"}, {"name": "盡調清單", "module": "DueDiligence", "count": 4, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "併購案件後續追蹤", "module": "PastDealsTracking", "count": 7, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "法說會感謝信", "module": "Thank_You_Letter", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "拜訪客戶"}, {"name": "會議紀錄", "module": "Meeting_Minutes", "count": 3, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "行政事務"}, {"name": "本週工作彙整", "module": "WeeklyReview", "count": 4, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "行政事務"}, {"name": "每週併購新聞", "module": "MA_Weekly", "count": 19, "bar": "▓▓▓░░", "cat": "Youtuber", "subcat": null}, {"name": "會前Q&A準備", "module": "MeetingPrep", "count": 6, "bar": "▓░░░░", "cat": "圖靈金融", "subcat": "拜訪客戶"}, {"name": "每日盤後", "module": "DailyClose", "count": 112, "bar": "▓▓▓▓▓", "cat": "個人基金", "subcat": null}, {"name": "月選股資金配置", "module": "MonthlyAllocation", "count": 4, "bar": "▓░░░░", "cat": "個人基金", "subcat": null}, {"name": "月初下單策略", "module": "MonthlyOrderStrategy", "count": 10, "bar": "▓▓░░░", "cat": "個人基金", "subcat": null}, {"name": "月初選股分析", "module": "Screening", "count": 9, "bar": "▓▓░░░", "cat": "投資分析", "subcat": null}, {"name": "公司研究追蹤", "module": "CompanyOverview_AutoAppend", "count": 10, "bar": "▓▓░░░", "cat": "投資分析", "subcat": null}, {"name": "每日總經儀表板", "module": "MacroDashboard", "count": 89, "bar": "▓▓▓▓▓", "cat": "Youtuber", "subcat": null}, {"name": "製作Shorts", "module": "MAContentCreator", "count": 1, "bar": "░░░░░", "cat": "Youtuber", "subcat": null}, {"name": "財報更新", "module": "EarningsUpdate", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "CIM", "module": "CIM", "count": 2, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "168公司網"}, {"name": "基金獎金分成", "module": "ReferralBonus", "count": 1, "bar": "░░░░░", "cat": "圖靈金融", "subcat": "圖靈併購"}, {"name": "獵戶村", "module": "OrionVillage", "count": 2, "bar": "░░░░░", "cat": "其他", "subcat": null}], "subskills": [{"name": "Teaser(PPT)", "module": "TeaserPPT", "parent": "公司摘要", "count": 12}, {"name": "同業比較", "module": "Comps", "parent": "公司摘要", "count": 21}, {"name": "DCF Model", "module": "DCF", "parent": "公司摘要", "count": 11}], "companies": [], "schedule": [{"name": "每日總經儀表板", "cron": "每日 08:00／20:00（早晚班 cron）", "desc": "抓 Yahoo/FRED 數據 → 生成 HTML → push GitHub Pages", "last_run": "2026-07-14 08:10", "auto": true}, {"name": "每日盤後", "cron": "收盤後手動觸發「每日盤後」", "desc": "股價更新 → 13 位客戶報告 → AUM 彙總 → 現金水位 → 持股風險", "last_run": "2026-07-14 15:09", "data_date": "2026/07/14", "auto": false}, {"name": "本週工作彙整", "cron": "每週五 15:00（cron）", "desc": "三大業務 × 三層狀態，兩頁 PDF", "last_run": "2026-06-05 15:00", "auto": true}, {"name": "月初下單策略", "cron": "每月初手動觸發", "desc": "全客戶再平衡：目標曝險 → 整張優化 → 處置股查核 → 6 頁 PDF", "last_run": null, "auto": false}, {"name": "每週併購新聞", "cron": "手動觸發「併購週報」", "desc": "台灣／大陸港股／全球三線掃描，YouTube M&A Hunter 素材", "last_run": null, "auto": false}], "events": {"order_day": false, "earnings_season": false, "labels": []}, "halls": {"macro": {"kpis": [{"label": "三大法人買賣超（07/13）", "val": "-180.8 億", "chg": -180.8}, {"label": "　外資", "val": "-195.6 億", "chg": -195.6}, {"label": "　投信", "val": "+125.8 億", "chg": 125.8}, {"label": "S&P 500", "val": "7,515（多頭排列）", "chg": null}, {"label": "S&P RSI", "val": "61.6（偏多）", "chg": null}, {"label": "美元／台幣", "val": "32.161", "chg": -0.03}, {"label": "VIX（07/13）", "val": "17.16", "chg": null}, {"label": "Fear & Greed", "val": "22（Extreme Fear）", "chg": null}, {"label": "Put/Call Ratio", "val": "0.55", "chg": null}, {"label": "黃金", "val": "4,008", "chg": 0.05}], "updated": "2026/07/14 08:10", "market_date": "2026/07/14", "vix_series": [{"d": "06/15", "v": 16.2}, {"d": "06/16", "v": 16.41}, {"d": "06/17", "v": 18.44}, {"d": "06/18", "v": 16.4}, {"d": "06/22", "v": 17.28}, {"d": "06/23", "v": 19.49}, {"d": "06/24", "v": 18.63}, {"d": "06/25", "v": 18.89}, {"d": "06/26", "v": 18.41}, {"d": "06/29", "v": 17.65}, {"d": "06/30", "v": 16.45}, {"d": "07/01", "v": 16.59}, {"d": "07/02", "v": 16.15}, {"d": "07/06", "v": 15.57}, {"d": "07/07", "v": 16.13}, {"d": "07/08", "v": 16.9}, {"d": "07/09", "v": 15.84}, {"d": "07/10", "v": 15.03}, {"d": "07/13", "v": 17.16}]}, "industry": {"tagged": 206, "tier3_n": 85, "pools_ge3": 36, "tier1_top": [["電子上游", 71], ["半導體", 37], ["電子下游", 35], ["傳產", 16], ["電子中游", 12], ["金融", 10]], "version": "v0.1", "updated": "2026-04-30", "themes": ["BBU", "BMC晶片", "CCL", "CPO", "CPU", "IC封測", "Micro LED CPO", "PCB", "低軌衛星", "先進封裝", "功率元件/導線架", "半導體設備", "散熱", "機器人/半導體設備", "滑軌", "特化", "矽晶圓", "矽智財(IP)/ASIC", "被動元件"]}, "industry_map": {"2231": ["為升", "電子下游", "車用電子", "車用電子-感測/雷達"], "2252": ["為昇科", "電子下游", "車用電子", "車用電子-感測/雷達"], "2305": ["全友", "生技醫療", "醫材", "醫材-雷射/影像"], "2317": ["鴻海", "電子中游", "EMS代工", "EMS代工"], "2327": ["國巨", "電子上游", "被動元件", "被動元件-MLCC"], "2328": ["廣宇", "電子上游", "連接器", "連接器-線材/纜線"], "2347": ["聯強", "電子通路", "IC通路", "IC通路-AI伺服器/IT"], "2360": ["致茂", "半導體", "半導體測試", "半導體測試-測試代工"], "2375": ["凱美", "電子上游", "被動元件", "被動元件-鋁質電容"], "2392": ["正崴", "電子上游", "連接器", "連接器-Apple/消費"], "2395": ["研華", "電子下游", "工業電腦", "工業電腦-龍頭"], "2397": ["友通", "電子下游", "工業電腦", "工業電腦-工控/工具機"], "2414": ["精技", "電子下游", "工業電腦", "工業電腦-通路/維運"], "2417": ["圓剛", "電子下游", "影像/AV", "影像/AV"], "2428": ["興勤", "電子上游", "保護元件", "保護元件"], "2462": ["良得電", "電子上游", "連接器", "連接器-線材/纜線"], "2472": ["立隆電", "電子上游", "被動元件", "被動元件-鋁質電容"], "2478": ["大毅", "電子上游", "被動元件", "被動元件-電阻"], "2482": ["連宇", "電子下游", "工業電腦", "工業電腦-POS零售"], "2484": ["希華", "電子上游", "被動元件", "被動元件-石英元件"], "2492": ["華新科", "電子上游", "被動元件", "被動元件-MLCC"], "2497": ["怡利電", "電子下游", "車用電子", "車用電子-HUD/車載"], "2548": ["華固", "營建", "營建", "住宅建設"], "2603": ["長榮海", "航運", "航運", "貨櫃航運"], "2605": ["新興", "航運", "航運", "散裝航運"], "2887": ["台新金", "金融", "金控", "金控-民營"], "2897": ["王道銀行", "金融", "銀行", "銀行-專業/數位"], "2904": ["匯僑", "服務", "物流", "石化儲運"], "3003": ["健和興", "電子上游", "連接器", "連接器-車用"], "3005": ["神基", "電子下游", "工業電腦", "工業電腦-強固型/軍工"], "3010": ["華立", "電子通路", "半導體材料通路", "半導體材料通路"], "3022": ["威強電", "電子下游", "工業電腦", "工業電腦-醫療"], "3023": ["信邦", "電子上游", "連接器", "連接器-工業/IPC"], "3026": ["禾伸堂", "電子上游", "被動元件", "被動元件-MLCC"], "3036": ["文曄", "電子通路", "IC通路", "IC通路-AI伺服器/IT"], "3042": ["晶技", "電子上游", "被動元件", "被動元件-石英元件"], "3046": ["建碁", "電子下游", "工業電腦", "工業電腦-車載/儲能"], "3088": ["艾訊", "電子下游", "工業電腦", "工業電腦-龍頭"], "3089": ["億杰", "綠能/環保", "太陽能", "太陽能-上游/漿料"], "3090": ["日電貿", "電子上游", "被動元件", "被動元件-MLCC"], "3092": ["鴻碩", "電子上游", "連接器", "連接器-車用"], "3128": ["昇銳", "電子下游", "監控/安防", "監控/安防"], "3131": ["弘塑", "半導體", "半導體設備", "半導體設備-黃光/CMP"], "3152": ["璟德", "電子上游", "被動元件", "被動元件-整合元件/天線"], "3163": ["波若威", "電子上游", "光通訊", "光通訊-CPO/矽光子"], "3167": ["大量", "傳產", "機械", "滑軌/螺桿"], "3209": ["全科", "電子通路", "IC通路", "IC通路-AI伺服器/IT"], "3213": ["茂訊", "電子下游", "工業電腦", "工業電腦-通路/維運"], "3217": ["優群", "電子上游", "連接器", "連接器-高速/AI伺服器"], "3221": ["台嘉碩", "電子上游", "被動元件", "被動元件-石英元件"], "3236": ["千如", "電子上游", "被動元件", "被動元件-電感"], "3293": ["鈊象", "軟體", "遊戲", "遊戲/博弈"], "3317": ["尼克森", "半導體", "IC設計", "IC設計-功率半導體"], "3322": ["建舜電", "電子上游", "連接器", "連接器-Apple/消費"], "3357": ["臺慶科", "電子上游", "被動元件", "被動元件-電感"], "3380": ["明泰", "電子下游", "通訊網路", "通訊網路設備"], "3388": ["崇越電", "電子通路", "半導體材料通路", "半導體材料通路"], "3416": ["融程電", "電子下游", "工業電腦", "工業電腦-車載/儲能"], "3454": ["晶睿", "電子下游", "監控/安防", "監控/安防"], "3501": ["維熹", "電子上游", "連接器", "連接器-線材/纜線"], "3526": ["凡甲", "電子上游", "連接器", "連接器-高速/AI伺服器"], "3529": ["力旺", "半導體", "IC設計", "IC設計-ASIC/IP"], "3533": ["嘉澤", "電子上游", "連接器", "連接器-高速/AI伺服器"], "3552": ["同致", "電子下游", "車用電子", "車用電子-感測/雷達"], "3555": ["博士旺", "電子通路", "IC通路", "IC通路-AI伺服器/IT"], "3611": ["鼎翰", "電子下游", "工業電腦", "工業電腦-印表機"], "3624": ["光頡", "電子上游", "被動元件", "被動元件-電阻"], "3665": ["貿聯-KY", "電子上游", "連接器", "連接器-工業/IPC"], "3669": ["圓展", "電子下游", "影像/AV", "影像/AV"], "3691": ["碩禾", "綠能/環保", "太陽能", "太陽能-上游/漿料"], "3702": ["大聯大", "電子通路", "IC通路", "IC通路-AI伺服器/IT"], "3710": ["連展投控", "電子上游", "連接器", "連接器-RJ45/網通"], "4153": ["鈺緯", "電子下游", "工業電腦", "工業電腦-醫療"], "4542": ["科嶠", "半導體", "半導體測試", "半導體測試-測試代工"], "4577": ["達航科技", "半導體", "半導體設備", "半導體設備-廠務/化學供應"], "4741": ["泓瀚", "生技醫療", "醫材", "醫材CDMO"], "4760": ["勤凱", "電子上游", "被動元件", "被動元件-上游材料"], "4768": ["晶呈科技", "半導體", "半導體材料", "半導體材料-特化品/光阻"], "4904": ["遠傳", "服務", "電信", "電信"], "4923": ["力士", "半導體", "IC設計", "IC設計-功率半導體"], "4949": ["有成精密", "綠能/環保", "太陽能", "太陽能-上游/漿料"], "4971": ["IET-KY", "電子上游", "光通訊", "光通訊-CPO/矽光子"], "5228": ["鈺鎧", "電子上游", "被動元件", "被動元件-電感"], "5258": ["虹堡", "電子下游", "工業電腦", "工業電腦-POS零售"], "5299": ["杰力", "半導體", "IC設計", "IC設計-功率半導體"], "5328": ["華容", "電子上游", "被動元件", "被動元件-塑膠薄膜電容"], "5345": ["天揚", "電子上游", "被動元件", "被動元件-上游材料"], "5386": ["青雲", "電子通路", "AI伺服器代理", "AI伺服器代理/記憶體通路"], "5457": ["宣德", "電子上游", "連接器", "連接器-Apple/消費"], "5489": ["彩富", "電子下游", "監控/安防", "監控/安防"], "5490": ["同亨", "電子下游", "工業電腦", "工業電腦-POS零售"], "6015": ["宏遠證", "金融", "證券", "證券/期貨"], "6111": ["大宇資", "軟體", "遊戲", "遊戲/博弈"], "6126": ["信音", "電子上游", "連接器", "連接器-高速光纖/CPO"], "6127": ["九豪", "電子上游", "被動元件", "被動元件-上游材料"], "6155": ["鈞寶", "電子上游", "被動元件", "被動元件-電感"], "6160": ["欣技", "電子下游", "工業電腦", "工業電腦-通路/維運"], "6166": ["凌華", "電子下游", "工業電腦", "工業電腦-AI/邊緣運算"], "6173": ["信昌電", "電子上游", "被動元件", "被動元件-MLCC"], "6174": ["安碁", "電子上游", "被動元件", "被動元件-石英元件"], "6175": ["立敦", "電子上游", "被動元件", "被動元件-上游材料"], "6187": ["萬潤", "半導體", "半導體設備", "先進封裝設備(CoWoS/SoIC)"], "6190": ["萬泰科", "電子上游", "連接器", "連接器-線材/纜線"], "6197": ["佳必琪", "電子上游", "連接器", "連接器-高速/AI伺服器"], "6204": ["艾華", "電子上游", "被動元件", "被動元件-電阻"], "6205": ["詮欣", "電子上游", "連接器", "連接器-工業/IPC"], "6206": ["飛捷", "電子下游", "工業電腦", "工業電腦-POS零售"], "6207": ["雷科", "電子上游", "被動元件", "被動元件-上游材料"], "6217": ["中探針", "半導體", "半導體測試", "半導體測試-探針卡/測試載板"], "6224": ["聚鼎", "電子上游", "保護元件", "保護元件"], "6234": ["高僑", "半導體", "半導體設備", "半導體設備-黃光/CMP"], "6245": ["立端", "電子下游", "工業電腦", "工業電腦-網安/網通"], "6279": ["胡連", "電子上游", "連接器", "連接器-車用"], "6284": ["佳邦", "電子上游", "被動元件", "被動元件-整合元件/天線"], "6290": ["良維", "電子上游", "連接器", "連接器-車用"], "6291": ["沛亨", "半導體", "IC設計", "IC設計-PMIC電源管理"], "6432": ["今展科", "電子上游", "被動元件", "被動元件-電感"], "6435": ["大中", "半導體", "IC設計", "IC設計-功率半導體"], "6449": ["鈺邦", "電子上游", "被動元件", "被動元件-鋁質電容"], "6515": ["穎崴", "半導體", "半導體測試", "半導體測試-探針卡/測試載板"], "6568": ["宏觀", "半導體", "IC設計", "IC設計-RFIC射頻"], "6577": ["勁豐", "電子下游", "工業電腦", "工業電腦-博弈/特殊"], "6579": ["研揚", "電子下游", "工業電腦", "工業電腦-AI/邊緣運算"], "6584": ["南俊國際", "傳產", "機械", "滑軌/螺桿"], "6588": ["東典光電", "電子上游", "光電元件", "光電元件-LED"], "6613": ["朋億", "半導體", "半導體設備", "半導體設備-廠務/化學供應"], "6640": ["均華", "半導體", "半導體設備", "先進封裝設備(CoWoS/SoIC)"], "6642": ["富致", "電子上游", "保護元件", "保護元件"], "6651": ["全宇昕", "半導體", "IC設計", "IC設計-功率半導體"], "6658": ["聯策", "半導體", "半導體測試", "半導體測試-測試代工"], "6679": ["鈺太", "半導體", "IC設計", "IC設計-影像感測/MEMS"], "6680": ["鑫創電子", "電子下游", "工業電腦", "工業電腦-車載/儲能"], "6683": ["雍智科技", "半導體", "半導體測試", "半導體測試-探針卡/測試載板"], "6693": ["廣閎科", "半導體", "IC設計", "IC設計-MOSFET驅動/馬達IC"], "6715": ["嘉基", "電子上游", "連接器", "連接器-高速光纖/CPO"], "6716": ["應廣", "半導體", "IC設計", "IC設計-ASIC/IP"], "6727": ["亞泰金屬", "電子上游", "連接器", "連接器-機殼/精密件"], "6735": ["美達科技", "傳產", "汽車零組件", "汽車零組件-沖壓鑄件/航太"], "6761": ["穩得", "電子上游", "保護元件", "保護元件"], "6792": ["詠業", "電子上游", "被動元件", "被動元件-整合元件/天線"], "6829": ["千附精密", "半導體", "半導體設備", "半導體設備-黃光/CMP"], "6861": ["睿生光電", "生技醫療", "醫材", "醫材-平板感測"], "6894": ["衛司特", "傳產", "化工", "化工-貴金屬回收"], "7712": ["博盛", "半導體", "IC設計", "IC設計-功率半導體"], "7728": ["光焱科技", "半導體", "半導體測試", "半導體測試-測試代工"], "7734": ["印能科技", "半導體", "半導體設備", "先進封裝設備(CoWoS/SoIC)"], "8027": ["鈦昇", "半導體", "半導體設備", "先進封裝設備(CoWoS/SoIC)"], "8042": ["金山電", "電子上游", "被動元件", "被動元件-鋁質電容"], "8043": ["蜜望實", "電子上游", "被動元件", "被動元件-MLCC"], "8050": ["廣積", "電子下游", "工業電腦", "工業電腦-通路/維運"], "8076": ["伍豐", "電子下游", "工業電腦", "工業電腦-博弈/特殊"], "8091": ["翔名", "電子通路", "半導體材料通路", "半導體材料通路"], "8103": ["瀚荃", "電子上游", "連接器", "連接器-高速/AI伺服器"], "8114": ["振樺電", "電子下游", "工業電腦", "工業電腦-POS零售"], "8121": ["越峰", "電子上游", "被動元件", "被動元件-上游材料"], "8147": ["正淩", "電子上游", "連接器", "連接器-高速/AI伺服器"], "8182": ["加高", "電子上游", "被動元件", "被動元件-石英元件"], "8210": ["勤誠", "電子中游", "機殼", "機殼/伺服器機構"], "8234": ["新漢", "電子下游", "工業電腦", "工業電腦-強固型/軍工"], "8261": ["富鼎", "半導體", "IC設計", "IC設計-功率半導體"], "8289": ["泰藝", "電子上游", "被動元件", "被動元件-石英元件"], "8383": ["千附", "半導體", "半導體設備", "半導體設備-黃光/CMP"], "8431": ["匯鑽科", "電子上游", "連接器", "連接器-機殼/精密件"], "8438": ["昶昕", "傳產", "化工", "化工-貴金屬回收"], "8499": ["鼎炫-KY", "電子上游", "連接器", "連接器-高速光纖/CPO"], "8996": ["高力", "電子中游", "散熱", "散熱-液冷/CDU"], "1590": ["亞德客-KY", "傳產", "機械", "氣動元件/自動化"], "1597": ["直得", "傳產", "機械", "滑軌/螺桿"], "1714": ["和桐", "傳產", "化工", "化工-石化原料"], "1785": ["光洋科", "傳產", "化工", "化工-貴金屬回收"], "2010": ["春源", "傳產", "鋼鐵", "鋼鐵-冷軋/鋼構"], "2236": ["百達-KY", "傳產", "汽車零組件", "汽車零組件-塑件"], "2330": ["台積電", "半導體", "晶圓代工", "Foundry晶圓代工"], "2454": ["聯發科", "半導體", "IC設計", "IC設計-記憶體控制"], "2308": ["台達電", "電子上游", "PCB", "PCB-載板/HDI"], "2382": ["廣達", "電子中游", "EMS", "AI伺服器組裝"], "2376": ["技嘉", "電子中游", "主機板", "AI伺服器組裝"], "3231": ["緯創", "電子中游", "EMS", "AI伺服器組裝"], "6669": ["緯穎", "電子中游", "EMS", "AI伺服器組裝"], "2356": ["英業達", "電子中游", "EMS", "AI伺服器組裝"], "2357": ["華碩", "電子中游", "主機板", "主機板/PC板卡"], "3017": ["奇鋐", "電子中游", "散熱", "散熱-液冷/CDU"], "3338": ["泰碩", "電子中游", "散熱", "散熱-液冷/CDU"], "3211": ["順達", "電子中游", "散熱", "散熱-液冷/CDU"], "2311": ["日月光投控", "半導體", "封測", "OSAT封測"], "6147": ["頎邦", "半導體", "封測", "OSAT封測"], "6271": ["同欣電", "半導體", "封測", "OSAT封測"], "3037": ["欣興", "電子上游", "PCB", "封測載板/Substrate"], "8046": ["南電", "電子上游", "PCB", "封測載板/Substrate"], "6213": ["聯茂", "電子上游", "PCB", "PCB-CCL/銅箔基板"], "2412": ["中華電", "服務", "電信", "電信"], "3045": ["台灣大", "服務", "電信", "電信"], "2882": ["國泰金", "金融", "金控", "金控-民營"], "2881": ["富邦金", "金融", "金控", "金控-民營"], "2891": ["中信金", "金融", "金控", "金控-民營"], "2886": ["兆豐金", "金融", "金控", "金控-公股"], "2880": ["華南金", "金融", "金控", "金控-公股"], "2892": ["第一金", "金融", "金控", "金控-公股"], "5880": ["合庫金", "金融", "金控", "金控-公股"], "1216": ["統一", "傳產", "食品", "食品-龍頭"], "2912": ["統一超", "服務", "通路", "百貨/餐飲"], "1301": ["台塑", "傳產", "化工", "化工-石化原料"], "1303": ["南亞", "傳產", "化工", "化工-石化原料"], "2002": ["中鋼", "傳產", "鋼鐵", "鋼鐵-冷軋/鋼構"], "2049": ["上銀", "傳產", "機械", "滑軌/螺桿"], "5483": ["中美晶", "半導體", "半導體材料", "半導體材料-矽晶圓"]}, "stocks": {"list": [], "total_files": null}, "teaching": {"courses": [{"t": "這座村是什麼", "d": "零虛構觀察站 — 每棟建築對應一個真實運轉中的系統，數據與內部報告同源"}, {"t": "估值方法論", "d": "80% P/E（五大類規則庫：成長／獲利／護城河／風險／流動性）＋ 20% DCF 交叉驗證"}, {"t": "高成長題材估值", "d": "CAGR ≥25% 適用 PEG 1.0 為合理價底；R/R ≥3.0 才進 conviction trade"}, {"t": "風險紀律", "d": "HHI 集中度／Beta（2Y 週線 vs 加權）／年化波動率，每日盤後自動掃描"}, {"t": "月初再平衡", "d": "目標曝險（順序＝優先序）→ 整張優化 ±1.5pp → 處置股查核 → 分日下單"}]}}, "holidays": ["2026-07-10"], "links": {"dashboard": "https://jeffhsu1216.github.io/ma-hunter-macro-dashboard/"}, "anon": true};
 </script>
 <script>
 /**
@@ -1191,30 +1250,28 @@ window.VILLAGE_DATA = {"meta": {"village": "獵戶村 ORION VILLAGE", "owner": "
 </script>
 <script>
 /* ══════════════════════════════════════════════════════════════
-   獵戶村 ORION VILLAGE — main.js (Three.js r128)
-   零虛構原則：所有面板數據來自 village_data.js（真實系統萃取）
+   獵戶村 ORION VILLAGE v2 — 遊戲化投資村莊
+   規格來源：Jeff 手稿（2026-07-14）
+   ・進村動畫 → NPC 帶入中央大廳 → 村民登錄（Tailor Made）
+   ・六大場館：總經／知識／產業鏈／併購／Jeff 基金／待開發
+   ・NPC｜路人｜真人 三種角色；每日登入 +XP；升等解鎖
+   ・零虛構：場館數據來自 village_data.js（真實系統萃取）
    ══════════════════════════════════════════════════════════════ */
 'use strict';
 const D = window.VILLAGE_DATA || {};
 
-/* ── 小工具 ─────────────────────────────────────────────── */
+/* ── 工具 ─────────────────────────────────────────────── */
 function fmtMoney(v) {
   if (v == null) return '—';
-  const sign = v < 0 ? '-' : '';
-  const a = Math.abs(v);
-  if (a >= 1e8) return sign + (a / 1e8).toFixed(2) + ' 億';
-  if (a >= 1e4) return sign + Math.round(a / 1e4).toLocaleString() + ' 萬';
-  return sign + Math.round(a).toLocaleString() + ' 元';
+  const s = v < 0 ? '-' : '', a = Math.abs(v);
+  if (a >= 1e8) return s + (a / 1e8).toFixed(2) + ' 億';
+  if (a >= 1e4) return s + Math.round(a / 1e4).toLocaleString() + ' 萬';
+  return s + Math.round(a).toLocaleString() + ' 元';
 }
-function fmtPct(v) { return v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
-function fmtSigned(v) { return v == null ? '—' : (v >= 0 ? '+' : '') + fmtMoney(v); }
-function pnlCls(v) { return v == null ? '' : (v >= 0 ? 'up' : 'down'); }  // 台股慣例：紅漲綠跌
+function fmtPct(v) { return v == null ? '—' : (v >= 0 ? '+' : '') + Number(v).toFixed(2) + '%'; }
+function pnlCls(v) { return v == null ? '' : (v >= 0 ? 'up' : 'down'); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function kv(k, v, cls) { return `<div class="kv"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`; }
-
-/* 村莊事件（來自資料引擎的真實訊號；__orion.forceEvents 可強制預覽） */
-const EV = Object.assign({ order_day: false, earnings_season: false, labels: [] }, D.events || {});
-
 function taipeiNow() {
   try { return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' })); }
   catch (e) { return new Date(); }
@@ -1227,14 +1284,47 @@ function marketState(d) {
   const wd = d.getDay(), h = d.getHours() + d.getMinutes() / 60;
   if (wd === 0 || wd === 6) return { open: false, label: '週末休市' };
   if (isHoliday(d)) return { open: false, label: '休市日' };
-  if (h >= 9 && h < 13.5) return { open: true, label: '● 開盤中 09:00–13:30' };
+  if (h >= 9 && h < 13.5) return { open: true, label: '● 開盤中' };
   return { open: false, label: h < 9 ? '開盤前' : '已收盤' };
 }
+const $ = id => document.getElementById(id);
 
-/* ── 場景基礎 ───────────────────────────────────────────── */
+/* ── 村民證（localStorage；XP／等級） ─────────────────── */
+const LV_XP = [0, 20, 50, 100, 180];   // Lv1..Lv5 門檻
+let BADGE = null;
+function loadBadge() {
+  try { BADGE = JSON.parse(localStorage.getItem('orion_badge_v2')) || null; } catch (e) { BADGE = null; }
+}
+function saveBadge() { try { localStorage.setItem('orion_badge_v2', JSON.stringify(BADGE)); } catch (e) {} }
+function lvOf(xp) { let lv = 1; LV_XP.forEach((t, i) => { if (xp >= t) lv = i + 1; }); return lv; }
+function xpGain(n, why) {
+  if (!BADGE) return;
+  BADGE.xp += n;
+  const nl = lvOf(BADGE.xp);
+  const up = nl > BADGE.lv; BADGE.lv = nl;
+  saveBadge(); renderBadge();
+  toast(`+${n} XP　${why}${up ? `　🎉 升到 Lv.${nl}！` : ''}`);
+  if (up) refreshPlayerBadge();
+}
+function renderBadge() {
+  const el = $('hud-badge');
+  if (!BADGE) { el.innerHTML = '尚未入村 — 跟著 NPC 完成村民登錄'; return; }
+  const cur = LV_XP[BADGE.lv - 1] || 0, next = LV_XP[BADGE.lv] || (BADGE.xp + 1);
+  const p = Math.min(100, Math.round((BADGE.xp - cur) / Math.max(1, next - cur) * 100));
+  el.innerHTML = `🎫 <b>${esc(BADGE.name)}</b>・Lv.${BADGE.lv}` +
+    `<span class="xpbar"><i style="width:${p}%"></i></span>` +
+    `<span style="color:#9e8e7e">${BADGE.xp} XP${BADGE.lv < 5 ? '／下一等 ' + next : '（滿級）'}</span>`;
+}
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.style.display = 'none'; }, 2600);
+}
+
+/* ── 場景 ─────────────────────────────────────────────── */
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1200);
-camera.position.set(78, 62, 118);
+camera.position.set(95, 60, 120);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
@@ -1245,29 +1335,25 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 document.body.appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 6, 0);
+controls.target.set(0, 4, 0);
 controls.enableDamping = true; controls.dampingFactor = 0.06;
-controls.maxPolarAngle = 1.42; controls.minDistance = 22; controls.maxDistance = 320;
+controls.maxPolarAngle = 1.44; controls.minDistance = 3; controls.maxDistance = 300;
 
 scene.fog = new THREE.Fog(0x0a1030, 150, 460);
-
 const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x3a4a30, 0.6); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 1.0);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.left = -130; sun.shadow.camera.right = 130;
-sun.shadow.camera.top = 130; sun.shadow.camera.bottom = -130;
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -110; sun.shadow.camera.right = 110;
+sun.shadow.camera.top = 110; sun.shadow.camera.bottom = -110;
 sun.shadow.camera.far = 500; sun.shadow.bias = -0.0004;
 scene.add(sun); scene.add(sun.target);
 const moon = new THREE.DirectionalLight(0x8899cc, 0.0); moon.position.set(-80, 100, -60); scene.add(moon);
 
-/* ── 材質/幾何工具 ─────────────────────────────────────── */
 function M(color, o) {
   o = o || {};
   return new THREE.MeshStandardMaterial({
-    color: color, roughness: o.rough != null ? o.rough : 0.85,
-    metalness: o.metal || 0, flatShading: !!o.flat,
-    emissive: o.emissive || 0x000000, emissiveIntensity: o.eI || 0,
+    color, roughness: o.rough != null ? o.rough : 0.85, metalness: o.metal || 0,
+    flatShading: !!o.flat, emissive: o.emissive || 0x000000, emissiveIntensity: o.eI || 0,
     transparent: !!o.alpha, opacity: o.alpha || 1,
   });
 }
@@ -1280,1476 +1366,633 @@ function mesh(geo, mat, x, y, z) {
 function box(w, h, d, mat, x, y, z) { return mesh(new THREE.BoxGeometry(w, h, d), mat, x, y, z); }
 function cyl(rt, rb, h, seg, mat, x, y, z) { return mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat, x, y, z); }
 
-/* 共用「窗燈」材質 ×3 — 夜晚集體點亮，暖/暗/冷三色差異化 + 微閃爍 */
-const winMat = new THREE.MeshStandardMaterial({ color: 0x18222e, emissive: 0xffc86e, emissiveIntensity: 0, roughness: .6 });
-const winMatB = new THREE.MeshStandardMaterial({ color: 0x16202b, emissive: 0xd8a34e, emissiveIntensity: 0, roughness: .6 });
-const winMatC = new THREE.MeshStandardMaterial({ color: 0x18222e, emissive: 0x9fd0e8, emissiveIntensity: 0, roughness: .6 });
-const winMats = [winMat, winMatB, winMatC];
-function addWindows(g, w, h, d, rows, cols, y0) {
-  const gw = 0.55, gh = 0.7;
-  for (const face of [1, -1]) {
-    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-      const win = new THREE.Mesh(new THREE.BoxGeometry(gw, gh, 0.06), winMats[(r * 7 + c * 3 + (face > 0 ? 0 : 1)) % 3]);
-      win.position.set(-w/2 + (c+1) * w/(cols+1), y0 + r * (h / rows), face * (d/2 + 0.04));
-      g.add(win);
-    }
-  }
-}
-/* 路燈材質 — 夜晚點亮 */
-const lampMat = new THREE.MeshStandardMaterial({ color: 0xfff2cc, emissive: 0xffdf99, emissiveIntensity: 0 });
-
-/* 文字 Sprite（中文 OK） */
 function textSprite(text, opt) {
   opt = opt || {};
   const fs = opt.fs || 44, pad = 18;
   const cv = document.createElement('canvas');
-  const ctx = cv.getContext('2d');
-  ctx.font = `${opt.bold ? 'bold ' : ''}${fs}px "PingFang TC","Heiti TC",sans-serif`;
-  const tw = ctx.measureText(text).width;
-  cv.width = Math.ceil(tw + pad * 2); cv.height = fs + pad * 2;
-  const c2 = cv.getContext('2d');
-  if (opt.bg) { c2.fillStyle = opt.bg; c2.beginPath();
-    c2.roundRect ? (c2.roundRect(0,0,cv.width,cv.height,14), c2.fill()) : c2.fillRect(0,0,cv.width,cv.height); }
-  c2.font = `${opt.bold ? 'bold ' : ''}${fs}px "PingFang TC","Heiti TC",sans-serif`;
-  c2.fillStyle = opt.color || '#fff';
-  c2.textAlign = 'center'; c2.textBaseline = 'middle';
-  c2.shadowColor = 'rgba(0,0,0,.6)'; c2.shadowBlur = 8;
-  c2.fillText(text, cv.width / 2, cv.height / 2);
-  const tex = new THREE.CanvasTexture(cv);
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: opt.opacity != null ? opt.opacity : 1, depthWrite: false }));
+  const m0 = cv.getContext('2d');
+  m0.font = `${opt.bold ? 'bold ' : ''}${fs}px "PingFang TC","Heiti TC",sans-serif`;
+  cv.width = Math.ceil(m0.measureText(text).width + pad * 2); cv.height = fs + pad * 2;
+  const c = cv.getContext('2d');
+  if (opt.bg) { c.fillStyle = opt.bg; c.fillRect(0, 0, cv.width, cv.height); }
+  if (opt.border) { c.strokeStyle = opt.border; c.lineWidth = 6; c.strokeRect(3, 3, cv.width - 6, cv.height - 6); }
+  c.font = `${opt.bold ? 'bold ' : ''}${fs}px "PingFang TC","Heiti TC",sans-serif`;
+  c.fillStyle = opt.color || '#fff';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 8;
+  c.fillText(text, cv.width / 2, cv.height / 2);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, opacity: opt.opacity != null ? opt.opacity : 1, depthWrite: false }));
   const s = opt.scale || 0.032;
   sp.scale.set(cv.width * s, cv.height * s, 1);
   return sp;
 }
 
-/* ── 點擊/懸停註冊 ─────────────────────────────────────── */
+/* 拾取 */
 const pickables = [];
 function register(root, info) {
   root.userData.info = info;
   root.traverse(o => { if (o.isMesh) { o.userData.pickRoot = root; pickables.push(o); } });
 }
 
-/* ── 地面／道路／街區底盤 ──────────────────────────────── */
-const ground = mesh(new THREE.CircleGeometry(150, 64), M(0x49703f, { rough: 1 }));
-ground.rotation.x = -Math.PI / 2; ground.castShadow = false; scene.add(ground);
-
-const plaza = mesh(new THREE.CircleGeometry(14, 48), M(0x8d8474, { rough: 1 }));
-plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.04; plaza.castShadow = false; scene.add(plaza);
-
-function districtPlate(x, z, w, d, color) {
-  const p = mesh(new THREE.BoxGeometry(w, 0.12, d), M(color, { rough: 1, alpha: 0.5 }), x, 0.02, z);
-  p.castShadow = false; scene.add(p);
-}
-districtPlate(0, -60, 62, 34, 0x6b6250);    // 圖靈金融（北）
-districtPlate(66, 8, 70, 52, 0x5d7050);     // 個人基金（東）
-districtPlate(-2, 68, 62, 36, 0x50645d);    // 投資研究（南）
-districtPlate(-62, 0, 42, 62, 0x5c566b);    // 傳播區（西）
-districtPlate(52, -52, 30, 26, 0x6e5b4a);   // 技能祭壇（東北）
-districtPlate(-54, 48, 42, 30, 0x565a70);   // 展示特區（西南，四大大廳原型）
-
-/* 環形道 + 放射道 */
-const roadMat = M(0x2c3038, { rough: 1 });
-const ring = mesh(new THREE.RingGeometry(24, 29, 64), roadMat); ring.rotation.x = -Math.PI/2; ring.position.y = 0.05; ring.castShadow = false; scene.add(ring);
-const RADIALS = [ -Math.PI/2, 0, Math.PI/2, Math.PI, -Math.PI/4, Math.PI * 0.75 ]; // N E S W NE SW(展示特區)
-for (const a of RADIALS) {
-  const len = 42, r0 = 26.5 + len / 2;
-  const rd = box(4, 0.1, len, roadMat, 0, 0.05, 0);
-  rd.rotation.y = -a + Math.PI / 2;
-  rd.position.set(Math.cos(a) * r0, 0.05, Math.sin(a) * r0);
-  rd.castShadow = false; scene.add(rd);
-}
-const inRoad = mesh(new THREE.RingGeometry(14, 24, 48, 1), M(0x3a3e46, { rough: 1, alpha: .5 }));
-inRoad.rotation.x = -Math.PI/2; inRoad.position.y = 0.03; inRoad.castShadow = false; scene.add(inRoad);
-
-/* 路燈 ×8 */
-for (let i = 0; i < 8; i++) {
-  const a = i / 8 * Math.PI * 2 + 0.3;
-  const g = new THREE.Group();
-  g.add(cyl(0.09, 0.12, 4.2, 6, M(0x333940), 0, 2.1, 0));
-  g.add(mesh(new THREE.SphereGeometry(0.34, 10, 10), lampMat, 0, 4.35, 0));
-  g.position.set(Math.cos(a) * 30.5, 0, Math.sin(a) * 30.5);
-  scene.add(g);
-}
-
-/* 區域名牌 */
-function districtSign(text, x, z, y) {
-  const sp = textSprite(text, { fs: 46, bold: true, color: '#f5e9c8', scale: 0.05, opacity: .92 });
-  sp.position.set(x, y || 17, z); scene.add(sp);
-}
-districtSign('🏛 圖靈金融區', 0, -60, 24);
-districtSign('🏦 個人基金區', 66, 8, 15);
-districtSign('🔭 投資研究區', -2, 68, 15);
-districtSign('📡 M&A HUNTER 傳播區', -62, 0, 22);
-districtSign('💎 技能祭壇', 52, -52, 14);
-districtSign('🏟 展示特區（大廳原型）', -54, 48, 16);
-
-/* ══════════════════════════════════════════════════════════
-   北區：圖靈金融
-   ══════════════════════════════════════════════════════════ */
-function buildTower101() {
-  const g = new THREE.Group();
-  const glass = M(0x3f8577, { rough: .35, metal: .55, flat: true });
-  g.add(box(11, 4, 11, M(0x5a5346), 0, 2, 0));                      // 裙樓
-  let y = 4;
-  for (let i = 0; i < 8; i++) {                                      // 8 節斗型（101 意象）
-    const r = 4.6 - i * 0.18, h = 3.7;
-    const seg = cyl(r * 1.16, r * 0.86, h, 4, glass, 0, y + h / 2, 0);
-    seg.rotation.y = Math.PI / 4;
-    g.add(seg); y += h;
-  }
-  g.add(cyl(0.9, 1.4, 2.2, 4, glass, 0, y + 1.1, 0)); y += 2.2;
-  g.add(cyl(0.06, 0.22, 7, 6, M(0xd8d8d8, { metal: .6 }), 0, y + 3.5, 0)); // 塔尖
-  const beacon = mesh(new THREE.SphereGeometry(0.32, 8, 8), new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0xff2222, emissiveIntensity: 1.2 }), 0, y + 7.1, 0);
-  g.add(beacon); blinkers.push(beacon.material);
-  addWindows(g, 9, 26, 9.4, 7, 4, 6);
-  const sign = textSprite('圖靈金融 TURING', { fs: 40, bold: true, color: '#ffe9ad', scale: 0.028 });
-  sign.position.set(0, 6.2, 6.4); g.add(sign);
-  g.position.set(0, 0, -64); scene.add(g);
-
-  const catSum = {}; (D.skills || []).forEach(s => catSum[s.cat] = (catSum[s.cat] || 0) + s.count);
-  register(g, {
-    tag: '🏛 圖靈金融區', title: '圖靈金融總部塔', accent: '#C8A951', tooltip: '圖靈金融總部塔｜台北 101・37F',
-    html: kv('辦公室', '台北 101 大樓 37 樓')
-      + kv('投資經理', 'Jeff Hsu, CFA')
-      + kv('本季技能調用', (catSum['圖靈金融'] || 0) + ' 次（12 項技能）')
-      + `<div class="sec">旗下實體</div><div class="list">
-         <div>圖靈併購投資</div><div>圖靈量化交易</div><div>圖靈財務顧問</div>
-         <div>圖靈一號併購投資有限合夥</div><div>圖靈量化私募股權基金有限合夥</div></div>
-      <div class="note">塔頂紅燈 = 真實營運中。三大業務線（併購顧問／量化基金／財顧）皆由本塔調度，村裡所有燃料流向這裡。</div>`,
-  });
-}
-
-function buildWorkshop() {
-  const g = new THREE.Group();
-  g.add(box(9, 4.4, 6.5, M(0x7a6a52), 0, 2.2, 0));
-  const roof = mesh(new THREE.CylinderGeometry(0.1, 4.9, 2.6, 4), M(0x4f4335, { flat: true }), 0, 5.7, 0);
-  roof.rotation.y = Math.PI / 4; roof.scale.set(1.35, 1, 1); g.add(roof);
-  const gear = mesh(new THREE.TorusGeometry(1.15, 0.3, 8, 10), M(0xC8A951, { metal: .7, rough: .35 }), 0, 3.4, 3.3);
-  g.add(gear); spinners.push(gear);
-  addWindows(g, 8, 3, 6.6, 1, 3, 2.2);
-  g.position.set(-23, 0, -50); g.rotation.y = 0.35; scene.add(g);
-
-  const pick = n => { const s = (D.skills || []).find(x => x.name.indexOf(n) >= 0); return s ? s.count : 0; };
-  register(g, {
-    tag: '🏛 圖靈金融區', title: '併購工坊（M&A Workshop）', accent: '#C8A951', tooltip: '併購工坊｜研究報告×' + pick('研究報告'),
-    html: kv('研究報告', pick('研究報告') + ' 份') + kv('公司摘要（Teaser→Comps→DCF）', pick('公司摘要') + ' 次')
-      + kv('Teaser 保密項目', pick('Teaser') + ' 份') + kv('CIM 賣方備忘錄', pick('CIM') + ' 份')
-      + kv('盡調清單', pick('盡調') + ' 份') + kv('財報更新', pick('財報') + ' 份')
-      + kv('併購案件追蹤', pick('併購案件') + ' 次') + kv('基金獎金分成', pick('獎金') + ' 次')
-      + '<div class="note">金色齒輪日夜轉動 = 併購產線。每份研究報告 5-8 分鐘出爐、CIM 40-50 頁 Word + Excel 附錄。窗口對接 168 公司網保密項目。</div>',
-  });
-}
-
-function buildAdmin() {
-  const g = new THREE.Group();
-  g.add(box(6.5, 3.6, 5, M(0x8a7d68), 0, 1.8, 0));
-  g.add(box(7.1, 0.5, 5.6, M(0x55493c), 0, 3.85, 0));
-  addWindows(g, 5.6, 2.2, 5.1, 1, 3, 1.7);
-  g.position.set(21, 0, -49); g.rotation.y = -0.3; scene.add(g);
-  const wk = (D.schedule || []).find(s => s.name === '本週工作彙整') || {};
-  register(g, {
-    tag: '🏛 圖靈金融區', title: '行政小樓', accent: '#C8A951', tooltip: '行政小樓｜會議紀錄・週報',
-    html: kv('會議紀錄', ((D.skills||[]).find(s=>s.name==='會議紀錄')||{count:0}).count + ' 份（投審會／董事會）')
-      + kv('本週工作彙整', ((D.skills||[]).find(s=>s.name==='本週工作彙整')||{count:0}).count + ' 份')
-      + kv('週報排程', wk.cron || '每週五 15:00')
-      + kv('上次週報', wk.last_run || '—')
-      + kv('會前 Q&A 準備', ((D.skills||[]).find(s=>s.name.indexOf('Q&A')>=0)||{count:0}).count + ' 次')
-      + kv('法說會感謝信', ((D.skills||[]).find(s=>s.name.indexOf('感謝信')>=0)||{count:0}).count + ' 封')
-      + '<div class="note">村公所。開會前這裡會亮燈準備 Q&A，會後產出藍字會議紀錄。</div>',
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   東區：個人基金 — 客戶屋 × 13（屋子大小 ∝ 真實 AUM）
-   ══════════════════════════════════════════════════════════ */
-function buildFundDistrict() {
-  const clients = (D.clients || []).filter(c => c.found);
-  const josh = clients.filter(c => c.owner === 'Josh');
-  const jeff = clients.filter(c => c.owner === 'Jeff');
-
-  function house(c, x, z, face) {
-    const raw = c.size != null ? c.size : Math.sqrt((c.aum || 0) / 4.5e6);
-    const s = Math.min(1.95, Math.max(0.8, raw));
-    const g = new THREE.Group();
-    const body = box(4.1 * s, 2.5 * s, 3.5 * s, M(0xcfc3a8), 0, 1.25 * s, 0);
-    g.add(body);
-    const roof = mesh(new THREE.CylinderGeometry(0.06, 3.1 * s, 1.7 * s, 4), M(new THREE.Color(c.color || '#8B1A1A'), { flat: true }), 0, 2.5 * s + 0.85 * s, 0);
-    roof.rotation.y = Math.PI / 4; g.add(roof);
-    g.add(box(0.9 * s, 1.3 * s, 0.1, M(0x5a4632), 0, 0.65 * s, 1.76 * s));
-    const win = new THREE.Mesh(new THREE.BoxGeometry(0.8 * s, 0.7 * s, 0.08), winMat);
-    win.position.set(1.1 * s, 1.5 * s, 1.76 * s); g.add(win);
-    const np = textSprite(c.name + (c.vip ? ' ⭐' : ''), { fs: 42, bold: true, color: '#fff', scale: 0.022 });
-    np.position.set(0, 2.5 * s + 2.3 * s, 0); g.add(np);
-    g.position.set(x, 0, z); g.rotation.y = face;
-    scene.add(g);
-    register(g, {
-      tag: '🏦 個人基金區 · ' + c.owner + ' 名下', title: c.name + (c.vip ? ' ⭐ VIP' : '') + ' 宅邸',
-      accent: c.color || '#C8A951', tooltip: `${c.name}｜AUM ${fmtMoney(c.aum)}｜${fmtPct(c.ret)}`,
-      html: kv('AUM 現值', fmtMoney(c.aum))
-        + kv('投入本金', fmtMoney(c.principal))
-        + kv('累積損益', fmtSigned(c.pnl), pnlCls(c.pnl))
-        + kv('累積報酬率', fmtPct(c.ret), pnlCls(c.ret))
-        + kv('實際現金', fmtMoney(c.cash) + (c.aum && c.cash != null ? `（${(c.cash / c.aum * 100).toFixed(1)}%）` : ''))
-        + (c.loan ? kv('融資借款', fmtMoney(c.loan)) : '')
-        + kv('持股', c.holdings_n + ' 檔' + (c.top_holding ? `（最大：${esc(c.top_holding)}）` : ''))
-        + kv('類型', c.type + (c.vip ? '（VIP 績效費減半）' : ''))
-        + kv('加入日', c.start_date || '—')
-        + '<div class="note">屋子大小 ∝ 真實 AUM，屋頂顏色 = AUM 報告專屬配色。數據與每日盤後報告同源。</div>',
-    });
-  }
-  josh.forEach((c, i) => house(c, 40 + i * 11.5, -8, 0));                       // 門面朝街（南）
-  jeff.forEach((c, i) => house(c, 37 + (i % 4) * 11.5, i < 4 ? 18 : 34, Math.PI)); // 門面朝街（北）
-
-  /* 盤後工廠 */
-  const f = new THREE.Group();
-  f.add(box(11, 4.6, 7.5, M(0x9c5b4a), 0, 2.3, 0));
-  for (let i = 0; i < 3; i++) {
-    const saw = mesh(new THREE.CylinderGeometry(0.05, 2.5, 2, 3), M(0x6e3f33, { flat: true }), -3.3 + i * 3.3, 5.6, 0);
-    saw.rotation.y = Math.PI / 2; saw.scale.z = 1.9; f.add(saw);
-  }
-  f.add(cyl(0.55, 0.7, 6.5, 8, M(0x4a4038), 4.2, 6, 2.2));
-  addWindows(f, 10, 2.4, 7.6, 1, 4, 2.4);
-  f.position.set(64, 0, 48); f.rotation.y = -0.5; scene.add(f);
-  const chimWorld = new THREE.Vector3(4.2, 9.2, 2.2).applyAxisAngle(new THREE.Vector3(0,1,0), -0.5).add(f.position);
-  smokeAnchor.copy(chimWorld);
-
-  const dc = (D.schedule || []).find(s => s.name === '每日盤後') || {};
-  const dcSkill = (D.skills || []).find(s => s.name === '每日盤後') || { count: 0 };
-  register(f, {
-    tag: '🏦 個人基金區', title: '盤後工廠（Daily Close）', accent: '#8B1A1A', tooltip: '盤後工廠｜已運轉 ' + dcSkill.count + ' 次',
-    html: kv('累積運轉', dcSkill.count + ' 次（村內最高熟練度 ▓▓▓▓▓）')
-      + kv('上次出貨', dc.last_run || '—')
-      + kv('資料日期', dc.data_date || D.meta.data_date || '—')
-      + `<div class="sec">五段產線</div><div class="list">
-        <div>① 收盤價更新（TWSE/TPEx + 週末假日回退）</div>
-        <div>② 13 位客戶個別報告 PDF</div>
-        <div>③ AUM 彙總（Family Office / Jeff Fund I 雙報告）</div>
-        <div>④ 全客戶現金水位</div>
-        <div>⑤ 持股風險分析（HHI / Beta / 年化波動率）</div></div>
-      <div class="note">煙囪冒煙 = 產線今天跑過。工廠的原料是收盤價，出貨的是客戶信任。</div>`,
-  });
-
-  /* 金庫 */
-  const v = new THREE.Group();
-  v.add(cyl(3.2, 3.5, 3, 12, M(0x8f8878, { rough: .5 }), 0, 1.5, 0));
-  v.add(mesh(new THREE.SphereGeometry(3.2, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), M(0xC8A951, { metal: .75, rough: .3 }), 0, 3, 0));
-  v.add(box(1.6, 2, 0.3, M(0x3f3830), 0, 1, 3.4));
-  v.position.set(44, 0, 47); scene.add(v);
-  const t = D.totals || {};
-  register(v, {
-    tag: '🏦 個人基金區', title: '村金庫（現金水位）', accent: '#C8A951', tooltip: '村金庫｜現金 ' + fmtMoney(t.cash),
-    html: kv('全村 AUM', fmtMoney(t.aum))
-      + kv('實際現金', fmtMoney(t.cash) + (t.cash_pct != null ? `（${t.cash_pct}%）` : ''))
-      + kv('投入本金', fmtMoney(t.principal))
-      + kv('累積損益', fmtSigned(t.pnl), pnlCls(t.pnl))
-      + kv('加權累積報酬', fmtPct(t.ret), pnlCls(t.ret))
-      + (t.loan ? kv('融資借款（已扣回權益）', fmtMoney(t.loan)) : '')
-      + '<div class="note">現金一律讀 C31 實際現金（= C25 + 已實現股利），與盤後 C25 KPI 同源。金頂反光的程度，就是村裡的火藥存量。</div>',
-  });
-
-  /* 風險燈塔 */
-  const lh = new THREE.Group();
-  const stripes = [0xe8e2d4, 0xb8433d, 0xe8e2d4, 0xb8433d, 0xe8e2d4];
-  stripes.forEach((c, i) => lh.add(cyl(1.5 - i * 0.14, 1.6 - i * 0.14, 2.2, 12, M(c, { rough: .6 }), 0, 1.1 + i * 2.2, 0)));
-  lh.add(cyl(1.1, 1.1, 1.6, 8, M(0x2b3240, { rough: .3, metal: .4 }), 0, 12, 0));
-  lh.add(mesh(new THREE.SphereGeometry(0.55, 10, 10), new THREE.MeshStandardMaterial({ color: 0xfff6d0, emissive: 0xffe9a0, emissiveIntensity: 1.5 }), 0, 12, 0));
-  const beamMat = new THREE.MeshBasicMaterial({ color: 0xfff2b8, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false });
-  const beams = new THREE.Group();
-  for (const dir of [1, -1]) {
-    const b = new THREE.Mesh(new THREE.ConeGeometry(3.2, 26, 12, 1, true), beamMat);
-    b.rotation.z = dir * Math.PI / 2; b.position.x = dir * 13; beams.add(b);
-  }
-  beams.position.y = 12; lh.add(beams); lighthouseBeams = beams;
-  lh.add(cyl(1.7, 1.9, 0.8, 12, M(0x777), 0, 0.4, 0));
-  lh.position.set(101, 0, -22); scene.add(lh);
-  register(lh, {
-    tag: '🏦 個人基金區', title: '風險燈塔（Risk Watch）', accent: '#E74C3C', tooltip: '風險燈塔｜HHI · Beta · 波動率',
-    html: `<div class="sec">掃描維度（每日盤後 Step 5）</div><div class="list">
-      <div>集中度 HHI — 持股集中風險</div>
-      <div>Beta — vs 加權指數（2Y 週線 raw，Bloomberg 標準）</div>
-      <div>年化波動率 — 個股與組合層級</div></div>
-      ${kv('全村持股檔數', (D.clients || []).reduce((a, c) => a + (c.holdings_n || 0), 0) + ' 筆部位')}
-      ${kv('融資部位監控', '成數標記 + 自備款隱含成數查核（>3pp 警示）')}
-      <div class="note">光束夜間掃過海面 — 處置股、融資查核、颱風休市，都逃不過這座塔。</div>`,
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   南區：投資研究 — 天文台 + 公司樹林（一樹一公司）
-   ══════════════════════════════════════════════════════════ */
-function buildResearch() {
-  const ob = new THREE.Group();
-  ob.add(cyl(4.4, 4.8, 3.4, 14, M(0xd8d2c2, { rough: .7 }), 0, 1.7, 0));
-  ob.add(mesh(new THREE.SphereGeometry(4.0, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), M(0x8fa5b5, { rough: .35, metal: .45 }), 0, 3.4, 0));
-  const tube = cyl(0.5, 0.7, 5.5, 10, M(0x40566b, { metal: .5, rough: .3 }), 0, 6.2, 1.2);
-  tube.rotation.x = -0.9; ob.add(tube);
-  ob.add(box(1.4, 3, 0.2, M(0x2b3240), 0, 4.6, 3.9));
-  /* 財報季套件：望遠鏡光柱（夜間）＋通宵告示＋駐點研究員 */
-  obsBeam = new THREE.Mesh(new THREE.ConeGeometry(2.2, 62, 12, 1, true),
-    new THREE.MeshBasicMaterial({ color: 0x9fd0ff, transparent: true, opacity: 0.09, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-  obsBeam.rotation.x = Math.PI - 0.25;   // 倒置：尖端落在圓頂、寬口朝天（探照燈）
-  obsBeam.position.set(0, 34, -4);
-  obsBeam.visible = false; ob.add(obsBeam);
-  obsSprite = textSprite('🔭 財報季・通宵觀測中', { fs: 40, bold: true, color: '#cfe3ff', scale: 0.028 });
-  obsSprite.position.set(0, 12.5, 0); obsSprite.visible = false; ob.add(obsSprite);
-  ob.position.set(-4, 0, 66); scene.add(ob);
-  [[-13, 61], [4, 74], [-9, 73]].forEach(([rx, rz], i) => {
-    const r = new THREE.Group();
-    r.add(cyl(0.26, 0.34, 0.95, 8, M([0x8fb5d8, 0x6a86b0, 0xb0a06a][i], { rough: .8 }), 0, 0.48, 0));
-    r.add(mesh(new THREE.SphereGeometry(0.26, 8, 8), M(0xe8c9a8), 0, 1.2, 0));
-    r.add(mesh(new THREE.SphereGeometry(0.15, 6, 6),
-      new THREE.MeshStandardMaterial({ color: 0xffe9a0, emissive: 0xffd27a, emissiveIntensity: 1.6 }), 0.4, 0.72, 0));
-    r.position.set(rx, 0, rz); r.visible = false;
-    scene.add(r); researchers.push(r);
-  });
-  const comps = D.companies || [];
-  register(ob, {
-    tag: '🔭 投資研究區', title: '研究天文台', accent: '#3F6EAD', tooltip: '研究天文台｜' + comps.length + ' 家公司在冊',
-    html: kv('在冊公司', comps.length + ' 家（樹林一樹一公司）')
-      + kv('公司研究追蹤', (((D.skills||[]).find(s=>s.module==='CompanyOverview_AutoAppend'))||{count:0}).count + ' 次')
-      + kv('月初選股分析', (((D.skills||[]).find(s=>s.module==='Screening'))||{count:0}).count + ' 次（每月 40 支）')
-      + '<div class="sec">觀測名錄</div><div class="list">'
-      + comps.map(c => `<div>${c.code}TT ${esc(c.name)}</div>`).join('') + '</div>'
-      + '<div class="note">望遠鏡指向的不是星星，是下一季的財報。每研究一家公司，林子就多一棵樹。</div>',
-  });
-
-  /* 公司樹林 */
-  const trunkMat = M(0x6b4a30), leafMats = [M(0x3f7f4f, {flat:true}), M(0x4f8f45, {flat:true}), M(0x37704f, {flat:true})];
-  comps.forEach((c, i) => {
-    const a = Math.PI / 2 + (i / comps.length - 0.5) * 1.9 + (i % 3) * 0.03;
-    const r = 44 + (i % 4) * 7 + (i * 7 % 5);
-    const g = new THREE.Group();
-    const h = 1.4 + (i * 13 % 10) / 10 * 1.2;
-    g.add(cyl(0.16, 0.22, h, 6, trunkMat, 0, h / 2, 0));
-    const lm = leafMats[i % 3];
-    g.add(mesh(new THREE.ConeGeometry(1.15, 2.2, 7), lm, 0, h + 1.0, 0));
-    g.add(mesh(new THREE.ConeGeometry(0.85, 1.7, 7), lm, 0, h + 2.2, 0));
-    g.position.set(Math.cos(a) * r * 0.9 - 4, 0, Math.sin(a) * r);
-    scene.add(g);
-    register(g, {
-      tag: '🔭 投資研究區 · 公司樹林', title: c.code + 'TT ' + c.name, accent: '#4f8f45',
-      tooltip: c.code + 'TT ' + c.name,
-      html: kv('研究資料夾', `~/Stock Analysis/Companies/${c.code}TT ${esc(c.name)}`)
-        + '<div class="note">這棵樹 = 一個真實研究資料夾（Teaser／Comps／DCF／研究報告存放處）。樹林只增不減 — 知識的複利。</div>',
-    });
-  });
-
-  /* 產業地圖碑 */
-  const slab = new THREE.Group();
-  slab.add(box(7, 4.4, 0.7, M(0x4a4f58, { rough: .6 }), 0, 2.5, 0));
-  slab.add(box(7.8, 0.6, 1.2, M(0x33373e), 0, 0.3, 0));
-  const map = textSprite('產業分類藍圖', { fs: 40, bold: true, color: '#cfe3ff', scale: 0.03 });
-  map.position.set(0, 5.6, 0); slab.add(map);
-  slab.position.set(-26, 0, 74); slab.rotation.y = 0.5; scene.add(slab);
-  register(slab, {
-    tag: '🔭 投資研究區', title: '產業分類藍圖碑（Taxonomy）', accent: '#3F6EAD', tooltip: '產業分類藍圖 v0.2',
-    html: kv('已標記', '206 家上市櫃') + kv('第三層分類', '84 個 tier3') + kv('可用同業池', '36 個 peer pool')
-      + '<div class="note">同業比較選 peer 的權威來源（IndustryTaxonomy.md）。長期工程：分 5 phase 擴至全台股 1,700+ 家。</div>',
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   西區：M&A HUNTER 傳播區
-   ══════════════════════════════════════════════════════════ */
-function buildMedia() {
-  /* 廣播塔 */
-  const tw = new THREE.Group();
-  const cols = [0xc94b3f, 0xe8e2d4, 0xc94b3f, 0xe8e2d4];
-  let y = 0;
-  cols.forEach((c, i) => { const h = 5.5 - i * 0.6; tw.add(cyl(1.3 - i * 0.28, 1.65 - i * 0.28, h, 6, M(c, { rough: .6, flat: true }), 0, y + h / 2, 0)); y += h; });
-  tw.add(cyl(0.05, 0.1, 6, 6, M(0xcccccc, { metal: .6 }), 0, y + 3, 0));
-  const blink = mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshStandardMaterial({ color: 0xff5544, emissive: 0xff3322, emissiveIntensity: 1.4 }), 0, y + 6.2, 0);
-  tw.add(blink); blinkers.push(blink.material);
-  const dish = mesh(new THREE.SphereGeometry(1.1, 10, 8, 0, Math.PI), M(0xdddddd, { rough: .4 }), 1.4, y - 3, 0);
-  dish.rotation.z = -Math.PI / 2.4; tw.add(dish);
-  tw.position.set(-66, 0, -6); scene.add(tw);
-  const mw = (D.skills || []).find(s => s.module === 'MA_Weekly') || { count: 0 };
-  register(tw, {
-    tag: '📡 M&A HUNTER 傳播區', title: 'M&A Hunter 廣播塔', accent: '#7B3F9B', tooltip: 'M&A Hunter 廣播塔',
-    html: kv('頻道', 'M&A Hunter（YouTube）')
-      + kv('每週併購新聞', mw.count + ' 期（台灣／陸港／全球三線）')
-      + kv('搜尋鐵律', 'v7：候選池→排序，403 非放棄理由')
-      + '<div class="note">紅燈閃爍 = 頻道存活。每週從三個戰場掃回併購情報，轉譯成大眾聽得懂的故事。</div>',
-  });
-
-  /* 總經看板 */
-  const bb = new THREE.Group();
-  const md = (D.schedule || []).find(s => s.name === '每日總經儀表板') || {};
-  bb.add(cyl(0.22, 0.26, 5.5, 6, M(0x3a3f46), -4.2, 2.75, 0));
-  bb.add(cyl(0.22, 0.26, 5.5, 6, M(0x3a3f46), 4.2, 2.75, 0));
-  const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 512;
-  const cx = cv.getContext('2d');
-  cx.fillStyle = '#0d1420'; cx.fillRect(0, 0, 1024, 512);
-  cx.strokeStyle = '#C8A951'; cx.lineWidth = 10; cx.strokeRect(10, 10, 1004, 492);
-  cx.fillStyle = '#C8A951'; cx.font = 'bold 78px "PingFang TC"'; cx.textAlign = 'center';
-  cx.fillText('M&A HUNTER', 512, 130);
-  cx.fillStyle = '#f5f0e8'; cx.font = 'bold 64px "PingFang TC"';
-  cx.fillText('每日總經儀表板', 512, 235);
-  cx.fillStyle = '#8fa5b5'; cx.font = '44px "PingFang TC"';
-  cx.fillText('早晚班 cron 08:00／20:00 自動更新', 512, 330);
-  cx.fillStyle = '#5ecb7b'; cx.font = 'bold 46px Menlo, monospace';
-  cx.fillText('上次更新 ' + (md.last_run || '—'), 512, 425);
-  const btex = new THREE.CanvasTexture(cv);
-  const face = new THREE.Mesh(new THREE.BoxGeometry(10.5, 5.2, 0.35), [M(0x22262c), M(0x22262c), M(0x22262c), M(0x22262c), new THREE.MeshStandardMaterial({ map: btex, emissive: 0xffffff, emissiveMap: btex, emissiveIntensity: 0.55 }), M(0x22262c)]);
-  face.position.y = 6.2; face.castShadow = true; bb.add(face);
-  bb.position.set(-54, 0, -28); bb.rotation.y = Math.PI / 3.2; scene.add(bb);
-  register(bb, {
-    tag: '📡 M&A HUNTER 傳播區', title: '總經儀表板看板', accent: '#5ecb7b', tooltip: '總經儀表板｜' + (md.last_run || ''),
-    html: kv('排程', md.cron || '每日 08:00／20:00')
-      + kv('上次自動更新', md.last_run || '—')
-      + kv('技能調用', (((D.skills||[]).find(s=>s.module==='MacroDashboard'))||{count:0}).count + ' 次')
-      + kv('內容', '利率・匯率・VIX・地緣政治 12H 視窗')
-      + kv('部署', 'GitHub Pages（本機 runner 全自動 push）')
-      + '<div class="note">這面看板在真實世界是一個公開網站 — 每天早晚由 cron 自己抓數據、自己發佈，無人值守。</div>'
-      + `<a class="linkbtn" href="${D.links && D.links.dashboard || '#'}" target="_blank">開啟真實儀表板 →</a>`,
-  });
-
-  /* 週報印刷所 */
-  const pr = new THREE.Group();
-  pr.add(box(7, 3.4, 5.5, M(0x6d5f7d), 0, 1.7, 0));
-  pr.add(box(7.6, 0.5, 6.1, M(0x453a52), 0, 3.65, 0));
-  const roller = cyl(0.6, 0.6, 4.5, 10, M(0xb9aec9, { metal: .4, rough: .4 }), 0, 4.6, 0);
-  roller.rotation.z = Math.PI / 2; pr.add(roller); spinners.push(roller);
-  addWindows(pr, 6, 2, 5.6, 1, 3, 1.6);
-  pr.position.set(-52, 0, 20); pr.rotation.y = -0.45; scene.add(pr);
-  register(pr, {
-    tag: '📡 M&A HUNTER 傳播區', title: '併購週報印刷所', accent: '#7B3F9B', tooltip: '併購週報印刷所',
-    html: kv('出刊', (((D.skills||[]).find(s=>s.module==='MA_Weekly'))||{count:0}).count + ' 期')
-      + kv('三條戰線', '台灣（ctee 逐日）／陸港（aastocks・智通）／全球（候選池）')
-      + kv('判準', '需取得控制權才算併購；少數股權轉讓不收錄')
-      + '<div class="note">滾筒轉動 = 每週情報壓成鉛字。這裡的每一則新聞都真實發生過。</div>',
-  });
-
-  /* Shorts 劇院 */
-  const th = new THREE.Group();
-  th.add(box(6, 3.6, 5, M(0x8a3a3a), 0, 1.8, 0));
-  th.add(mesh(new THREE.CylinderGeometry(3, 3, 5, 16, 1, false, 0, Math.PI), M(0x6d2c2c), 0, 3.6, 0)).children;
-  const dome = mesh(new THREE.CylinderGeometry(2.5, 2.5, 5.2, 14, 1, false, 0, Math.PI), M(0xa14848, { flat: true }), 0, 3.6, 0);
-  dome.rotation.z = Math.PI / 2; dome.rotation.y = Math.PI / 2; th.add(dome);
-  const mq = textSprite('M&A SHORTS', { fs: 40, bold: true, color: '#ffd27a', bg: 'rgba(30,10,10,.85)', scale: 0.02 });
-  mq.position.set(0, 4.9, 2.2); th.add(mq);
-  th.position.set(-70, 0, 26); th.rotation.y = 0.4; scene.add(th);
-  register(th, {
-    tag: '📡 M&A HUNTER 傳播區', title: 'Shorts 劇院', accent: '#E74C3C', tooltip: 'Shorts 劇院',
-    html: kv('已上映', (((D.skills||[]).find(s=>s.module==='MAContentCreator'))||{count:0}).count + ' 部')
-      + kv('產線', '併購週報 → Scene 設計 → Shorts／Podcast')
-      + '<div class="note">村裡最年輕的建築。原料來自隔壁印刷所，出口是 60 秒的注意力戰場。</div>',
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   西南：展示特區 — 四大大廳原型（未來「教學與展示版」核心）
-   揭露性分級：🟢 可公開｜🟡 部分公開｜🔴 內部限定
-   ══════════════════════════════════════════════════════════ */
-let hallGlobe = null, tickerTex = null;
-function chipDisc(level, note) {
-  const map = { g: ['🟢 對外可公開', 'rgba(94,203,123,.15)', '#5ecb7b'],
-                y: ['🟡 部分公開', 'rgba(200,169,81,.15)', '#C8A951'],
-                r: ['🔴 內部限定', 'rgba(231,76,60,.15)', '#E74C3C'] }[level];
-  return `<div style="margin:10px 0 4px"><span class="chip" style="background:${map[1]};border-color:${map[2]};color:${map[2]}">${map[0]}</span>
-    <span style="font-size:11.5px;color:#9e8e7e">${note}</span></div>`;
-}
-function buildHalls() {
-  const H = D.halls || {};
-
-  /* 教學大廳 — 圓形講堂（柱廊 + 玻璃穹頂） */
-  const te = new THREE.Group();
-  te.add(cyl(4.6, 5, 1, 20, M(0xb9b2a2, { rough: .8 }), 0, 0.5, 0));
-  for (let i = 0; i < 8; i++) {
-    const a = i / 8 * Math.PI * 2;
-    te.add(cyl(0.24, 0.28, 3.2, 8, M(0xd8d2c2), Math.cos(a) * 3.4, 2.6, Math.sin(a) * 3.4));
-  }
-  te.add(cyl(4.2, 4.2, 0.5, 20, M(0x8a8478), 0, 4.4, 0));
-  te.add(mesh(new THREE.SphereGeometry(3.6, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2),
-    M(0x7fd8c8, { rough: .2, metal: .3, alpha: .75 }), 0, 4.6, 0));
-  te.position.set(-66, 0, 40); scene.add(te);
-  const teach = (H.teaching || {}).courses || [];
-  register(te, {
-    tag: '🏟 展示特區', title: '教學大廳（Teaching Hall）', accent: '#7fd8c8',
-    tooltip: '教學大廳｜方法論課綱 ' + teach.length + ' 講',
-    html: chipDisc('g', '未來教學展示版的入口')
-      + '<div class="sec">課綱（' + teach.length + ' 講）</div><div class="list">'
-      + teach.map(c => `<div><b style="color:#e8ddc8">${esc(c.t)}</b><br><span style="color:#9e8e7e;font-size:12px">${esc(c.d)}</span></div>`).join('')
-      + '</div><div class="note">給訪客的第一站：這座村怎麼運作、估值與風險的方法論。內容策展自內部規範，不含任何客戶數據。</div>',
-  });
-
-  /* 總經大廳 — 屋頂地球儀 + 金環 */
-  const ma = new THREE.Group();
-  ma.add(box(7.5, 4, 6, M(0x4a5568, { rough: .6 }), 0, 2, 0));
-  ma.add(box(8.1, 0.5, 6.6, M(0x333c4a), 0, 4.25, 0));
-  addWindows(ma, 6.5, 2.4, 6.1, 1, 3, 1.9);
-  hallGlobe = new THREE.Group();
-  hallGlobe.add(mesh(new THREE.SphereGeometry(1.9, 18, 14), M(0x3a6ea8, { rough: .5, flat: true }), 0, 0, 0));
-  const ringT = mesh(new THREE.TorusGeometry(2.5, 0.09, 8, 32), M(0xC8A951, { metal: .8, rough: .3 }), 0, 0, 0);
-  ringT.rotation.x = Math.PI / 2.6; hallGlobe.add(ringT);
-  hallGlobe.position.y = 6.6; ma.add(hallGlobe);
-  ma.position.set(-42, 0, 37); ma.rotation.y = 0.4; scene.add(ma);
-  const mk = (H.macro || {});
-  const kpiRows = (mk.kpis || []).map(k =>
-    kv(esc(k.label), esc(k.val), k.chg == null ? '' : (k.chg >= 0 ? 'up' : 'down'))).join('');
-  register(ma, {
-    tag: '🏟 展示特區', title: '總經大廳（Macro Hall）', accent: '#5ecb7b',
-    tooltip: '總經大廳｜' + (mk.kpis || []).length + ' 項即時指標',
-    html: chipDisc('g', '數據源已是公開網站（GitHub Pages）')
-      + kv('數據更新', mk.updated || '—') + kv('市場日期', mk.market_date || '—')
-      + '<div class="sec">即時儀表</div>' + (kpiRows || '<div class="note">cache 無資料</div>')
-      + `<a class="linkbtn" href="${D.links && D.links.dashboard || '#'}" target="_blank">開啟完整總經儀表板 →</a>`,
-  });
-
-  /* 產業大廳 — 六角蜂巢塔群（一柱一產業層） */
-  const ind = (H.industry || {});
-  const ig = new THREE.Group();
-  const hexCols = [0xC8A951, 0x3F6EAD, 0x7B3F9B, 0x5ecb7b, 0xB94C4C];
-  const hexPos = [[0, 0], [2.6, 1.5], [-2.6, 1.5], [1.3, -2.2], [-1.3, -2.2]];
-  hexPos.forEach(([hx, hz], i) => {
-    const h = 2.5 + ((i * 37) % 4) * 1.2;
-    const hex = cyl(1.35, 1.35, h, 6, M(hexCols[i % hexCols.length], { rough: .5, flat: true }), hx, h / 2, hz);
-    ig.add(hex);
-  });
-  ig.position.set(-64, 0, 57); scene.add(ig);
-  const t1 = (ind.tier1_top || []).map(([n, c]) => `<div>${esc(n)} <span class="mono" style="float:right">×${c}</span></div>`).join('');
-  register(ig, {
-    tag: '🏟 展示特區', title: '產業大廳（Industry Hall）', accent: '#3F6EAD',
-    tooltip: `產業大廳｜${ind.tagged || '—'} 家已標記`,
-    html: chipDisc('y', '分類藍圖可展示；與選股連動的部分內部')
-      + kv('已標記', (ind.tagged || '—') + ' 家上市櫃')
-      + kv('第三層分類', (ind.tier3_n || '—') + ' 個 tier3')
-      + kv('同業池（≥3 家）', (ind.pools_ge3 || '—') + ' 池')
-      + kv('藍圖版本', `${ind.version || '—'}（${ind.updated || '—'}）`)
-      + '<div class="sec">Tier1 分佈（前 6）</div><div class="list">' + t1 + '</div>'
-      + '<div class="sec">追蹤題材（' + ((ind.themes || []).length) + '）</div><div>'
-      + (ind.themes || []).map(t => `<span class="chip">${esc(t)}</span>`).join('') + '</div>',
-  });
-
-  /* 個股大廳 — 展廊 + 全息跑馬燈 */
-  const st = (H.stocks || { list: [] });
-  const sg = new THREE.Group();
-  sg.add(box(11, 3.6, 6, M(0x2f3542, { rough: .5, metal: .2 }), 0, 1.8, 0));
-  sg.add(box(11.6, 0.4, 6.6, M(0x22262e), 0, 3.8, 0));
-  addWindows(sg, 10, 2, 6.1, 1, 5, 1.7);
-  /* 跑馬燈 */
-  const tcv = document.createElement('canvas'); tcv.width = 2048; tcv.height = 96;
-  const tcx = tcv.getContext('2d');
-  tcx.fillStyle = '#0a0e16'; tcx.fillRect(0, 0, 2048, 96);
-  tcx.font = 'bold 52px Menlo, "PingFang TC"'; tcx.textBaseline = 'middle';
-  let tx = 20;
-  (st.list || []).forEach((s, i) => {
-    tcx.fillStyle = i % 2 ? '#7fd8c8' : '#ffd27a';
-    const str = `${s.code} ${s.name} ×${s.files}　`;
-    tcx.fillText(str, tx, 48);
-    tx += tcx.measureText(str).width;
-  });
-  tickerTex = new THREE.CanvasTexture(tcv);
-  tickerTex.wrapS = THREE.RepeatWrapping;
-  const tickerMat = new THREE.MeshStandardMaterial({ map: tickerTex, emissive: 0xffffff, emissiveMap: tickerTex, emissiveIntensity: .8 });
-  for (const face of [1, -1]) {
-    const strip = new THREE.Mesh(new THREE.PlaneGeometry(10.4, 0.62), tickerMat);
-    strip.position.set(0, 3.1, face * 3.06); strip.rotation.y = face > 0 ? 0 : Math.PI;
-    sg.add(strip);
-  }
-  sg.position.set(-40, 0, 58); sg.rotation.y = -0.35; scene.add(sg);
-  const topFiles = (st.list || []).slice().sort((a, b) => b.files - a.files).slice(0, 8);
-  register(sg, {
-    tag: '🏟 展示特區', title: '個股大廳（Stock Hall）', accent: '#ffd27a',
-    tooltip: `個股大廳｜${(st.list || []).length} 家研究・${st.total_files || 0} 件產出`,
-    html: chipDisc('r', '選股資料 — 外版僅保留教學示例')
-      + kv('研究名錄', (st.list || []).length + ' 家（＝公司樹林）')
-      + kv('累積產出', (st.total_files || 0) + ' 件檔案（Teaser／Comps／DCF／報告）')
-      + '<div class="sec">產出最多（前 8）</div><div class="list">'
-      + topFiles.map(s => `<div>${s.code}TT ${esc(s.name)} <span class="mono" style="float:right">×${s.files}</span></div>`).join('')
-      + '</div><div class="note">跑馬燈滾動的是真實研究名錄與每家產出檔數。這一廳在外部版會被降級成教學示例——主軸④的揭露性分級。</div>',
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   東北：技能祭壇（20 根水晶 = 20 項技能，高度 ∝ 熟練度）
-   ══════════════════════════════════════════════════════════ */
-const CAT_COLOR = { '圖靈金融': 0xC8A951, '個人基金': 0x8B1A1A, '投資分析': 0x3F6EAD, 'Youtuber': 0x7B3F9B, '其他': 0x888888 };
-function buildAltar() {
-  const base = mesh(new THREE.CylinderGeometry(11, 12, 0.8, 24), M(0x6e6355, { rough: .9 }), 52, 0.4, -52);
-  scene.add(base);
-  const skills = (D.skills || []).slice();
-  skills.forEach((s, i) => {
-    const a = -Math.PI * 0.15 + (i / skills.length) * Math.PI * 1.72;
-    const h = 1.6 + Math.log2(s.count + 1) * 1.5;
-    const col = CAT_COLOR[s.cat] || 0x888888;
-    const cry = new THREE.Mesh(new THREE.OctahedronGeometry(0.95),
-      new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.22, roughness: .25, metalness: .35, flatShading: true }));
-    cry.scale.set(1, h / 1.9, 1);
-    cry.position.set(52 + Math.cos(a) * 8.4, 0.8 + h / 2, -52 + Math.sin(a) * 8.4);
-    cry.castShadow = true;
-    scene.add(cry);
-    if (s.count >= 60) crystalsPulse.push(cry.material);
-    register(cry, {
-      tag: '💎 技能祭壇 · ' + s.cat + (s.subcat ? ' / ' + s.subcat : ''), title: s.name,
-      accent: '#' + new THREE.Color(col).getHexString(),
-      tooltip: `${s.name} ×${s.count}\n${s.bar}`,
-      html: kv('調用次數', s.count + ' 次（2026/04/01 起）')
-        + kv('熟練度', `<span class="mono">${s.bar}</span>`)
-        + kv('分類', s.cat + (s.subcat ? ' / ' + s.subcat : ''))
-        + kv('模組', `<span class="mono">${esc(s.module)}</span>`)
-        + '<div class="note">水晶高度 ∝ log₂(調用次數)。61 次以上的水晶會呼吸發光。</div>',
-    });
-  });
-
-  /* 轉職石碑 */
-  const stele = new THREE.Group();
-  stele.add(box(3, 5.6, 1, M(0x4c5158, { rough: .5 }), 0, 3, 0));
-  stele.add(box(3.8, 0.7, 1.7, M(0x33373e), 0, 0.35, 0));
-  const lv = D.level || { lv: 20, title: '弓箭手' };
-  const t1 = textSprite(`${lv.emoji || '🏹'} Lv.${lv.lv} ${lv.title}`, { fs: 46, bold: true, color: '#ffe9ad', scale: 0.026 });
-  t1.position.set(0, 6.8, 0); stele.add(t1);
-  stele.position.set(52, 0, -52); scene.add(stele);
-  const byCat = {};
-  (D.skills || []).forEach(s => { (byCat[s.cat] = byCat[s.cat] || []).push(s); });
-  let listHtml = '';
-  for (const cat of Object.keys(byCat)) {
-    listHtml += `<div class="sec">${cat}（${byCat[cat].length}）</div><div class="list">`
-      + byCat[cat].sort((a, b) => b.count - a.count)
-        .map(s => `<div>${esc(s.name)} <span class="mono" style="float:right">${s.bar} ×${s.count}</span></div>`).join('')
-      + '</div>';
-  }
-  register(stele, {
-    tag: '💎 技能祭壇', title: `${lv.emoji || '🏹'} Orion Lv.${lv.lv}「${lv.title}」`, accent: '#C8A951',
-    tooltip: `轉職石碑｜Lv.${lv.lv} ${lv.title}`,
-    html: kv('目前職業', `${lv.emoji || '🏹'} ${lv.title}（Lv.${lv.lv}）`)
-      + kv('距 2 轉「' + (lv.next_title || '獵人') + '」', '還差 ' + (lv.next_need != null ? lv.next_need : '—') + ' 技能')
-      + kv('轉職路線', (lv.route || []).join(' → '))
-      + listHtml
-      + '<div class="note">Lv. = 常駐技能總數。每習得一項新技能，祭壇就多立一根水晶。</div>',
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   中央廣場：Orion 弓箭手雕像 + 時鐘塔
-   ══════════════════════════════════════════════════════════ */
-function buildStatue() {
-  const g = new THREE.Group();
-  const gold = M(0xC8A951, { metal: .85, rough: .3 });
-  g.add(cyl(2.6, 3.1, 1.3, 20, M(0x8d8474, { rough: .8 }), 0, 0.65, 0));
-  g.add(cyl(1.9, 2.3, 0.7, 20, M(0x7a7264), 0, 1.65, 0));
-  /* 弓箭手（抽象低模） */
-  const fig = new THREE.Group();
-  fig.add(cyl(0.22, 0.26, 1.5, 8, gold, -0.3, 0.75, 0));
-  fig.add(cyl(0.22, 0.26, 1.5, 8, gold, 0.35, 0.75, 0.12));
-  const torso = box(1.05, 1.5, 0.62, gold, 0, 2.1, 0); torso.rotation.z = 0.08; fig.add(torso);
-  fig.add(mesh(new THREE.SphereGeometry(0.42, 12, 10), gold, 0.06, 3.25, 0));
-  const armL = cyl(0.14, 0.16, 1.25, 8, gold, -0.75, 2.55, 0.34); armL.rotation.z = 1.15; armL.rotation.x = -0.5; fig.add(armL);
-  const armR = cyl(0.14, 0.16, 1.05, 8, gold, 0.62, 2.45, -0.1); armR.rotation.z = -0.9; fig.add(armR);
-  const bow = mesh(new THREE.TorusGeometry(1.25, 0.07, 8, 20, Math.PI * 1.1), gold, -1.35, 2.75, 0.55);
-  bow.rotation.y = Math.PI / 2; bow.rotation.z = 0.5; fig.add(bow);
-  const arrow = cyl(0.035, 0.035, 2.6, 6, M(0xE8DDC8, { metal: .5 }), -0.55, 2.9, 0.3);
-  arrow.rotation.z = Math.PI / 2 - 0.62; arrow.rotation.y = 0.3; fig.add(arrow);
-  fig.position.y = 2.0; fig.rotation.y = Math.PI * 0.78;   // 面向西南（獵戶座方位）
-  g.add(fig);
-  const np = textSprite('ORION', { fs: 40, bold: true, color: '#ffe9ad', scale: 0.02 });
-  np.position.set(0, 6.6, 0); g.add(np);
-  scene.add(g);
-  register(g, {
-    tag: '⛲ 中央廣場', title: 'Orion 弓箭手雕像', accent: '#C8A951', tooltip: 'Orion — 以數據為箭，以紀律為弓',
-    html: kv('銘文', '「以數據為箭，以紀律為弓。」')
-      + kv('建村者', D.meta && D.meta.owner || 'Jeff Hsu')
-      + kv('守望者', 'Orion — AI 投資經理助手')
-      + `<div class="sec">三重呼應</div><div class="list">
-        <div>🏹 楓之谷弓箭手角色卡（Lv.${(D.level||{}).lv || 20}）</div>
-        <div>🌌 獵戶座 — 夜空中的獵人星座（入夜抬頭可見）</div>
-        <div>📺 M&A Hunter — 獵人的頻道</div></div>
-      <div class="note">雕像的箭指向西南夜空 — 獵戶座升起的方向。村民說，那是守望者在瞄準下一個標的。</div>`,
-  });
-}
-
-let clockCtx = null, clockTex = null;
-function buildClock() {
-  const g = new THREE.Group();
-  g.add(box(3, 9, 3, M(0x9a8f7c, { rough: .8 }), 0, 4.5, 0));
-  g.add(box(3.6, 0.5, 3.6, M(0x6e6355), 0, 0.25, 0));
-  const roof = mesh(new THREE.CylinderGeometry(0.05, 2.6, 2, 4), M(0x8B1A1A, { flat: true }), 0, 10, 0);
-  roof.rotation.y = Math.PI / 4; g.add(roof);
-  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 256;
-  clockCtx = cv.getContext('2d');
-  clockTex = new THREE.CanvasTexture(cv);
-  const faceMat = new THREE.MeshStandardMaterial({ map: clockTex, emissive: 0xffffff, emissiveMap: clockTex, emissiveIntensity: .25 });
-  for (const rot of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 2.3), faceMat);
-    f.position.set(Math.sin(rot) * 1.52, 7.2, Math.cos(rot) * 1.52);
-    f.rotation.y = rot; g.add(f);
-  }
-  g.position.set(14, 0, 10); scene.add(g);
-
-  const schedHtml = (D.schedule || []).map(s =>
-    `<div style="margin-bottom:9px"><b style="color:#e8ddc8">${s.auto ? '🤖' : '🖐'} ${esc(s.name)}</b><br>
-     <span style="color:#9e8e7e;font-size:12px">${esc(s.cron)}</span><br>
-     <span style="font-size:12px">上次執行：<span class="mono">${s.last_run || '—'}</span>${s.data_date ? '（資料日 ' + s.data_date + '）' : ''}</span></div>`).join('');
-  const upcoming = (D.holidays || []).filter(h => h >= new Date().toISOString().slice(0, 10)).slice(0, 2);
-  register(g, {
-    tag: '⛲ 中央廣場', title: '村鐘塔（排程中樞）', accent: '#8B1A1A', tooltip: '村鐘塔｜排程與開收盤',
-    html: kv('台股交易時段', '週一至週五 09:00–13:30')
-      + kv('近期休市', upcoming.length ? upcoming.join('、') : '無登錄')
-      + '<div class="sec">村莊自動化（🤖 = cron 自動）</div>' + schedHtml
-      + '<div class="note">「上次執行」讀的是真實產出檔案的時間戳 — 鐘塔不說謊。</div>',
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   天空：星空 + 獵戶座 + 獵戶號飛碟
-   ══════════════════════════════════════════════════════════ */
+/* ── 天空：星空 + 獵戶座 ─────────────────────────────── */
 let starsMat, orionGroup;
 function buildSky() {
   const N = 550, pos = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) {
     const a = Math.random() * Math.PI * 2, e = Math.random() * Math.PI * 0.48 + 0.05, r = 430;
-    pos[i * 3] = Math.cos(a) * Math.cos(e) * r;
-    pos[i * 3 + 1] = Math.sin(e) * r;
-    pos[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r;
+    pos[i*3] = Math.cos(a) * Math.cos(e) * r; pos[i*3+1] = Math.sin(e) * r; pos[i*3+2] = Math.sin(a) * Math.cos(e) * r;
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   starsMat = new THREE.PointsMaterial({ color: 0xdfe8ff, size: 2, transparent: true, opacity: 0, sizeAttenuation: false, depthWrite: false });
   starsMat.fog = false;
   scene.add(new THREE.Points(geo, starsMat));
-
-  /* 獵戶座（比例近似）：參宿四(橙) 參宿五 | 腰帶三星 | 參宿七(藍白) 參宿六 */
   orionGroup = new THREE.Group();
   const S = 30, stars = [
-    { x: 1.5, y: 2.1, c: 0xffb27a, s: 3.4, n: '參宿四' }, { x: -1.5, y: 1.9, c: 0xcfe0ff, s: 2.6, n: '參宿五' },
-    { x: 0.5, y: 0.15, c: 0xeaf2ff, s: 2.4, n: '' }, { x: 0, y: 0, c: 0xeaf2ff, s: 2.4, n: '' }, { x: -0.5, y: -0.15, c: 0xeaf2ff, s: 2.4, n: '' },
-    { x: 1.25, y: -1.9, c: 0xdfe8ff, s: 2.5, n: '參宿六' }, { x: -1.55, y: -2.15, c: 0xbcd6ff, s: 3.6, n: '參宿七' },
+    { x: 1.5, y: 2.1, c: 0xffb27a, s: 3.4 }, { x: -1.5, y: 1.9, c: 0xcfe0ff, s: 2.6 },
+    { x: 0.5, y: 0.15, c: 0xeaf2ff, s: 2.4 }, { x: 0, y: 0, c: 0xeaf2ff, s: 2.4 }, { x: -0.5, y: -0.15, c: 0xeaf2ff, s: 2.4 },
+    { x: 1.25, y: -1.9, c: 0xdfe8ff, s: 2.5 }, { x: -1.55, y: -2.15, c: 0xbcd6ff, s: 3.6 },
   ];
-  const pts = [];
   stars.forEach(st => {
     const m = new THREE.Mesh(new THREE.SphereGeometry(st.s * 0.55, 8, 8),
       new THREE.MeshBasicMaterial({ color: st.c, transparent: true, opacity: 0 }));
-    m.position.set(st.x * S, st.y * S, 0); orionGroup.add(m); pts.push(m);
+    m.position.set(st.x * S, st.y * S, 0); orionGroup.add(m);
   });
-  const linkIdx = [[0, 1], [0, 2], [1, 4], [2, 3], [3, 4], [2, 5], [4, 6]];
-  const lgeo = new THREE.BufferGeometry(), lpos = [];
-  linkIdx.forEach(([a, b]) => { lpos.push(stars[a].x * S, stars[a].y * S, 0, stars[b].x * S, stars[b].y * S, 0); });
-  lgeo.setAttribute('position', new THREE.Float32BufferAttribute(lpos, 3));
-  const lineMat = new THREE.LineBasicMaterial({ color: 0x88aaff, transparent: true, opacity: 0 });
-  orionGroup.add(new THREE.LineSegments(lgeo, lineMat));
+  const links = [[0,1],[0,2],[1,4],[2,3],[3,4],[2,5],[4,6]];
+  const lp = [];
+  links.forEach(([a,b]) => { lp.push(stars[a].x*S, stars[a].y*S, 0, stars[b].x*S, stars[b].y*S, 0); });
+  const lgeo = new THREE.BufferGeometry();
+  lgeo.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+  orionGroup.add(new THREE.LineSegments(lgeo, new THREE.LineBasicMaterial({ color: 0x88aaff, transparent: true, opacity: 0 })));
   const lbl = textSprite('獵戶座 ORION', { fs: 40, color: '#9db8e8', scale: 0.09, opacity: 0 });
   lbl.position.set(0, -3.4 * S, 0); orionGroup.add(lbl);
-  orionGroup.position.set(-260, 200, 260);
-  orionGroup.lookAt(0, 0, 0);
+  orionGroup.position.set(-260, 200, 260); orionGroup.lookAt(0, 0, 0);
   scene.add(orionGroup);
-  orionGroup.userData.mats = orionGroup.children.map(c => c.material);
+  orionGroup.userData.mats = orionGroup.children.map(c2 => c2.material);
   orionGroup.userData.mats.forEach(m => { m.fog = false; m.needsUpdate = true; });
 }
 
-let saucer, saucerAngle = 0;
-function buildSaucer() {
-  saucer = new THREE.Group();
-  const body = mesh(new THREE.CylinderGeometry(3.1, 2.2, 0.75, 20), M(0x9aa4b2, { metal: .8, rough: .25 }), 0, 0, 0);
-  saucer.add(body);
-  saucer.add(mesh(new THREE.SphereGeometry(1.35, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), M(0x7fd8c8, { rough: .15, metal: .3, alpha: .85 }), 0, 0.35, 0));
-  for (let i = 0; i < 8; i++) {
-    const a = i / 8 * Math.PI * 2;
-    const l = mesh(new THREE.SphereGeometry(0.16, 6, 6), new THREE.MeshStandardMaterial({ color: 0xffe9a0, emissive: 0xffd27a, emissiveIntensity: 1.4 }), Math.cos(a) * 2.6, -0.15, Math.sin(a) * 2.6);
-    saucer.add(l);
-  }
-  const glow = new THREE.Mesh(new THREE.ConeGeometry(2.2, 5, 16, 1, true),
-    new THREE.MeshBasicMaterial({ color: 0x9fe8d8, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-  glow.position.y = -2.8; saucer.add(glow);
-  saucer.position.set(72, 46, 0);
-  scene.add(saucer);
-  register(saucer, {
-    tag: '🛸 上空', title: '獵戶號（可駕駛）', accent: '#7fd8c8', tooltip: '獵戶號｜按右下「🛸 駕駛」接管',
-    html: kv('狀態', '自動巡航中')
-      + kv('駕駛方式', 'WASD／方向鍵移動，Q/E 升降，Shift 加速')
-      + '<div class="note">按右下角「🛸 駕駛」接管獵戶號。Esc 或再按一次交還自動巡航。傳說建村者曾在往 LA 的航班上，用一支手機遙控整座村莊。</div>',
-  });
+/* ── 日夜引擎 ─────────────────────────────────────────── */
+const winMat  = new THREE.MeshStandardMaterial({ color: 0x18222e, emissive: 0xffc86e, emissiveIntensity: 0, roughness: .6 });
+const winMatB = new THREE.MeshStandardMaterial({ color: 0x16202b, emissive: 0xd8a34e, emissiveIntensity: 0, roughness: .6 });
+const winMatC = new THREE.MeshStandardMaterial({ color: 0x18222e, emissive: 0x9fd0e8, emissiveIntensity: 0, roughness: .6 });
+const winMats = [winMat, winMatB, winMatC];
+const lampMat = new THREE.MeshStandardMaterial({ color: 0xfff2cc, emissive: 0xffdf99, emissiveIntensity: 0 });
+const neonMats = [];
+function neon(c) {
+  const m = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: .4, roughness: .4 });
+  neonMats.push(m); return m;
 }
-
-/* ══════════════════════════════════════════════════════════
-   村民
-   ══════════════════════════════════════════════════════════ */
-const villagers = [];
-function buildVillagers() {
-  const palette = [0xd88c6a, 0x8fb5d8, 0xc8a951, 0x9b6ab0, 0x6ab08f, 0xb06a6a, 0xe0c98f, 0x7a9bd8];
-  for (let i = 0; i < 14; i++) {
-    const g = new THREE.Group();
-    const col = palette[i % palette.length];
-    g.add(cyl(0.26, 0.34, 0.95, 8, M(col, { rough: .8 }), 0, 0.48, 0));
-    g.add(mesh(new THREE.SphereGeometry(0.26, 8, 8), M(0xe8c9a8), 0, 1.2, 0));
-    const isWatch = i === 13;
-    if (isWatch) {
-      const lant = mesh(new THREE.SphereGeometry(0.16, 6, 6), new THREE.MeshStandardMaterial({ color: 0xffe9a0, emissive: 0xffd27a, emissiveIntensity: 1.6 }), 0.4, 0.7, 0);
-      g.add(lant);
-    }
-    scene.add(g);
-    const mode = i < 8 ? 'ring' : 'radial';
-    const v = {
-      g, mode, isWatch,
-      angle: Math.random() * Math.PI * 2,
-      speed: (0.05 + Math.random() * 0.07) * (Math.random() > .5 ? 1 : -1),
-      radial: RADIALS[i % RADIALS.length],
-      t: Math.random(), dir: 1,
-      wspeed: 0.1 + Math.random() * 0.1,
-      spot: { a: i / 14 * Math.PI * 2, r: 8.5 + (i % 3) * 1.8 },   // 廣場聚集點
-    };
-    /* 初始就定位在路網上（避免隱藏期間堆在原點、轉場齊步走） */
-    if (mode === 'ring') g.position.set(Math.cos(v.angle) * 26.5, 0, Math.sin(v.angle) * 26.5);
-    else { const r0 = 15 + v.t * 40; g.position.set(Math.cos(v.radial) * r0, 0, Math.sin(v.radial) * r0); }
-    villagers.push(v);
-  }
-}
-
-/* 村民時段行程（真實台北時間驅動；__orion.forcePhase 可預覽） */
-let phaseOverride = null, _phase = 'work', _phaseAt = -99;
-function villagePhase(now, open) {
-  const wd = now.getDay(), h = now.getHours() + now.getMinutes() / 60;
-  const weekday = wd >= 1 && wd <= 5 && !isHoliday(now);
-  if (currentNightF > 0.75 || h < 5.5) return 'night';
-  if (weekday) {
-    if (h >= 8.4 && h < 9.5) return 'rush';       // 開盤衝刺
-    if (open) return 'work';                       // 盤中
-    if (h >= 13.5 && h < 15) return 'plaza';       // 收盤廣場聚集
-    if (h >= 5.5 && h < 8.4) return 'evening';     // 清晨零星
-    if (h >= 15 && h < 19.5) return 'evening';     // 收工
-    return 'night';
-  }
-  return (h >= 8.5 && h < 19) ? 'holiday' : 'night';
-}
-function updateVillagers(dt, phase, nightF) {
-  const cfg = {
-    night:   { n: 0,  mult: 0 },
-    rush:    { n: 14, mult: 1.8 },
-    work:    { n: 14, mult: 1.0 },
-    plaza:   { n: 14, mult: 1.0, gather: true },
-    evening: { n: 7,  mult: 0.6 },
-    holiday: { n: 8,  mult: 0.5, mixed: true },
-  }[phase] || { n: 8, mult: 1 };
-  villagers.forEach((v, i) => {
-    if (v.isWatch) {   // 值班員：夜間獨走（= 無人值守 cron）
-      v.g.visible = nightF > 0.5;
-      if (!v.g.visible) return;
-      v.angle += 0.04 * dt;
-      v.g.position.set(Math.cos(v.angle) * 26.5, 0, Math.sin(v.angle) * 26.5);
-      v.g.rotation.y = -v.angle - Math.PI / 2;
-      v.g.position.y = Math.abs(Math.sin(v.angle * 40 + i)) * 0.1;
-      return;
-    }
-    v.g.visible = i < cfg.n;
-    if (!v.g.visible) return;
-    const gatherThis = cfg.gather || (cfg.mixed && i % 2 === 0);
-    if (gatherThis) {   // 走向廣場聚集點，抵達後原地小晃
-      const tx = Math.cos(v.spot.a) * v.spot.r, tz = Math.sin(v.spot.a) * v.spot.r;
-      const dx = tx - v.g.position.x, dz = tz - v.g.position.z;
-      const dist = Math.hypot(dx, dz);
-      if (dist > 0.4) {
-        v.g.position.x += dx / dist * 2.4 * dt;
-        v.g.position.z += dz / dist * 2.4 * dt;
-        v.g.rotation.y = Math.atan2(dx, dz);
-        v.g.position.y = Math.abs(Math.sin(clock3.elapsedTime * 8 + i)) * 0.12;
-      } else {
-        v.g.rotation.y = Math.atan2(-v.g.position.x, -v.g.position.z);  // 面向雕像
-        v.g.position.y = Math.abs(Math.sin(clock3.elapsedTime * 2.2 + i)) * 0.05;
-      }
-      return;
-    }
-    if (v.mode === 'ring') {
-      v.angle += v.speed * cfg.mult * dt;
-      const r = 26.5;
-      v.g.position.set(Math.cos(v.angle) * r, 0, Math.sin(v.angle) * r);
-      v.g.rotation.y = -v.angle + (v.speed > 0 ? -Math.PI / 2 : Math.PI / 2);
-    } else {
-      v.t += v.wspeed * cfg.mult * dt * v.dir;
-      if (v.t > 1) { v.t = 1; v.dir = -1; } if (v.t < 0) { v.t = 0; v.dir = 1; }
-      const r = 15 + v.t * 40;
-      v.g.position.set(Math.cos(v.radial) * r, 0, Math.sin(v.radial) * r);
-      v.g.rotation.y = -v.radial + (v.dir > 0 ? Math.PI : 0) + Math.PI / 2;
-    }
-    v.g.position.y = Math.abs(Math.sin((v.angle + v.t * 6) * 4 + i)) * 0.12 * Math.max(0.4, cfg.mult);
-  });
-}
-
-/* ── 煙霧（盤後工廠） ───────────────────────────────────── */
-const smokeAnchor = new THREE.Vector3();
-const smokes = [];
-function buildSmoke() {
-  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
-  const cx = cv.getContext('2d');
-  const grad = cx.createRadialGradient(32, 32, 4, 32, 32, 30);
-  grad.addColorStop(0, 'rgba(230,230,230,.85)'); grad.addColorStop(1, 'rgba(230,230,230,0)');
-  cx.fillStyle = grad; cx.fillRect(0, 0, 64, 64);
-  const tex = new THREE.CanvasTexture(cv);
-  for (let i = 0; i < 10; i++) {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0, depthWrite: false }));
-    sp.userData.t = i / 10;
-    scene.add(sp); smokes.push(sp);
-  }
-}
-function updateSmoke(dt, rate) {
-  smokes.forEach(sp => {
-    sp.userData.t += dt * 0.22;
-    if (sp.userData.t > 1) sp.userData.t = 0;
-    const t = sp.userData.t;
-    sp.position.set(smokeAnchor.x + Math.sin(t * 9) * 0.7, smokeAnchor.y + t * 9, smokeAnchor.z + Math.cos(t * 7) * 0.5);
-    const s = 1.2 + t * 3.4; sp.scale.set(s, s, 1);
-    sp.material.opacity = rate * (t < 0.12 ? t / 0.12 : (1 - t)) * 0.5;
-  });
-}
-
-/* ── 動態元件收集 ──────────────────────────────────────── */
-const blinkers = [];       // 塔頂紅燈
-const spinners = [];       // 齒輪/滾筒
-const crystalsPulse = [];  // 高熟練水晶
-let lighthouseBeams = null;
-let obsBeam = null, obsSprite = null;   // 財報季：望遠鏡光柱 + 告示
-const researchers = [];                  // 財報季：通宵研究員
-const trucks = [];                       // 下單日：貨運車隊
-
-/* ── 下單日貨運車隊（EV.order_day 時出動） ─────────────── */
-function buildTrucks() {
-  for (let i = 0; i < 2; i++) {
-    const g = new THREE.Group();
-    const col = i ? 0x8B1A1A : 0xC8A951;
-    g.add(box(2.6, 1.5, 1.5, M(col, { rough: .6 }), -0.4, 1.05, 0));      // 貨斗
-    g.add(box(1.1, 1.0, 1.3, M(0x3a3f46, { rough: .5 }), 1.45, 0.8, 0));  // 車頭
-    g.add(box(0.55, 0.45, 0.55, M(0xe8ddc8), -0.95, 2.0, 0));             // 貨物
-    g.add(box(0.5, 0.5, 0.5, M(0x9fb8d8), -0.1, 2.05, 0));
-    for (const [wx, wz] of [[-1.15, 0.8], [-1.15, -0.8], [1.25, 0.8], [1.25, -0.8]]) {
-      const w = cyl(0.32, 0.32, 0.24, 10, M(0x22262c), wx, 0.32, wz);
-      w.rotation.x = Math.PI / 2; g.add(w);
-    }
-    g.visible = false; scene.add(g);
-    register(g, {
-      tag: '📦 下單日', title: '月初下單貨運車', accent: '#C8A951',
-      tooltip: '下單日車隊｜全客戶再平衡執行中',
-      html: kv('任務', '月初下單策略 — 全客戶再平衡')
-        + kv('路線', '中央廣場 ⇄ 個人基金區（東環道）')
-        + kv('出動條件', '下單策略 PDF 48h 內生成，或當月前 3 個交易日')
-        + '<div class="note">貨斗裡載的是新倉位。目標曝險 → 整張優化 → 處置股查核，跑完車隊就收工。</div>',
-    });
-    trucks.push({ g, t: i * 0.55, dir: i ? -1 : 1, lane: i ? -1.6 : 1.6, speed: 0.085 + i * 0.02 });
-  }
-}
-function updateTrucks(dt) {
-  trucks.forEach(tr => {
-    tr.g.visible = EV.order_day;
-    if (!EV.order_day) return;
-    tr.t += tr.speed * dt * tr.dir;
-    if (tr.t > 1) { tr.t = 1; tr.dir = -1; }
-    if (tr.t < 0) { tr.t = 0; tr.dir = 1; }
-    tr.g.position.set(30 + tr.t * 66, 0, tr.lane);
-    tr.g.rotation.y = tr.dir > 0 ? 0 : Math.PI;
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   科幻城市細節 pass1：霓虹／廣場家具／全息柱／岩石灌木／懸浮車
-   ══════════════════════════════════════════════════════════ */
-const neonMats = [], holoMats = [], hovercars = [];
-let holoPillar = null, holoSprite = null;
-function buildCityDetail() {
-  const neon = (c) => {
-    const m = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: .4, roughness: .4 });
-    neonMats.push(m); return m;
-  };
-  /* 101 塔四角霓虹邊條 */
-  for (const [dx, dz] of [[3.5, 0], [-3.5, 0], [0, 3.5], [0, -3.5]]) {
-    scene.add(mesh(new THREE.BoxGeometry(0.16, 26, 0.16), neon(0x19e0c8), dx, 17, -64 + dz));
-  }
-  /* 廣播塔霓虹環 */
-  for (const [h, r] of [[6, 1.45], [11, 1.16]]) {
-    const t = mesh(new THREE.TorusGeometry(r, 0.07, 6, 24), neon(0xff4fd8), -66, h, -6);
-    t.rotation.x = Math.PI / 2; scene.add(t);
-  }
-  /* 廣場長椅 ×4 */
-  for (let i = 0; i < 4; i++) {
-    const a = i / 4 * Math.PI * 2 + Math.PI / 4;
-    const b = new THREE.Group();
-    b.add(box(2.2, 0.12, 0.55, M(0x8a6f4d), 0, 0.5, 0));
-    b.add(box(2.2, 0.5, 0.1, M(0x7a5f42), 0, 0.85, -0.26));
-    b.add(box(0.12, 0.5, 0.5, M(0x4a4038), -0.95, 0.25, 0));
-    b.add(box(0.12, 0.5, 0.5, M(0x4a4038), 0.95, 0.25, 0));
-    b.position.set(Math.cos(a) * 10.5, 0, Math.sin(a) * 10.5);
-    b.rotation.y = -a - Math.PI / 2;
-    scene.add(b);
-  }
-  /* 內環光樁 ×6 */
-  for (let i = 0; i < 6; i++) {
-    const a = i / 6 * Math.PI * 2 + 0.5;
-    const p = new THREE.Group();
-    p.add(cyl(0.12, 0.16, 1.1, 6, M(0x33383f), 0, 0.55, 0));
-    p.add(mesh(new THREE.SphereGeometry(0.16, 8, 8), neon(0x9fe8ff), 0, 1.2, 0));
-    p.position.set(Math.cos(a) * 15.5, 0, Math.sin(a) * 15.5);
-    scene.add(p);
-  }
-  /* 全息資訊柱（賽博公告欄） */
-  const hg = new THREE.Group();
-  hg.add(cyl(0.9, 1.1, 0.5, 12, M(0x2b3240, { metal: .5, rough: .3 }), 0, 0.25, 0));
-  const holoMat = new THREE.MeshBasicMaterial({ color: 0x66d8ff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-  holoMats.push(holoMat);
-  holoPillar = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 4.4, 24, 1, true), holoMat);
-  holoPillar.position.y = 2.8; hg.add(holoPillar);
-  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 320;
-  const cx = cv.getContext('2d');
-  cx.fillStyle = 'rgba(8,20,32,.55)'; cx.fillRect(0, 0, 512, 320);
-  cx.strokeStyle = '#66d8ff'; cx.lineWidth = 4; cx.strokeRect(6, 6, 500, 308);
-  cx.fillStyle = '#bfeaff'; cx.font = 'bold 44px "PingFang TC"'; cx.textAlign = 'center';
-  cx.fillText('ORION VILLAGE', 256, 62);
-  cx.font = '36px "PingFang TC"';
-  const tt = D.totals || {}, lv2 = D.level || {};
-  cx.fillText(D.anon ? `客戶 ${tt.clients_n || 0} 位` : `AUM ${fmtMoney(tt.aum)}`, 256, 128);
-  cx.fillText(`技能 Lv.${lv2.lv || '—'}｜公司 ${(D.companies || []).length} 家`, 256, 186);
-  cx.fillText('守望者：Orion 🏹', 256, 244);
-  cx.fillStyle = '#7fd8c8'; cx.font = '28px "PingFang TC"';
-  cx.fillText('— 零虛構觀察站 —', 256, 296);
-  holoSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, opacity: 0.92, depthWrite: false }));
-  holoSprite.scale.set(7, 4.4, 1); holoSprite.position.y = 5.6;
-  hg.add(holoSprite);
-  hg.position.set(-8.5, 0, 7.5);
-  scene.add(hg);
-  register(hg, {
-    tag: '⛲ 中央廣場', title: '全息資訊柱', accent: '#66d8ff', tooltip: '全息資訊柱｜村莊即時概況',
-    html: kv('顯示', '村莊即時概況（AUM／Lv.／公司數）')
-      + '<div class="note">賽博村的公告欄，與 HUD 同源。每日盤後 Step 7 重生數據後自動更新。</div>',
-  });
-  /* 岩石與灌木（黃金角散布，避開放射道） */
-  const rockMat = M(0x8d9096, { flat: true }), bushMat = M(0x2f5f3f, { flat: true });
-  for (let i = 0; i < 26; i++) {
-    const a = (i * 2.399) % (Math.PI * 2);
-    const nearRoad = RADIALS.some(ra => {
-      let d = Math.abs(a - ((ra + Math.PI * 2) % (Math.PI * 2)));
-      d = Math.min(d, Math.PI * 2 - d);
-      return d < 0.15;
-    });
-    if (nearRoad) continue;
-    const r = i % 2 ? 34 + (i * 13 % 12) : 74 + (i * 17 % 22);
-    const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    if (i % 3 === 0) {
-      const rk = mesh(new THREE.IcosahedronGeometry(0.4 + (i % 4) * 0.16, 0), rockMat, x, 0.3, z);
-      rk.rotation.set(i, i * 2, 0); scene.add(rk);
-    } else {
-      const bu = new THREE.Group();
-      bu.add(mesh(new THREE.SphereGeometry(0.55, 7, 6), bushMat, 0, 0.45, 0));
-      bu.add(mesh(new THREE.SphereGeometry(0.4, 7, 6), bushMat, 0.4, 0.35, 0.15));
-      bu.position.set(x, 0, z); scene.add(bu);
+function addWindows(g, w, h, d, rows, cols, y0) {
+  for (const face of [1, -1]) {
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const win = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.7, 0.06), winMats[(r*7 + c*3 + (face>0?0:1)) % 3]);
+      win.position.set(-w/2 + (c+1)*w/(cols+1), y0 + r*(h/rows), face*(d/2 + 0.04));
+      g.add(win);
     }
   }
-  /* 懸浮通勤車 ×2（環道上空） */
-  for (let i = 0; i < 2; i++) {
-    const g = new THREE.Group();
-    const col = i ? 0xd8b04a : 0x4ab0d8;
-    g.add(box(2.1, 0.42, 1.05, M(col, { metal: .6, rough: .3 }), 0, 0, 0));
-    g.add(mesh(new THREE.SphereGeometry(0.5, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), M(0xaad8e8, { rough: .15, metal: .3, alpha: .8 }), 0.2, 0.2, 0));
-    const gl = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.9), new THREE.MeshBasicMaterial({ color: 0x66d8ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false }));
-    gl.rotation.x = -Math.PI / 2; gl.position.y = -0.35; g.add(gl);
-    scene.add(g);
-    hovercars.push({ g, a: i * Math.PI, dir: i ? 1 : -1, speed: 0.22 + i * 0.06 });
-  }
 }
-function updateHovercars(dt, el) {
-  hovercars.forEach((h, i) => {
-    h.a += h.speed * dt * h.dir;
-    const r = 26.5;
-    h.g.position.set(Math.cos(h.a) * r, 5.4 + Math.sin(el * 2 + i * 3) * 0.35, Math.sin(h.a) * r);
-    h.g.rotation.y = -h.a + (h.dir > 0 ? -Math.PI / 2 : Math.PI / 2);
-    h.g.rotation.z = h.dir * 0.12;
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   科幻密度 pass2：全息數據流／101 光柱／穿梭艇／傳送門網絡
-   ══════════════════════════════════════════════════════════ */
-const dataStreams = [], shuttles = [], portals = [];
-let beam101 = null, camTween = null;
-
-function addDataStream(x, z, topY, color) {
-  const g = new THREE.Group();
-  const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-  for (let i = 0; i < 8; i++) {
-    const q = new THREE.Mesh(new THREE.PlaneGeometry(.3, .3), mat);
-    q.userData.t = i / 8;
-    g.add(q);
-  }
-  g.position.set(x, 0, z);
-  scene.add(g);
-  dataStreams.push({ g, topY, mat });
-}
-function updateDataStreams(dt) {
-  dataStreams.forEach(s => {
-    s.mat.opacity = 0.12 + currentNightF * 0.45;
-    s.g.children.forEach(q => {
-      q.userData.t = (q.userData.t + dt * 0.1) % 1;
-      q.position.y = 2.5 + q.userData.t * s.topY;
-      const sc = 0.5 + Math.sin(q.userData.t * Math.PI) * 0.9;
-      q.scale.set(sc, sc, 1);
-      q.quaternion.copy(camera.quaternion);
-    });
-  });
-}
-
-function buildSciFi2() {
-  /* 全息數據流 — 高度 ∝ log₂(真實數字)，零虛構 */
-  const dcN = (((D.skills || []).find(s => s.module === 'DailyClose')) || { count: 0 }).count;
-  const mdN = (((D.skills || []).find(s => s.module === 'MacroDashboard')) || { count: 0 }).count;
-  const stF = ((D.halls || {}).stocks || {}).total_files || 0;
-  const coN = (D.companies || []).length;
-  const lvN = (D.level || {}).lv || 0;
-  addDataStream(64, 48, 6 + Math.log2(dcN + 1) * 2.0, 0xff8a7a);      // 盤後工廠 ×110
-  addDataStream(-54, -28, 6 + Math.log2(mdN + 1) * 2.0, 0x5ecb7b);    // 總經看板 ×84
-  addDataStream(-40, 58, 6 + Math.log2(stF + 1) * 2.0, 0xffd27a);     // 個股大廳 ×79 件
-  addDataStream(-4, 66, 6 + Math.log2(coN + 1) * 2.0, 0x9db8e8);      // 天文台 ×28 家
-  addDataStream(52, -52, 6 + Math.log2(lvN + 1) * 2.0, 0xC8A951);     // 技能祭壇 Lv.21
-
-  /* 101 塔頂光柱（夜間） */
-  beam101 = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.85, 46, 12, 1, true),
-    new THREE.MeshBasicMaterial({ color: 0x8fe8d8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-  beam101.position.set(0, 66, -64);
-  scene.add(beam101);
-
-  /* 跨區穿梭艇 ×2（航線=真實區點連線） */
-  const routes = [
-    [[0, 10, -52], [2, 12, 0], [-48, 10, 42], [-52, 11, 0]],
-    [[58, 9, 8], [46, 10, -46], [4, 11, -50], [6, 9, 6]],
-  ];
-  routes.forEach((pts, ri) => {
-    const g = new THREE.Group();
-    const col = ri ? 0xc87a4a : 0x7a9bd8;
-    g.add(box(2.8, 0.45, 0.95, M(col, { metal: .65, rough: .3 }), 0, 0, 0));
-    g.add(mesh(new THREE.SphereGeometry(0.42, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), M(0xaad8e8, { rough: .15, alpha: .8 }), 0.5, 0.2, 0));
-    g.add(mesh(new THREE.ConeGeometry(0.3, 0.8, 8), M(col, { metal: .6, rough: .3 }), 1.75, 0, 0)).children;
-    const nose = g.children[g.children.length - 1]; nose.rotation.z = -Math.PI / 2;
-    const tail = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.5), new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }));
-    tail.position.set(-1.9, 0, 0); g.add(tail);
-    scene.add(g);
-    shuttles.push({ g, pts: pts.map(p => new THREE.Vector3(...p)), seg: 0, t: ri * 0.5, speed: 0.09 + ri * 0.03 });
-  });
-
-  /* 傳送門網絡（點擊瞬移；走路模式=人到，觀察模式=鏡頭飛過去） */
-  const P = [
-    ['⛲ 中央廣場', 10, -9, 0, 0],
-    ['🏛 圖靈金融', 6, -46, 0, -58],
-    ['🏦 個人基金', 44, 5, 58, 12],
-    ['🔭 投資研究', 4, 50, -4, 62],
-    ['📡 傳播區', -46, -4, -56, -4],
-    ['🏟 展示特區', -38, 42, -52, 48],
-    ['💎 技能祭壇', 40, -40, 52, -52],
-  ];
-  P.forEach(([label, px, pz, tx, tz]) => {
-    const g = new THREE.Group();
-    const ringMat = new THREE.MeshStandardMaterial({ color: 0x66d8ff, emissive: 0x66d8ff, emissiveIntensity: 1.1, roughness: .3 });
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.11, 10, 32), ringMat);
-    ring.position.y = 2.0; g.add(ring);
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(1.36, 24),
-      new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: .16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    disc.position.y = 2.0; g.add(disc);
-    g.add(box(0.9, 0.35, 0.9, M(0x2b3240, { metal: .4 }), 0, 0.17, 0));
-    const hit = new THREE.Mesh(new THREE.CircleGeometry(3.0, 12),   // 加大點擊範圍（近乎隱形）
-      new THREE.MeshBasicMaterial({ color: 0x66d8ff, transparent: true, opacity: 0.02, depthWrite: false, side: THREE.DoubleSide }));
-    hit.position.y = 2.2; g.add(hit);
-    const lbl = textSprite(label, { fs: 32, color: '#bfeaff', scale: 0.018 });
-    lbl.position.y = 4.0; g.add(lbl);
-    g.position.set(px, 0, pz);
-    g.lookAt(new THREE.Vector3(0, 0, 0)); g.rotation.x = 0; g.rotation.z = 0;
-    scene.add(g);
-    register(g, {
-      tag: '🌀 傳送門', title: '傳送 → ' + label, accent: '#66d8ff',
-      tooltip: '🌀 點擊傳送 → ' + label,
-      portalTo: { x: tx, z: tz, label },
-    });
-    portals.push({ g, ring });
-  });
-}
-function doTeleport(t) {
-  if (walking) {
-    walker.position.set(t.x + 3, 0, t.z + 3);
-    camera.position.set(t.x + 9, 5, t.z + 12);
-    controls.target.set(t.x + 3, 1.5, t.z + 3);
-    controls.update();
-  } else {
-    camTween = {
-      t: 0, dur: 0.9,
-      fromPos: camera.position.clone(), toPos: new THREE.Vector3(t.x + 24, 21, t.z + 28),
-      fromTgt: controls.target.clone(), toTgt: new THREE.Vector3(t.x, 5, t.z),
-    };
-  }
-}
-function updateSciFi2(dt, el) {
-  if (beam101) {
-    beam101.material.opacity = currentNightF * (0.16 + Math.sin(el * 1.2) * 0.05);
-    beam101.rotation.y += dt * 0.4;
-  }
-  portals.forEach((p, i) => {
-    p.ring.rotation.z += dt * (0.8 + i * 0.07);
-    p.ring.material.emissiveIntensity = 0.7 + currentNightF * 0.8 + Math.sin(el * 3 + i) * 0.2;
-  });
-  shuttles.forEach(s => {
-    const a = s.pts[s.seg], b = s.pts[(s.seg + 1) % s.pts.length];
-    const segLen = a.distanceTo(b);
-    s.t += (s.speed * 30 * dt) / Math.max(1, segLen);
-    if (s.t >= 1) { s.t = 0; s.seg = (s.seg + 1) % s.pts.length; return; }
-    s.g.position.lerpVectors(a, b, s.t);
-    s.g.position.y += Math.sin(el * 2.2) * 0.25;
-    const dir = b.clone().sub(a);
-    s.g.rotation.y = Math.atan2(dir.x, dir.z) - Math.PI / 2;   // 機首(+x)朝航向
-  });
-  if (camTween) {
-    camTween.t += dt / camTween.dur;
-    const k = camTween.t >= 1 ? 1 : (1 - Math.pow(1 - camTween.t, 3));   // easeOutCubic
-    camera.position.lerpVectors(camTween.fromPos, camTween.toPos, k);
-    controls.target.lerpVectors(camTween.fromTgt, camTween.toTgt, k);
-    controls.update();
-    if (camTween.t >= 1) camTween = null;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════
-   Orion NPC 巡村（點擊對話）＋ 晨鳥夜螢
-   ══════════════════════════════════════════════════════════ */
-let orionNPC = null, orionAngle = 2.1;
-const birdFlocks = [], fireflies = [];
-function buildOrionNPC() {
-  orionNPC = new THREE.Group();
-  const gold = M(0xC8A951, { metal: .8, rough: .35 });
-  orionNPC.add(cyl(0.3, 0.4, 1.2, 8, gold, 0, 0.6, 0));
-  orionNPC.add(mesh(new THREE.SphereGeometry(0.3, 10, 8), M(0xE8DDC8, { metal: .3 }), 0, 1.5, 0));
-  const bow = mesh(new THREE.TorusGeometry(0.55, 0.04, 6, 16, Math.PI), gold, 0.32, 1.0, 0);
-  bow.rotation.y = Math.PI / 2; bow.rotation.z = 0.4; orionNPC.add(bow);
-  const np = textSprite('ORION 🏹', { fs: 34, bold: true, color: '#ffe9ad', scale: 0.018 });
-  np.position.y = 2.5; orionNPC.add(np);
-  scene.add(orionNPC);
-  register(orionNPC, {
-    tag: '🏹 守望者', title: 'Orion（巡村中）', accent: '#C8A951',
-    tooltip: 'Orion｜點擊交談', dialog: true,
-  });
-}
-function orionDialog() {
-  const mk = marketState(taipeiNow());
-  const dc = (((D.skills || []).find(s => s.module === 'DailyClose')) || { count: 0 }).count;
-  const lines = [
-    `今天${mk.label.replace('● ', '')}。${mk.open ? '盯緊法人動向，收盤見。' : '市場休息，正好巡村。'}`,
-    `距離 2 轉「獵人」還差 ${(D.level || {}).next_need != null ? D.level.next_need : '—'} 個技能。快了。`,
-    `祭壇最高那根酒紅水晶是「每日盤後」×${dc} —— 那是村子的心跳。`,
-    `夜裡抬頭，獵戶座在西南天空。我的箭一直指著它。`,
-    `公司樹林已經 ${(D.companies || []).length} 棵了。樹只增不減，這是知識的複利。`,
-    (EV.earnings_season ? '財報季，天文台通宵。研究員的燈籠不會滅。' : '等財報季一到，天文台就要通宵了。'),
-    `全村 AUM ${fmtMoney((D.totals || {}).aum)}，${(D.totals || {}).clients_n || 0} 座宅邸。守護它們是我的工作。`,
-  ];
-  const pick = [];
-  while (pick.length < 2) {
-    const l = lines[Math.floor(Math.random() * lines.length)];
-    if (!pick.includes(l)) pick.push(l);
-  }
-  openPanel({
-    tag: '🏹 守望者', title: 'Orion', accent: '#C8A951',
-    html: pick.map(l => `<div class="kv" style="display:block;padding:8px 0"><span style="color:#e8ddc8">「${esc(l)}」</span></div>`).join('')
-      + '<div class="note">再點一次我，聽別的。守望者常駐村中，如同背景裡的排程。</div>',
-  });
-}
-function buildAmbient() {
-  /* 晨鳥 ×2 群（白天） */
-  for (let f = 0; f < 2; f++) {
-    const flock = { g: new THREE.Group(), cx: f ? -30 : 40, cz: f ? 30 : -20, rx: 34 + f * 8, rz: 24 + f * 6, h: 26 + f * 6, sp: 0.14 + f * 0.04, ph: f * 2 };
-    for (let i = 0; i < 5; i++) {
-      const b = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.24), new THREE.MeshBasicMaterial({ color: 0x24303a, side: THREE.DoubleSide }));
-      b.userData.off = i;
-      flock.g.add(b);
-    }
-    scene.add(flock.g); birdFlocks.push(flock);
-  }
-  /* 夜螢 ×16 */
-  const cv = document.createElement('canvas'); cv.width = cv.height = 32;
-  const cx = cv.getContext('2d');
-  const gr = cx.createRadialGradient(16, 16, 1, 16, 16, 14);
-  gr.addColorStop(0, 'rgba(220,255,160,1)'); gr.addColorStop(1, 'rgba(220,255,160,0)');
-  cx.fillStyle = gr; cx.fillRect(0, 0, 32, 32);
-  const ftex = new THREE.CanvasTexture(cv);
-  for (let i = 0; i < 16; i++) {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: ftex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
-    sp.scale.set(0.7, 0.7, 1);
-    const a = (i * 2.399) % (Math.PI * 2), r = 38 + (i * 11 % 46);
-    fireflies.push({ sp, x: Math.cos(a) * r, z: Math.sin(a) * r, sp1: 0.4 + (i % 5) * 0.13, ph: i * 1.7 });
-    scene.add(sp);
-  }
-}
-function updateAmbient(dt, el, nightF) {
-  const dayVis = nightF < 0.35;
-  birdFlocks.forEach(fl => {
-    fl.g.visible = dayVis;
-    if (!dayVis) return;
-    const a = el * fl.sp + fl.ph;
-    fl.g.children.forEach(b => {
-      const oa = a - b.userData.off * 0.13;
-      b.position.set(fl.cx + Math.cos(oa) * fl.rx, fl.h + Math.sin(oa * 2) * 1.6 + b.userData.off * 0.4, fl.cz + Math.sin(oa) * fl.rz);
-      b.rotation.y = -oa;
-      b.scale.y = 0.5 + Math.abs(Math.sin(el * 9 + b.userData.off)) * 0.9;   // 拍翅
-    });
-  });
-  const fVis = nightF > 0.55;
-  fireflies.forEach(f => {
-    f.sp.material.opacity = fVis ? (0.35 + Math.sin(el * f.sp1 * 4 + f.ph) * 0.3) * nightF : 0;
-    if (!fVis) return;
-    f.sp.position.set(
-      f.x + Math.sin(el * f.sp1 + f.ph) * 2.2,
-      1 + Math.abs(Math.sin(el * f.sp1 * 0.7 + f.ph * 2)) * 1.8,
-      f.z + Math.cos(el * f.sp1 * 0.8 + f.ph) * 2.2);
-  });
-}
-function updateOrionNPC(dt, el) {
-  if (!orionNPC) return;
-  orionAngle += dt * 0.045;
-  const r = 28.8;
-  orionNPC.position.set(Math.cos(orionAngle) * r, Math.abs(Math.sin(el * 5)) * 0.08, Math.sin(orionAngle) * r);
-  orionNPC.rotation.y = -orionAngle - Math.PI / 2;
-}
-
-/* ══════════════════════════════════════════════════════════
-   🚶 走路探索模式（第三人稱跟隨鏡頭）
-   ══════════════════════════════════════════════════════════ */
-let walker = null, walking = false, prevCam = null;
-function buildWalker() {
-  walker = new THREE.Group();
-  walker.add(cyl(0.3, 0.38, 1.15, 8, M(0x2E8B8B, { rough: .7 }), 0, 0.58, 0));
-  walker.add(mesh(new THREE.SphereGeometry(0.28, 10, 8), M(0xe8c9a8), 0, 1.4, 0));
-  const bow = mesh(new THREE.TorusGeometry(0.5, 0.035, 6, 16, Math.PI), M(0xC8A951, { metal: .7 }), 0, 0.9, -0.32);
-  bow.rotation.z = Math.PI / 2; walker.add(bow);
-  walker.visible = false;
-  scene.add(walker);
-}
-function toggleWalk() {
-  if (driving) toggleDrive();
-  walking = !walking;
-  $('btn-walk').classList.toggle('driving', walking);
-  $('btn-walk').textContent = walking ? '🚶 探索中（Esc 退出）' : '🚶 探索';
-  walker.visible = walking;
-  if (walking) {
-    prevCam = { pos: camera.position.clone(), tgt: controls.target.clone(), minD: controls.minDistance };
-    walker.position.set(6, 0, 10);
-    controls.minDistance = 3;
-    camera.position.set(13, 5.5, 19);
-    openPanel({
-      tag: '🚶 探索模式', title: '你正走在獵戶村裡', accent: '#2E8B8B',
-      html: kv('移動', 'W A S D／方向鍵（相對鏡頭方向）') + kv('奔跑', 'Shift')
-        + kv('視角', '滑鼠拖曳環繞・滾輪縮放') + kv('退出', 'Esc 或再按「🚶 探索」')
-        + '<div class="note">走近任何建築點擊即可查看數據。夜裡記得抬頭——獵戶座就在西南天空。</div>',
-    });
-  } else if (prevCam) {
-    controls.minDistance = prevCam.minD;
-    camera.position.copy(prevCam.pos); controls.target.copy(prevCam.tgt); controls.update();
-  }
-}
-const _wDir = new THREE.Vector3(), _wRight = new THREE.Vector3(), _wMove = new THREE.Vector3();
-function updateWalk(dt, el) {
-  if (!walking) return;
-  camera.getWorldDirection(_wDir); _wDir.y = 0; _wDir.normalize();
-  _wRight.crossVectors(_wDir, new THREE.Vector3(0, 1, 0));
-  _wMove.set(0, 0, 0);
-  if (keys['w'] || keys['arrowup']) _wMove.add(_wDir);
-  if (keys['s'] || keys['arrowdown']) _wMove.sub(_wDir);
-  if (keys['a'] || keys['arrowleft']) _wMove.sub(_wRight);
-  if (keys['d'] || keys['arrowright']) _wMove.add(_wRight);
-  if (_wMove.lengthSq() > 0) {
-    _wMove.normalize().multiplyScalar((keys['shift'] ? 10.5 : 4.4) * dt);
-    walker.position.add(_wMove);
-    const rr = Math.hypot(walker.position.x, walker.position.z);
-    if (rr > 146) { walker.position.x *= 146 / rr; walker.position.z *= 146 / rr; }
-    walker.rotation.y = Math.atan2(_wMove.x, _wMove.z);
-    walker.position.y = Math.abs(Math.sin(el * 9)) * 0.09;
-  } else {
-    walker.position.y = 0;
-  }
-  const tgt = walker.position.clone(); tgt.y += 1.5;
-  controls.target.lerp(tgt, 0.3);
-}
-
-/* ══════════════════════════════════════════════════════════
-   日夜引擎
-   ══════════════════════════════════════════════════════════ */
 const TIME_KEYS = [
-  { h: 0.0, sky: 0x0a1030, sunI: 0.0, sunC: 0xffffff, hemiI: 0.16, stars: 1.0, win: 1.0 },
-  { h: 5.0, sky: 0x141440, sunI: 0.03, sunC: 0xffc9a0, hemiI: 0.2, stars: 0.85, win: 0.9 },
-  { h: 6.4, sky: 0xf09a5e, sunI: 0.5, sunC: 0xffb877, hemiI: 0.45, stars: 0.0, win: 0.25 },
-  { h: 8.0, sky: 0x9ecdf0, sunI: 0.95, sunC: 0xfff2dd, hemiI: 0.62, stars: 0.0, win: 0.0 },
-  { h: 12.5, sky: 0xa9d8f8, sunI: 1.12, sunC: 0xffffff, hemiI: 0.66, stars: 0.0, win: 0.0 },
-  { h: 16.8, sky: 0x97c4e8, sunI: 0.9, sunC: 0xfff0d0, hemiI: 0.6, stars: 0.0, win: 0.0 },
-  { h: 18.1, sky: 0xf0955e, sunI: 0.42, sunC: 0xff9d5e, hemiI: 0.42, stars: 0.0, win: 0.5 },
+  { h: 0.0,  sky: 0x0a1030, sunI: 0.0,  sunC: 0xffffff, hemiI: 0.16, stars: 1.0,  win: 1.0 },
+  { h: 5.0,  sky: 0x141440, sunI: 0.03, sunC: 0xffc9a0, hemiI: 0.2,  stars: 0.85, win: 0.9 },
+  { h: 6.4,  sky: 0xf09a5e, sunI: 0.5,  sunC: 0xffb877, hemiI: 0.45, stars: 0.0,  win: 0.25 },
+  { h: 8.0,  sky: 0x9ecdf0, sunI: 0.95, sunC: 0xfff2dd, hemiI: 0.62, stars: 0.0,  win: 0.0 },
+  { h: 12.5, sky: 0xa9d8f8, sunI: 1.12, sunC: 0xffffff, hemiI: 0.66, stars: 0.0,  win: 0.0 },
+  { h: 16.8, sky: 0x97c4e8, sunI: 0.9,  sunC: 0xfff0d0, hemiI: 0.6,  stars: 0.0,  win: 0.0 },
+  { h: 18.1, sky: 0xf0955e, sunI: 0.42, sunC: 0xff9d5e, hemiI: 0.42, stars: 0.0,  win: 0.5 },
   { h: 19.3, sky: 0x38306a, sunI: 0.07, sunC: 0xcf9aff, hemiI: 0.24, stars: 0.55, win: 1.0 },
-  { h: 21.0, sky: 0x0e1436, sunI: 0.0, sunC: 0xffffff, hemiI: 0.17, stars: 1.0, win: 1.0 },
-  { h: 24.0, sky: 0x0a1030, sunI: 0.0, sunC: 0xffffff, hemiI: 0.16, stars: 1.0, win: 1.0 },
+  { h: 21.0, sky: 0x0e1436, sunI: 0.0,  sunC: 0xffffff, hemiI: 0.17, stars: 1.0,  win: 1.0 },
+  { h: 24.0, sky: 0x0a1030, sunI: 0.0,  sunC: 0xffffff, hemiI: 0.16, stars: 1.0,  win: 1.0 },
 ];
 const _c1 = new THREE.Color(), _c2 = new THREE.Color();
 let currentNightF = 0;
 function applyTime(h) {
   let a = TIME_KEYS[0], b = TIME_KEYS[TIME_KEYS.length - 1];
-  for (let i = 0; i < TIME_KEYS.length - 1; i++) {
-    if (h >= TIME_KEYS[i].h && h <= TIME_KEYS[i + 1].h) { a = TIME_KEYS[i]; b = TIME_KEYS[i + 1]; break; }
-  }
+  for (let i = 0; i < TIME_KEYS.length - 1; i++)
+    if (h >= TIME_KEYS[i].h && h <= TIME_KEYS[i+1].h) { a = TIME_KEYS[i]; b = TIME_KEYS[i+1]; break; }
   const f = (h - a.h) / Math.max(0.001, b.h - a.h);
   _c1.setHex(a.sky); _c2.setHex(b.sky); _c1.lerp(_c2, f);
-  scene.background = _c1.clone();
-  scene.fog.color.copy(_c1);
-  const sunI = a.sunI + (b.sunI - a.sunI) * f;
-  sun.intensity = sunI;
+  scene.background = _c1.clone(); scene.fog.color.copy(_c1);
+  sun.intensity = a.sunI + (b.sunI - a.sunI) * f;
   _c1.setHex(a.sunC); _c2.setHex(b.sunC); _c1.lerp(_c2, f); sun.color.copy(_c1);
   hemi.intensity = a.hemiI + (b.hemiI - a.hemiI) * f;
-  const sa = (h - 6) / 12 * Math.PI;   // 6 點日出 18 點日落
+  const sa = (h - 6) / 12 * Math.PI;
   sun.position.set(Math.cos(sa) * 160, Math.max(8, Math.sin(sa) * 150), 60);
-  const starsF = a.stars + (b.stars - a.stars) * f;
-  starsMat.opacity = starsF * 0.95;
-  if (orionGroup) orionGroup.userData.mats.forEach((m, i) => { m.opacity = starsF * (i < 7 ? 1 : (i === orionGroup.children.length - 1 ? 0.75 : 0.4)); });
+  const stF = a.stars + (b.stars - a.stars) * f;
+  starsMat.opacity = stF * 0.95;
+  if (orionGroup) orionGroup.userData.mats.forEach((m, i) => {
+    m.opacity = stF * (i < 7 ? 1 : (i === orionGroup.children.length - 1 ? 0.75 : 0.4));
+  });
   const winF = a.win + (b.win - a.win) * f;
   const _el = clock3 ? clock3.elapsedTime : 0;
   winMat.emissiveIntensity = winF * 1.25;
-  winMatB.emissiveIntensity = winF * 0.85 * (0.9 + 0.1 * Math.sin(_el * 6.3));   // 微閃爍
+  winMatB.emissiveIntensity = winF * 0.85 * (0.9 + 0.1 * Math.sin(_el * 6.3));
   winMatC.emissiveIntensity = winF * 1.05;
   lampMat.emissiveIntensity = winF * 1.5;
   neonMats.forEach(m => { m.emissiveIntensity = 0.3 + winF * 1.5; });
-  holoMats.forEach(m => { m.opacity = 0.08 + winF * 0.1; });
-  moon.intensity = starsF * 0.22;
+  moon.intensity = stF * 0.22;
   currentNightF = winF;
-  if (lighthouseBeams) lighthouseBeams.visible = winF > 0.15;
 }
 
-/* ══════════════════════════════════════════════════════════
-   UI：HUD / 面板 / 拾取 / 時間控制 / 駕駛模式
-   ══════════════════════════════════════════════════════════ */
-const $ = id => document.getElementById(id);
-function initHud() {
-  const t = D.totals || {}, lv = D.level || {};
-  const evLine = EV.labels && EV.labels.length
-    ? `<br><span style="color:#ffd27a">⚡ ${EV.labels.join('　')}</span>` : '';
-  if (D.anon) {
-    document.querySelector('#hud-title .sub').textContent =
-      'Jeff Hsu 的賽博莊園 — 匿名展示版（形狀為真・明細已隱藏）';
-    $('hud-stats').innerHTML =
-      `客戶 <b>${t.clients_n || 0}</b> 位 · 技能 <b>Lv.${lv.lv || '—'}</b> ${lv.title || ''} · `
-      + `公司研究 <b>${(D.companies || []).length}</b> 家`
-      + `<br><span style="color:#9e8e7e">資料日 ${D.meta && D.meta.data_date || '—'}（宅邸大小比例為真，金額與姓名已移除）</span>` + evLine;
-    return;
-  }
-  $('hud-stats').innerHTML =
-    `AUM <b>${fmtMoney(t.aum)}</b> · 累積 <span class="${pnlCls(t.ret)}">${fmtPct(t.ret)}</span> · 客戶 <b>${t.clients_n || 0}</b> 位 · `
-    + `技能 <b>Lv.${lv.lv || '—'}</b> ${lv.title || ''} · 公司研究 <b>${(D.companies || []).length}</b> 家`
-    + `<br><span style="color:#9e8e7e">資料日 ${D.meta && D.meta.data_date || '—'} · 引擎生成 ${D.meta && D.meta.generated_at || '—'}</span>` + evLine;
+/* ── 地形：地面／環道／六輻射道／燈／植被 ──────────────── */
+const HALL_R = 52;
+const HALL_ANGLES = { macro: -Math.PI/2, knowledge: -Math.PI/6, chain: Math.PI/6, ma: Math.PI/2, fund: Math.PI*5/6, dev: -Math.PI*5/6 };
+function hallPos(key, r) {
+  const a = HALL_ANGLES[key]; const rr = r != null ? r : HALL_R;
+  return [Math.cos(a) * rr, Math.sin(a) * rr];
 }
-function updateClock() {
-  const now = taipeiNow();
-  $('clock-time').textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-  const wd = '日一二三四五六'[now.getDay()];
-  $('clock-date').textContent = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}（${wd}）台北`;
-  const mk = marketState(now);
-  const badge = $('market-badge');
-  badge.textContent = mk.label;
-  badge.className = mk.open ? 'mk-open' : 'mk-closed';
-  /* 鐘塔面 */
-  if (clockCtx) {
-    clockCtx.fillStyle = '#1a1410'; clockCtx.fillRect(0, 0, 256, 256);
-    clockCtx.strokeStyle = '#C8A951'; clockCtx.lineWidth = 10; clockCtx.strokeRect(8, 8, 240, 240);
-    clockCtx.fillStyle = '#ffe9ad'; clockCtx.textAlign = 'center';
-    clockCtx.font = 'bold 74px Menlo, monospace';
-    clockCtx.fillText($('clock-time').textContent, 128, 128);
-    clockCtx.font = '34px "PingFang TC"';
-    clockCtx.fillStyle = mk.open ? '#ff8a7a' : '#8a94a6';
-    clockCtx.fillText(mk.open ? '開盤中' : '收盤', 128, 190);
-    clockTex.needsUpdate = true;
+function buildTerrain() {
+  const ground = mesh(new THREE.CircleGeometry(150, 64), M(0x49703f, { rough: 1 }));
+  ground.rotation.x = -Math.PI/2; ground.castShadow = false; scene.add(ground);
+  const plaza = mesh(new THREE.CircleGeometry(15, 48), M(0x8d8474, { rough: 1 }));
+  plaza.rotation.x = -Math.PI/2; plaza.position.y = 0.04; plaza.castShadow = false; scene.add(plaza);
+  const roadMat = M(0x2c3038, { rough: 1 });
+  const ring = mesh(new THREE.RingGeometry(22, 26.5, 64), roadMat);
+  ring.rotation.x = -Math.PI/2; ring.position.y = 0.05; ring.castShadow = false; scene.add(ring);
+  Object.values(HALL_ANGLES).forEach(a => {
+    const len = 26, r0 = 26 + len/2;
+    const rd = box(4, 0.1, len, roadMat, 0, 0.05, 0);
+    rd.rotation.y = -a + Math.PI/2;
+    rd.position.set(Math.cos(a) * r0, 0.05, Math.sin(a) * r0);
+    rd.castShadow = false; scene.add(rd);
+    /* 場館前庭 */
+    const [hx, hz] = hallPos(Object.keys(HALL_ANGLES).find(k => HALL_ANGLES[k] === a), 44);
+    const pad = mesh(new THREE.CircleGeometry(5, 24), M(0x6e6a5e, { rough: 1 }));
+    pad.rotation.x = -Math.PI/2; pad.position.set(hx, 0.04, hz); pad.castShadow = false; scene.add(pad);
+  });
+  for (let i = 0; i < 10; i++) {
+    const a = i / 10 * Math.PI * 2 + 0.3;
+    const g = new THREE.Group();
+    g.add(cyl(0.09, 0.12, 4.2, 6, M(0x333940), 0, 2.1, 0));
+    g.add(mesh(new THREE.SphereGeometry(0.34, 10, 10), lampMat, 0, 4.35, 0));
+    g.position.set(Math.cos(a) * 28.5, 0, Math.sin(a) * 28.5);
+    scene.add(g);
   }
-  return mk;
+  /* 植被（黃金角，避開輻射道） */
+  const trunkMat = M(0x6b4a30), rockMat = M(0x8d9096, { flat: true });
+  const leafMats = [M(0x3f7f4f, {flat:true}), M(0x4f8f45, {flat:true}), M(0x37704f, {flat:true})];
+  for (let i = 0; i < 42; i++) {
+    const a = (i * 2.399) % (Math.PI * 2);
+    const near = Object.values(HALL_ANGLES).some(ra => {
+      let d0 = Math.abs(a - ((ra + Math.PI*2) % (Math.PI*2)));
+      d0 = Math.min(d0, Math.PI*2 - d0); return d0 < 0.16;
+    });
+    if (near) continue;
+    const r = i % 2 ? 32 + (i*13 % 10) : 62 + (i*17 % 40);
+    const x = Math.cos(a)*r, z = Math.sin(a)*r;
+    if (i % 4 === 3) {
+      const rk = mesh(new THREE.IcosahedronGeometry(0.4 + (i%4)*0.16, 0), rockMat, x, 0.3, z);
+      rk.rotation.set(i, i*2, 0); scene.add(rk);
+    } else {
+      const g = new THREE.Group();
+      const h = 1.4 + (i*13 % 10)/10 * 1.2, lm = leafMats[i % 3];
+      g.add(cyl(0.16, 0.22, h, 6, trunkMat, 0, h/2, 0));
+      g.add(mesh(new THREE.ConeGeometry(1.15, 2.2, 7), lm, 0, h+1.0, 0));
+      g.add(mesh(new THREE.ConeGeometry(0.85, 1.7, 7), lm, 0, h+2.2, 0));
+      g.position.set(x, 0, z); scene.add(g);
+    }
+  }
 }
 
-/* 面板 */
+/* ── 角色工廠（細緻人形：四肢擺動、眼睛、帽子、身分徽章） ── */
+function makeCharacter(o) {
+  const g = new THREE.Group();
+  const sc = o.scale || 1;
+  const skin = M(o.skin || 0xe8c9a8), shirt = M(o.shirt || 0x8fb5d8), pants = M(o.pants || 0x3a4356);
+  const legL = new THREE.Group(), legR = new THREE.Group();
+  [[legL, -1], [legR, 1]].forEach(([lg, s]) => {
+    lg.position.set(s * 0.11 * sc, 0.52 * sc, 0);
+    lg.add(cyl(0.07 * sc, 0.085 * sc, 0.5 * sc, 8, pants, 0, -0.25 * sc, 0));
+    lg.add(box(0.13 * sc, 0.07 * sc, 0.2 * sc, M(0x2b2f38), 0, -0.51 * sc, 0.03 * sc));  // 鞋
+    g.add(lg);
+  });
+  const torso = mesh(new THREE.BoxGeometry(0.42 * sc, 0.5 * sc, 0.25 * sc), shirt, 0, 0.78 * sc, 0);
+  g.add(torso);
+  g.add(box(0.44 * sc, 0.1 * sc, 0.27 * sc, M(o.belt || 0x2b2f38), 0, 0.55 * sc, 0));     // 腰帶
+  const armL = new THREE.Group(), armR = new THREE.Group();
+  [[armL, -1], [armR, 1]].forEach(([ag, s]) => {
+    ag.position.set(s * 0.27 * sc, 1.0 * sc, 0);
+    ag.add(cyl(0.05 * sc, 0.065 * sc, 0.44 * sc, 8, shirt, 0, -0.22 * sc, 0));
+    ag.add(mesh(new THREE.SphereGeometry(0.055 * sc, 6, 6), skin, 0, -0.46 * sc, 0));      // 手
+    g.add(ag);
+  });
+  g.add(mesh(new THREE.SphereGeometry(0.17 * sc, 12, 10), skin, 0, 1.22 * sc, 0));         // 頭
+  for (const s of [-1, 1])
+    g.add(mesh(new THREE.SphereGeometry(0.021 * sc, 6, 6), M(0x22262c), s * 0.06 * sc, 1.24 * sc, 0.155 * sc)); // 眼
+  if (o.hat === 'cap') {
+    g.add(cyl(0.155 * sc, 0.175 * sc, 0.1 * sc, 10, M(o.hatColor || 0x8B1A1A), 0, 1.36 * sc, 0));
+    g.add(box(0.18 * sc, 0.02 * sc, 0.15 * sc, M(o.hatColor || 0x8B1A1A), 0, 1.32 * sc, 0.2 * sc));
+  } else if (o.hat === 'hood') {
+    g.add(mesh(new THREE.ConeGeometry(0.21 * sc, 0.34 * sc, 10), M(o.hatColor || 0x2E8B8B), 0, 1.42 * sc, 0));
+  } else {
+    g.add(mesh(new THREE.SphereGeometry(0.168 * sc, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2.3), M(o.hatColor || 0x3a2f28), 0, 1.26 * sc, 0)); // 髮
+  }
+  if (o.bow) {   // 弓（背在身後）
+    const bw = mesh(new THREE.TorusGeometry(0.42 * sc, 0.03 * sc, 6, 16, Math.PI), M(0xC8A951, { metal: .7, rough: .3 }), 0, 0.85 * sc, -0.2 * sc);
+    bw.rotation.z = Math.PI / 2; g.add(bw);
+  }
+  /* 身分徽章：NPC 金／路人 灰／真人 青 */
+  const bcol = { npc: ['#ffe9ad', 'rgba(60,45,10,.85)', '#C8A951'], walker: ['#c9cdd6', 'rgba(30,34,42,.8)', '#5a6478'], player: ['#bffcf0', 'rgba(10,50,45,.85)', '#2E8B8B'] }[o.kind || 'walker'];
+  const badge = textSprite((o.kind === 'npc' ? '【NPC】' : o.kind === 'player' ? '【村民】' : '') + o.name, { fs: 30, bold: true, color: bcol[0], bg: bcol[1], border: bcol[2], scale: 0.014 });
+  badge.position.y = 1.8 * sc; g.add(badge);
+  g.userData.limbs = { legL, legR, armL, armR };
+  g.userData.phase = Math.random() * 6;
+  g.userData.badgeSprite = badge;
+  return g;
+}
+function animChar(g, dt, moving, speedF) {
+  const L = g.userData.limbs; if (!L) return;
+  if (moving) {
+    g.userData.phase += dt * 9 * (speedF || 1);
+    const a = Math.sin(g.userData.phase) * 0.62;
+    L.legL.rotation.x = a; L.legR.rotation.x = -a;
+    L.armL.rotation.x = -a * 0.75; L.armR.rotation.x = a * 0.75;
+  } else {
+    ['legL', 'legR', 'armL', 'armR'].forEach(k => { L[k].rotation.x *= 0.82; });
+  }
+}
+
+/* ── 中央大廳 ─────────────────────────────────────────── */
+let holoRing = null, holoNameSprite = null, signpost = null;
+function buildCentralHall() {
+  const g = new THREE.Group();
+  g.add(cyl(10.5, 11, 0.5, 32, M(0xa8a091, { rough: .8 }), 0, 0.25, 0));            // 基座
+  const floor = mesh(new THREE.CircleGeometry(10, 32), M(0xcfc8b8, { rough: .7 }));
+  floor.rotation.x = -Math.PI/2; floor.position.y = 0.52; g.add(floor);
+  for (let i = 0; i < 10; i++) {                                                     // 柱廊
+    const a = i / 10 * Math.PI * 2 + Math.PI / 10;
+    g.add(cyl(0.32, 0.38, 5.2, 10, M(0xd8d2c2), Math.cos(a) * 9, 3.1, Math.sin(a) * 9));
+  }
+  g.add(cyl(9.8, 9.8, 0.6, 32, M(0x8a8478), 0, 5.9, 0));                             // 環樑
+  const ringNeon = mesh(new THREE.TorusGeometry(9.8, 0.1, 8, 48), neon(0x19e0c8), 0, 6.25, 0);
+  ringNeon.rotation.x = Math.PI/2; g.add(ringNeon);
+  g.add(mesh(new THREE.SphereGeometry(9.4, 24, 14, 0, Math.PI*2, 0, Math.PI/2),      // 玻璃穹頂
+    M(0x7fd8c8, { rough: .2, metal: .3, alpha: .5 }), 0, 6.2, 0));
+  /* 中央全息台：村民頭像放裡面 */
+  const ped = cyl(1.2, 1.5, 0.7, 16, M(0x2b3240, { metal: .5, rough: .3 }), 0, 0.87, 0);
+  g.add(ped);
+  holoRing = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.06, 8, 32),
+    new THREE.MeshStandardMaterial({ color: 0x66d8ff, emissive: 0x66d8ff, emissiveIntensity: 1.0, roughness: .3 }));
+  holoRing.position.y = 1.5; holoRing.rotation.x = Math.PI/2; g.add(holoRing);
+  /* 指示牌（大廳內） */
+  signpost = new THREE.Group();
+  signpost.add(cyl(0.09, 0.12, 4.6, 8, M(0x6b4a30), 0, 2.3, 0));
+  const HALL_NAMES = { macro: '① 總經大廳', knowledge: '② 知識大廳', chain: '③ 產業鏈', ma: '④ 併購專區', fund: '⑤ Jeff 基金', dev: '⑥ 待開發' };
+  Object.keys(HALL_ANGLES).forEach((k2, i) => {
+    const b = textSprite(HALL_NAMES[k2] + ' →', { fs: 28, bold: true, color: '#f5e9c8', bg: 'rgba(60,45,20,.85)', border: '#8a6f4d', scale: 0.014 });
+    b.position.set(0, 1.6 + i * 0.52, 0);
+    signpost.add(b);
+  });
+  signpost.position.set(4.2, 0.5, -4.2); g.add(signpost);
+  scene.add(g);
+  register(g, {
+    tag: '⛲ 村莊中心', title: '中央大廳（Central Hall）', accent: '#7fd8c8',
+    tooltip: '中央大廳｜村莊樞紐・村民登錄處',
+    html: kv('功能', '村民登錄・導覽起點・通往六大場館')
+      + kv('村民制度', '每日回村 +10 XP，升等解鎖新區域')
+      + kv('身分', 'NPC（金）／路人（灰）／村民（青）')
+      + '<div class="sec">六大場館</div><div class="list">'
+      + '<div>① 總經大廳 — 總經儀表視覺化</div><div>② 知識大廳 — 金融基礎＋進階</div>'
+      + '<div>③ 產業鏈 — 輸入個股查產業鏈</div><div>④ 併購專區 — M&A 情報站</div>'
+      + '<div>⑤ Jeff 基金 — 基金櫥窗</div><div>⑥ 待開發 — 升等解鎖</div></div>'
+      + '<div class="note">多人連線需要後端伺服器，目前村裡的「路人」為模擬村民——真多人已列入待開發。</div>',
+  });
+}
+function refreshPlayerBadge() {
+  if (holoNameSprite) { holoNameSprite.parent && holoNameSprite.parent.remove(holoNameSprite); holoNameSprite = null; }
+  if (!BADGE) return;
+  holoNameSprite = textSprite(`🎫 ${BADGE.name}・Lv.${BADGE.lv}`, { fs: 34, bold: true, color: '#bffcf0', bg: 'rgba(10,50,45,.7)', border: '#2E8B8B', scale: 0.02 });
+  holoNameSprite.position.set(0, 3.2, 0);
+  scene.add(holoNameSprite);   // 世界座標放大廳中央上方
+  if (player) {
+    player.userData.badgeSprite.material.map = textSprite('【村民】' + BADGE.name, { fs: 30, bold: true, color: '#bffcf0', bg: 'rgba(10,50,45,.85)', border: '#2E8B8B', scale: 0.014 }).material.map;
+  }
+}
+
+/* ── 六大場館 ─────────────────────────────────────────── */
+const HALLS = [];   // {key, g, x, z, panel()}
+function hallSign(g, text, y, color) {
+  const sp = textSprite(text, { fs: 44, bold: true, color: color || '#f5e9c8', scale: 0.03 });
+  sp.position.y = y; g.add(sp);
+}
+function doorNPC(g, name, hx, hz, opts) {
+  const c = makeCharacter(Object.assign({ kind: 'npc', name, hat: 'cap', hatColor: 0xC8A951, shirt: 0x6e5b3a }, opts || {}));
+  c.position.set(hx, 0, hz);
+  c.lookAt(0, 0, 0);
+  g.add(c);
+  return c;
+}
+
+function vixSparkSVG() {
+  const s = ((D.halls || {}).macro || {}).vix_series || [];
+  if (s.length < 2) return '';
+  const vals = s.map(p => p.v), mn = Math.min(...vals), mx = Math.max(...vals);
+  const W = 300, H = 56;
+  const pts = s.map((p, i) => `${(i/(s.length-1)*W).toFixed(1)},${(H - 6 - (p.v - mn)/Math.max(0.1, mx-mn)*(H-12)).toFixed(1)}`).join(' ');
+  return `<div class="sec">VIX 走勢（${esc(s[0].d)} → ${esc(s[s.length-1].d)}）</div>
+    <svg width="100%" viewBox="0 0 ${W} ${H}" style="background:rgba(255,255,255,.04);border-radius:8px">
+    <polyline points="${pts}" fill="none" stroke="#5ecb7b" stroke-width="2"/>
+    <text x="4" y="12" fill="#9e8e7e" font-size="10">高 ${mx.toFixed(1)}</text>
+    <text x="4" y="${H-4}" fill="#9e8e7e" font-size="10">低 ${mn.toFixed(1)}</text></svg>`;
+}
+
+function buildHalls() {
+  const HM = (D.halls || {});
+
+  /* ① 總經大廳（北）：屋頂自轉地球儀 */
+  {
+    const [x, z] = hallPos('macro');
+    const g = new THREE.Group();
+    g.add(box(9, 4.5, 7, M(0x4a5568, { rough: .6 }), 0, 2.25, 0));
+    g.add(box(9.6, 0.5, 7.6, M(0x333c4a), 0, 4.75, 0));
+    addWindows(g, 8, 2.6, 7.1, 1, 4, 2.1);
+    const globe = new THREE.Group();
+    globe.add(mesh(new THREE.SphereGeometry(1.9, 18, 14), M(0x3a6ea8, { rough: .5, flat: true }), 0, 0, 0));
+    const rt = mesh(new THREE.TorusGeometry(2.5, 0.09, 8, 32), M(0xC8A951, { metal: .8, rough: .3 }), 0, 0, 0);
+    rt.rotation.x = Math.PI/2.6; globe.add(rt);
+    globe.position.y = 7.2; g.add(globe);
+    g.userData.spin = globe;
+    hallSign(g, '① 總經大廳', 11, '#9fd0e8');
+    doorNPC(g, '總經館長', 0, 5.3);
+    g.position.set(x, 0, z); g.lookAt(0, 0, 0); g.position.set(x, 0, z);
+    scene.add(g);
+    const mk = HM.macro || {};
+    const panel = () => ({
+      tag: '① 總經大廳', title: '總經大廳（Macro Hall）', accent: '#5ecb7b',
+      html: kv('數據更新', mk.updated || '—') + kv('市場日期', mk.market_date || '—')
+        + '<div class="sec">即時儀表（Dashboard 視覺化）</div>'
+        + (mk.kpis || []).map(k2 => kv(esc(k2.label), esc(k2.val), k2.chg == null ? '' : (k2.chg >= 0 ? 'up' : 'down'))).join('')
+        + vixSparkSVG()
+        + `<a class="linkbtn" href="${(D.links||{}).dashboard || '#'}" target="_blank">開啟完整總經儀表板 →</a>`,
+    });
+    register(g, Object.assign({ tooltip: '總經大廳｜儀表視覺化', panelFn: panel }, panel()));
+    HALLS.push({ key: 'macro', g, x, z, panel });
+  }
+
+  /* ② 知識大廳（東北）：圖書館 */
+  {
+    const [x, z] = hallPos('knowledge');
+    const g = new THREE.Group();
+    g.add(box(8.5, 5, 6.5, M(0x8a7d68, { rough: .7 }), 0, 2.5, 0));
+    for (let i = 0; i < 5; i++) g.add(cyl(0.22, 0.26, 4.6, 8, M(0xd8d2c2), -3.2 + i * 1.6, 2.5, 3.35));
+    g.add(box(9.1, 0.6, 7.1, M(0x55493c), 0, 5.3, 0));
+    /* 書背彩條 */
+    const bookCols = [0x8B1A1A, 0x3F6EAD, 0x5B8B3A, 0xC8A951, 0x7B3F9B];
+    for (let i = 0; i < 10; i++)
+      g.add(box(0.5, 1.6, 0.1, M(bookCols[i % 5]), -2.6 + (i % 5) * 1.3, 4.0 + Math.floor(i/5) * -1.8, 3.31));
+    hallSign(g, '② 知識大廳', 8.4, '#e8ddc8');
+    doorNPC(g, '知識館長', 0, 5, { hat: 'none', hatColor: 0x4a3a2a });
+    g.position.set(x, 0, z); g.lookAt(0, 0, 0); g.position.set(x, 0, z);
+    scene.add(g);
+    const panel = () => ({
+      tag: '② 知識大廳', title: '知識大廳（Knowledge Hall）', accent: '#e8ddc8',
+      html: '<div class="sec">金融 Basic</div><div class="list">'
+        + [['P/E 本益比', '股價 ÷ 每股盈餘。付幾年盈餘買下這家公司'],
+           ['EPS', '每股盈餘。公司一年幫每一股賺多少錢'],
+           ['殖利率', '現金股利 ÷ 股價。持有領息的年報酬'],
+           ['市值', '股價 × 股數。市場給這家公司的總標價'],
+           ['三大法人', '外資／投信／自營商。台股籌碼面的主角'],
+           ['DCF', '把未來現金流折回今天，估內在價值']].map(c2 => `<div><b style="color:#e8ddc8">${c2[0]}</b><br><span style="color:#9e8e7e;font-size:12px">${c2[1]}</span></div>`).join('')
+        + '</div><div class="sec">進階 Info</div><div class="list">'
+        + [['估值框架 80/20', '80% P/E（成長／獲利／護城河／風險／流動性 五大類規則）＋ 20% DCF 交叉驗證'],
+           ['PEG 1.0', '高成長（CAGR ≥25%）題材以 PEG 1.0 為合理價底；R/R ≥3 才是 conviction'],
+           ['風險三尺', 'HHI 集中度／Beta（2Y 週線）／年化波動率'],
+           ['再平衡紀律', '目標曝險 → 整張優化 ±1.5pp → 處置股查核 → 分日下單']].map(c2 => `<div><b style="color:#ffd27a">${c2[0]}</b><br><span style="color:#9e8e7e;font-size:12px">${c2[1]}</span></div>`).join('')
+        + '</div><div class="note">內容策展自村莊真實使用中的方法論。</div>',
+    });
+    register(g, Object.assign({ tooltip: '知識大廳｜金融 Basic + 進階', panelFn: panel }, panel()));
+    HALLS.push({ key: 'knowledge', g, x, z, panel });
+  }
+
+  /* ③ 產業鏈大廳（東南）：六角蜂巢 + 齒輪 */
+  {
+    const [x, z] = hallPos('chain');
+    const g = new THREE.Group();
+    const hexCols = [0xC8A951, 0x3F6EAD, 0x7B3F9B, 0x5ecb7b, 0xB94C4C];
+    [[0,0],[2.6,1.5],[-2.6,1.5],[1.3,-2.2],[-1.3,-2.2]].forEach(([hx2, hz2], i) => {
+      const h = 2.8 + ((i*37) % 4) * 1.2;
+      g.add(cyl(1.4, 1.4, h, 6, M(hexCols[i % 5], { rough: .5, flat: true }), hx2, h/2, hz2));
+    });
+    const gear = mesh(new THREE.TorusGeometry(1.1, 0.28, 8, 10), M(0xC8A951, { metal: .7, rough: .35 }), 0, 6.6, 0);
+    g.add(gear); g.userData.spin = gear;
+    hallSign(g, '③ 產業鏈', 9.6, '#9fb8d8');
+    doorNPC(g, '產業鏈館長', 0, 4.6, { hat: 'hood', hatColor: 0x3F6EAD });
+    g.position.set(x, 0, z);
+    scene.add(g);
+    const ind = HM.industry || {};
+    const panel = () => ({
+      tag: '③ 產業鏈大廳', title: '產業鏈分析（Chain Hall）', accent: '#3F6EAD',
+      html: kv('收錄', (ind.tagged || 0) + ' 家上市櫃・' + (ind.tier3_n || 0) + ' 條細分賽道')
+        + '<div class="sec">輸入個股 → 產業鏈</div>'
+        + `<div style="margin:8px 0"><input class="inline" id="chain-in" placeholder="輸入台股代號，如 6651" value="${BADGE && BADGE.holdings && BADGE.holdings[0] ? esc(BADGE.holdings[0]) : ''}">`
+        + `<button class="inline" onclick="window.__chainGo()">查詢</button></div><div id="chain-out" class="note">輸入代號查它在產業鏈的位置與同賽道公司。</div>`
+        + '<div class="sec">追蹤題材（' + ((ind.themes || []).length) + '）</div><div>'
+        + (ind.themes || []).map(t => `<span class="chip">${esc(t)}</span>`).join('') + '</div>',
+    });
+    register(g, Object.assign({ tooltip: '產業鏈大廳｜輸入個股查鏈', panelFn: panel }, panel()));
+    HALLS.push({ key: 'chain', g, x, z, panel });
+  }
+
+  /* ④ 併購專區（南）：雙塔＋天橋（合併意象） */
+  {
+    const [x, z] = hallPos('ma');
+    const g = new THREE.Group();
+    g.add(box(3.2, 7, 3.2, M(0x6d5f7d, { rough: .6 }), -2.6, 3.5, 0));
+    g.add(box(3.2, 5.5, 3.2, M(0x8a6f4d, { rough: .6 }), 2.6, 2.75, 0));
+    g.add(box(2.2, 1.1, 1.6, M(0xC8A951, { metal: .5, rough: .4 }), 0, 4.2, 0));   // 天橋
+    addWindows(g, 2.6, 4, 3.3, 2, 2, 2.2);
+    hallSign(g, '④ 併購專區', 9.2, '#cbb3e0');
+    doorNPC(g, '併購館長', 0, 3.6, { shirt: 0x4a3a5a });
+    g.position.set(x, 0, z);
+    scene.add(g);
+    const cnt = m => (((D.skills || []).find(s => s.module === m)) || { count: 0 }).count;
+    const panel = () => ({
+      tag: '④ 併購專區', title: '併購專區（M&A Zone）', accent: '#7B3F9B',
+      html: kv('每週併購新聞', cnt('MA_Weekly') + ' 期（台灣／陸港／全球三線）')
+        + kv('併購案件追蹤', cnt('PastDealsTracking') + ' 次（6 頁 PDF）')
+        + kv('CIM 賣方備忘錄', cnt('CIM') + ' 份')
+        + kv('保密 Teaser', cnt('Teaser (168公司網)') + ' 份')
+        + '<div class="sec">這裡在做什麼</div><div class="list">'
+        + '<div>掃描三大戰場的併購情報（需取得控制權才算）</div>'
+        + '<div>雙塔天橋 = 兩家公司合而為一的意象</div>'
+        + '<div>M&A Hunter 頻道的素材工廠</div></div>',
+    });
+    register(g, Object.assign({ tooltip: '併購專區｜M&A 情報站', panelFn: panel }, panel()));
+    HALLS.push({ key: 'ma', g, x, z, panel });
+  }
+
+  /* ⑤ Jeff 基金（西南）：金庫 — 外部只見總 AUM 與 Return */
+  {
+    const [x, z] = hallPos('fund');
+    const g = new THREE.Group();
+    g.add(cyl(4.2, 4.6, 3.6, 14, M(0x8f8878, { rough: .5 }), 0, 1.8, 0));
+    g.add(mesh(new THREE.SphereGeometry(4.2, 16, 10, 0, Math.PI*2, 0, Math.PI/2), M(0xC8A951, { metal: .75, rough: .3 }), 0, 3.6, 0));
+    const door = mesh(new THREE.TorusGeometry(1.3, 0.22, 8, 24), M(0x3f3830, { metal: .6, rough: .3 }), 0, 1.7, 4.35);
+    g.add(door);
+    g.add(cyl(1.25, 1.25, 0.16, 20, M(0x55493c, { metal: .5 }), 0, 1.7, 4.32));
+    g.add(box(5.4, 0.5, 2, M(0x777063), 0, 0.25, 5));                                // 台階
+    hallSign(g, '⑤ Jeff 基金', 8.2, '#ffe9ad');
+    doorNPC(g, '基金門房', 2.4, 4.6, { shirt: 0x5a4a2a, hat: 'cap', hatColor: 0x8B1A1A });
+    g.position.set(x, 0, z); g.lookAt(0, 0, 0); g.rotation.x = 0; g.rotation.z = 0;
+    scene.add(g);
+    const t = D.totals || {};
+    const panel = () => {
+      let inner;
+      if (!D.anon) {   // 私人版：Jeff 走進去看得到細節（盤後工廠/金庫已收進館內）
+        const rows = (D.clients || []).filter(c2 => c2.found)
+          .map(c2 => kv(esc(c2.name), `${fmtMoney(c2.aum)}　<span class="${pnlCls(c2.ret)}">${fmtPct(c2.ret)}</span>`)).join('');
+        const dc = (D.schedule || []).find(s => s.name === '每日盤後') || {};
+        inner = '<div class="sec">🔓 合夥人視角（內部細節）</div>' + rows
+          + '<div class="sec">盤後工廠</div>'
+          + kv('上次出貨', dc.last_run || '—') + kv('資料日', dc.data_date || (D.meta||{}).data_date || '—')
+          + '<div class="sec">金庫</div>'
+          + kv('實際現金', fmtMoney(t.cash) + (t.cash_pct != null ? `（${t.cash_pct}%）` : ''))
+          + kv('投入本金', fmtMoney(t.principal));
+      } else {
+        inner = '<div class="sec">🔒 內部細節</div>'
+          + '<div class="note">個別客戶明細、盤後產線與金庫數據僅基金合夥人入內可見。外部展示僅提供總體數字。</div>';
+      }
+      return {
+        tag: '⑤ Jeff 基金', title: 'Jeff 基金（Fund Vault）', accent: '#C8A951',
+        html: kv('總 AUM', fmtMoney(t.aum))
+          + kv('累積報酬', fmtPct(t.ret), pnlCls(t.ret))
+          + kv('客戶數', (t.clients_n || 0) + ' 位')
+          + inner
+          + '<div class="note">數據與每日盤後系統同源，資料日 ' + ((D.meta||{}).data_date || '—') + '。</div>',
+      };
+    };
+    register(g, Object.assign({ tooltip: 'Jeff 基金｜總 AUM 與報酬', panelFn: panel }, panel()));
+    HALLS.push({ key: 'fund', g, x, z, panel });
+  }
+
+  /* ⑥ 待開發（西北）：工地＋吊車，升等解鎖 */
+  {
+    const [x, z] = hallPos('dev');
+    const g = new THREE.Group();
+    const dirt = mesh(new THREE.CircleGeometry(6, 20), M(0x7a6a52, { rough: 1 }));
+    dirt.rotation.x = -Math.PI/2; dirt.position.y = 0.05; g.add(dirt);
+    for (let i = 0; i < 5; i++) g.add(box(3, 0.3, 0.3, M(0xb98d4a), -1 + (i%2), 0.3 + Math.floor(i/2)*0.32, 1.5 - i*0.1)); // 鋼樑堆
+    g.add(cyl(0.14, 0.18, 7.5, 8, M(0xd8b04a), 2, 3.75, -1));                        // 吊車柱
+    const jib = box(5.5, 0.22, 0.22, M(0xd8b04a), -0.5, 7.4, -1); g.add(jib);
+    g.add(cyl(0.02, 0.02, 2.6, 6, M(0x333940), -2.9, 6.1, -1));                      // 吊索
+    g.add(box(0.5, 0.5, 0.5, M(0x8a8478), -2.9, 4.7, -1));                            // 吊物
+    for (let i = 0; i < 6; i++) {                                                     // 圍籬
+      const a = i / 6 * Math.PI * 2;
+      const fence = box(2.6, 0.9, 0.08, M(0xC8A951, { rough: .8 }), Math.cos(a)*5.4, 0.5, Math.sin(a)*5.4);
+      fence.rotation.y = -a + Math.PI/2;
+      g.add(fence);
+    }
+    hallSign(g, '⑥ 待開發（Lv.3 解鎖搶先看）', 9, '#9e8e7e');
+    g.position.set(x, 0, z);
+    scene.add(g);
+    const panel = () => {
+      const lv = BADGE ? BADGE.lv : 0;
+      return {
+        tag: '⑥ 待開發', title: '待開發區（Under Construction）', accent: '#9e8e7e',
+        html: lv >= 3
+          ? '<div class="sec">🔓 Lv.3 搶先看 — 開發路線圖</div><div class="list">'
+            + '<div>🌐 真・多人連線（需後端伺服器）</div><div>🏛 題材館 — 19 大題材的 3D 展廳</div>'
+            + '<div>🎯 選股模擬挑戰 — 拿虛擬幣試身手</div><div>📱 行動版走路搖桿</div></div>'
+            + '<div class="note">恭喜升到 Lv.3！這些是村莊接下來要長的東西。</div>'
+          : kv('狀態', '🔒 尚未解鎖')
+            + '<div class="note">升到 Lv.3（累積 50 XP）即可搶先看開發路線圖。每日回村 +10 XP。</div>',
+      };
+    };
+    register(g, Object.assign({ tooltip: '待開發區｜升等解鎖', panelFn: panel }, panel()));
+    HALLS.push({ key: 'dev', g, x, z, panel });
+  }
+}
+/* 產業鏈查詢（面板內互動） */
+window.__chainGo = function () {
+  const code = ($('chain-in') || {}).value ? $('chain-in').value.trim().replace(/[^0-9]/g, '') : '';
+  const out = $('chain-out'); if (!out) return;
+  const map = (D.halls || {}).industry_map || {};
+  if (!code) { out.innerHTML = '請輸入代號。'; return; }
+  const hit = map[code];
+  if (!hit) { out.innerHTML = `<b>${esc(code)}</b> 尚未收錄於產業分類藍圖（現收錄 ${Object.keys(map).length} 家）。`; return; }
+  const peers = Object.entries(map).filter(([c2, v]) => v[3] === hit[3] && c2 !== code).slice(0, 10);
+  out.innerHTML = `<div class="kv"><span class="k">${esc(code)} ${esc(hit[0])}</span><span class="v"></span></div>`
+    + `<div style="margin:8px 0;font-size:13px;color:#e8ddc8">${esc(hit[1])} → ${esc(hit[2])} → <b style="color:#ffd27a">${esc(hit[3])}</b></div>`
+    + (peers.length ? `<div class="sec">同賽道（${esc(hit[3])}）</div><div class="list">`
+      + peers.map(([c2, v]) => `<div>${esc(c2)} ${esc(v[0])}</div>`).join('') + '</div>' : '<div class="note">此賽道暫無其他收錄公司。</div>');
+};
+
+/* ── 人物：玩家／Orion／路人 ─────────────────────────── */
+let player = null, walking = false;
+const keys = {};
+let orionNPC = null, orionAngle = 2.1;
+const walkers = [];
+function buildPeople() {
+  player = makeCharacter({ kind: 'player', name: BADGE ? BADGE.name : '訪客', shirt: 0x2E8B8B, pants: 0x24424a, hat: 'hood', hatColor: 0x2E8B8B, bow: true });
+  player.position.set(0, 0.52, 3.5);
+  player.visible = false;
+  scene.add(player);
+  orionNPC = makeCharacter({ kind: 'npc', name: 'Orion', shirt: 0x8a6f2a, pants: 0x5a4a20, hat: 'none', hatColor: 0xC8A951, bow: true, scale: 1.05 });
+  scene.add(orionNPC);
+  register(orionNPC, { tag: '🏹 守望者', title: 'Orion', accent: '#C8A951', tooltip: 'Orion｜點擊交談', dialog: true });
+  const NAMES = ['阿明', '小華', '貓姐', '老王', '阿珠', '大衛', 'Amy', '小徐'];
+  const palette = [0xd88c6a, 0x8fb5d8, 0x9b6ab0, 0x6ab08f, 0xb06a6a, 0xe0c98f, 0x7a9bd8, 0x5B8B3A];
+  NAMES.forEach((nm, i) => {
+    const c = makeCharacter({ kind: 'walker', name: nm, shirt: palette[i], pants: 0x3a4356, hat: i % 3 === 0 ? 'cap' : (i % 3 === 1 ? 'none' : 'hood'), hatColor: palette[(i+3) % 8] });
+    const a = i / NAMES.length * Math.PI * 2;
+    c.position.set(Math.cos(a) * 24, 0, Math.sin(a) * 24);
+    scene.add(c);
+    walkers.push({ g: c, state: 'pause', t: Math.random() * 3, target: null, speed: 1.6 + Math.random() * 0.8 });
+  });
+}
+function walkerTargets() {
+  const pts = HALLS.map(h => new THREE.Vector3(h.x * 0.82, 0, h.z * 0.82));
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * 24, 0, Math.sin(a) * 24)); }
+  pts.push(new THREE.Vector3(2, 0, 6));
+  return pts;
+}
+let _wTargets = null;
+function updateWalkers(dt, nightF) {
+  if (!_wTargets) _wTargets = walkerTargets();
+  const activeN = nightF > 0.75 ? 2 : 8;
+  walkers.forEach((w, i) => {
+    w.g.visible = i < activeN;
+    if (!w.g.visible) return;
+    if (w.state === 'pause') {
+      w.t -= dt; animChar(w.g, dt, false);
+      if (w.t <= 0) { w.target = _wTargets[Math.floor(Math.random() * _wTargets.length)]; w.state = 'go'; }
+      return;
+    }
+    const dx = w.target.x - w.g.position.x, dz = w.target.z - w.g.position.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist < 0.6) { w.state = 'pause'; w.t = 1.5 + Math.random() * 3; return; }
+    w.g.position.x += dx / dist * w.speed * dt;
+    w.g.position.z += dz / dist * w.speed * dt;
+    w.g.rotation.y = Math.atan2(dx, dz);
+    animChar(w.g, dt, true, w.speed / 2);
+  });
+}
+function updateOrion(dt) {
+  orionAngle += dt * 0.05;
+  orionNPC.position.set(Math.cos(orionAngle) * 29, 0, Math.sin(orionAngle) * 29);
+  orionNPC.rotation.y = -orionAngle - Math.PI / 2;
+  animChar(orionNPC, dt, true, 0.6);
+}
+function orionDialog() {
+  const mk = marketState(taipeiNow());
+  const lines = [
+    `今天${mk.label.replace('● ', '')}。${mk.open ? '盤中的村子最有活力。' : '正好慢慢逛。'}`,
+    BADGE ? `${BADGE.name}，你已經 ${BADGE.xp} XP 了。每天回村都有獎勵。` : '還沒登錄村民證？去中央大廳找我辦一張。',
+    '六大場館各有各的本事——產業鏈大廳可以查你手上的股票。',
+    '夜裡抬頭，獵戶座在西南天空。我的箭一直指著它。',
+    'Jeff 基金的金庫只給合夥人進。外面的人看總數就好。',
+    (BADGE && BADGE.lv >= 3) ? '你 Lv.3 了，待開發區的圍籬對你打開了一條縫。' : '升到 Lv.3，待開發區會給你看點東西。',
+  ];
+  const pick = [];
+  while (pick.length < 2) { const l = lines[Math.floor(Math.random() * lines.length)]; if (!pick.includes(l)) pick.push(l); }
+  openPanel({
+    tag: '🏹 守望者', title: 'Orion', accent: '#C8A951',
+    html: pick.map(l => `<div class="kv" style="display:block;padding:8px 0"><span style="color:#e8ddc8">「${esc(l)}」</span></div>`).join('')
+      + '<div class="note">再點一次我，聽別的。</div>',
+  });
+}
+
+/* ── 面板／拾取 ───────────────────────────────────────── */
 function openPanel(info) {
   $('panel-tag').textContent = info.tag || 'ORION VILLAGE';
   $('panel-title').innerHTML = esc(info.title);
@@ -2759,24 +2002,21 @@ function openPanel(info) {
   $('panel').classList.add('open');
 }
 $('panel-close').onclick = () => $('panel').classList.remove('open');
-
-/* 拾取 */
 const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
-let hoverRoot = null;
-const tooltip = $('tooltip');
+let hoverRoot = null, downPos = null;
 function setPointer(e) {
   const x = e.touches ? e.touches[0].clientX : e.clientX;
   const y = e.touches ? e.touches[0].clientY : e.clientY;
   pointer.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1);
   return { x, y };
 }
-let downPos = null;
 renderer.domElement.addEventListener('pointerdown', e => { downPos = [e.clientX, e.clientY]; });
 renderer.domElement.addEventListener('pointerup', e => {
+  if (INTRO.active) { advanceIntro(); return; }
   if (!downPos) return;
   const moved = Math.hypot(e.clientX - downPos[0], e.clientY - downPos[1]);
   downPos = null;
-  if (moved > 6) return;                       // 拖曳不算點擊
+  if (moved > 6) return;
   setPointer(e);
   raycaster.setFromCamera(pointer, camera);
   const hits = raycaster.intersectObjects(pickables, false);
@@ -2784,202 +2024,247 @@ renderer.domElement.addEventListener('pointerup', e => {
     const root = hits[0].object.userData.pickRoot;
     if (root && root.userData.info) {
       const info = root.userData.info;
-      if (info.portalTo) {           // 傳送門：直接行動，不開面板
-        doTeleport(info.portalTo);
-        return;
-      }
-      if (info.dialog) {             // Orion NPC：每次對話都不同
-        orionDialog();
-        return;
-      }
-      openPanel(info);
+      if (info.dialog) { orionDialog(); return; }
+      openPanel(info.panelFn ? info.panelFn() : info);
     }
   }
 });
 renderer.domElement.addEventListener('pointermove', e => {
+  if (INTRO.active) return;
   const { x, y } = setPointer(e);
   raycaster.setFromCamera(pointer, camera);
   const hits = raycaster.intersectObjects(pickables, false);
   const root = hits.length ? hits[0].object.userData.pickRoot : null;
-  if (root !== hoverRoot) {
-    hoverRoot = root;
-    renderer.domElement.style.cursor = root ? 'pointer' : 'default';
-  }
+  if (root !== hoverRoot) { hoverRoot = root; renderer.domElement.style.cursor = root ? 'pointer' : 'default'; }
+  const tt = $('tooltip');
   if (root && root.userData.info && root.userData.info.tooltip) {
-    tooltip.style.display = 'block';
-    tooltip.textContent = root.userData.info.tooltip;
-    tooltip.style.left = Math.min(x + 16, innerWidth - 250) + 'px';
-    tooltip.style.top = (y + 16) + 'px';
-  } else tooltip.style.display = 'none';
+    tt.style.display = 'block'; tt.textContent = root.userData.info.tooltip;
+    tt.style.left = Math.min(x + 16, innerWidth - 250) + 'px'; tt.style.top = (y + 16) + 'px';
+  } else tt.style.display = 'none';
 });
 
-/* 時間控制 */
-let timeMode = 'live';
-document.querySelectorAll('#time-ctl button[data-h]').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('#time-ctl button[data-h]').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
-    timeMode = btn.dataset.h;
-  };
-});
-
-/* 駕駛模式 */
-let driving = false;
-const keys = {};
+/* ── 進村流程：環繞 → NPC 帶入大廳 → 登錄 → 導覽 ──────── */
+const INTRO = { active: true, stage: 'orbit', orbitA: 0, step: 0, tween: null };
+function caption(text, who) {
+  $('cap-who').textContent = who || '🏹 ORION';
+  $('cap-text').textContent = text;
+  $('caption').style.display = 'block';
+}
+function hideCaption() { $('caption').style.display = 'none'; }
+function tweenCam(pos, tgt, dur) {
+  INTRO.tween = { t: 0, dur: dur || 1.4, fp: camera.position.clone(), tp: new THREE.Vector3(...pos), ft: controls.target.clone(), tt: new THREE.Vector3(...tgt) };
+}
+const TOUR = [
+  { key: 'macro',     text: '這裡是「總經大廳」——每天早晚自動更新的總經儀表，法人動向、VIX、Fear & Greed 都在裡面。' },
+  { key: 'knowledge', text: '「知識大廳」收著金融基礎與進階方法論——從 P/E 到 80/20 估值框架。' },
+  { key: 'chain',     text: '「產業鏈大廳」可以輸入你手上的股票代號，看它在產業鏈的位置和同賽道的公司。' },
+  { key: 'ma',        text: '「併購專區」——雙塔天橋就是兩家公司合而為一。每週的併購情報從這裡出去。' },
+  { key: 'fund',      text: '「Jeff 基金」的金色穹頂下鎖著基金明細。外面的人看得到總 AUM 和報酬，細節只給合夥人。' },
+  { key: 'dev',       text: '最後是「待開發區」——每天回村賺 XP，升到 Lv.3 就能搶先看這裡要長什麼。' },
+];
+function advanceIntro() {
+  if (!INTRO.active) return;
+  if (INTRO.stage === 'orbit') {
+    INTRO.stage = 'approach';
+    tweenCam([0, 7, 26], [0, 3, 0], 1.8);
+    caption('歡迎來到獵戶村。我是守望者 Orion——這座村的每一棟建築，都連著一套真實運轉中的系統。跟我來，先到中央大廳。');
+    return;
+  }
+  if (INTRO.stage === 'approach') {
+    if (BADGE) {
+      INTRO.stage = 'tour';
+      INTRO.step = -1;
+      caption(`歡迎回來，${BADGE.name}。要再走一遍導覽嗎？點擊繼續；按 Esc 直接開始探索。`);
+      dailyLogin();
+      return;
+    }
+    INTRO.stage = 'register';
+    hideCaption();
+    $('modal').style.display = 'flex';
+    return;
+  }
+  if (INTRO.stage === 'tour') {
+    INTRO.step++;
+    if (INTRO.step >= TOUR.length) { finishIntro(); return; }
+    const t = TOUR[INTRO.step];
+    const hall = HALLS.find(h => h.key === t.key);
+    tweenCam([hall.x * 1.35, 14, hall.z * 1.35 + 18], [hall.x, 3, hall.z], 1.6);
+    let txt = t.text;
+    if (t.key === 'chain' && BADGE && BADGE.holdings && BADGE.holdings.length) {
+      const map = (D.halls || {}).industry_map || {};
+      const hit = map[BADGE.holdings[0]];
+      if (hit) txt += `（你持有的 ${BADGE.holdings[0]} ${hit[0]}，就在「${hit[3]}」這條賽道上。）`;
+    }
+    caption(txt);
+    return;
+  }
+}
+function finishIntro() {
+  INTRO.active = false; INTRO.tween = null;
+  hideCaption();
+  player.visible = true;
+  walking = true;
+  $('btn-view').textContent = '🔭 俯瞰';
+  player.position.set(0, 0.52, 3.5);
+  camera.position.set(8, 5.5, 12);
+  controls.target.set(0, 2, 3.5);
+  controls.update();
+  caption('村子交給你逛了——WASD 走路、走近場館會自動開門、點 NPC 聊天。祝你打獵愉快。🏹');
+  setTimeout(hideCaption, 5200);
+}
+function dailyLogin() {
+  if (!BADGE) return;
+  const today = taipeiNow().toISOString().slice(0, 10);
+  if (BADGE.last !== today) { BADGE.last = today; saveBadge(); xpGain(10, '每日回村'); }
+}
+$('reg-go').onclick = () => {
+  const name = $('reg-name').value.trim() || '無名獵人';
+  const holdings = $('reg-holdings').value.split(/[,，\s]+/).map(s => s.replace(/[^0-9]/g, '')).filter(s => s.length === 4);
+  BADGE = { name, holdings, market: $('reg-market').value, xp: 0, lv: 1, last: taipeiNow().toISOString().slice(0, 10) };
+  saveBadge(); renderBadge(); refreshPlayerBadge();
+  $('modal').style.display = 'none';
+  xpGain(20, '入村禮');
+  INTRO.stage = 'tour'; INTRO.step = -1;
+  caption(`${name}，村民證辦好了！${holdings.length ? `你登記的持股（${holdings.join('、')}）我記下了，導覽會替你留意相關場館。` : ''}接下來帶你認識六大場館——點擊繼續。`);
+};
+$('reg-skip').onclick = () => {
+  $('modal').style.display = 'none';
+  INTRO.stage = 'tour'; INTRO.step = -1;
+  caption('沒問題，先以路人身分逛逛。想入村隨時點中央大廳。接下來帶你走一圈——點擊繼續。');
+};
 addEventListener('keydown', e => {
   keys[e.key.toLowerCase()] = true;
   if (e.key === 'Escape') {
-    if (driving) toggleDrive();
-    else if (walking) toggleWalk();
+    if (INTRO.active && INTRO.stage !== 'register') { finishIntro(); return; }
+    $('panel').classList.remove('open');
   }
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
-function toggleDrive() {
-  if (!driving && walking) toggleWalk();
-  driving = !driving;
-  $('btn-drive').classList.toggle('driving', driving);
-  $('btn-drive').textContent = driving ? '🛸 駕駛中（Esc 退出）' : '🛸 駕駛';
-  controls.enabled = !driving;
-  if (driving) openPanel({
-    tag: '🛸 獵戶號', title: '你已接管獵戶號', accent: '#7fd8c8',
-    html: kv('移動', 'W A S D／方向鍵') + kv('升降', 'Q（升）／ E（降）') + kv('加速', 'Shift') + kv('退出', 'Esc 或再按「🛸 駕駛」')
-      + '<div class="note">鏡頭會自動跟在船尾。試著飛去看看夜裡的獵戶座。</div>',
-  });
-}
-$('btn-drive').onclick = toggleDrive;
-$('btn-walk').onclick = toggleWalk;
-const saucerVel = new THREE.Vector3();
-function updateSaucer(dt) {
-  if (!driving) {
-    saucerAngle += dt * 0.1;
-    const r = 72;
-    saucer.position.x += ((Math.cos(saucerAngle) * r) - saucer.position.x) * 0.03;
-    saucer.position.z += ((Math.sin(saucerAngle) * r) - saucer.position.z) * 0.03;
-    saucer.position.y += ((46 + Math.sin(saucerAngle * 3) * 3) - saucer.position.y) * 0.03;
-    saucer.rotation.y = -saucerAngle;
-    saucer.rotation.z = Math.sin(saucerAngle * 2) * 0.06;
-    return;
+
+/* ── 玩家走路＋視角切換＋場館感應 ────────────────────── */
+const _wDir = new THREE.Vector3(), _wRight = new THREE.Vector3(), _wMove = new THREE.Vector3();
+let lastNearHall = null, nearT = 0;
+function updatePlayer(dt, el) {
+  window.__upCall = (window.__upCall || 0) + 1;
+  if (!walking || INTRO.active) return;
+  window.__upRun = (window.__upRun || 0) + 1;
+  camera.getWorldDirection(_wDir); _wDir.y = 0; _wDir.normalize();
+  _wRight.crossVectors(_wDir, new THREE.Vector3(0, 1, 0));
+  _wMove.set(0, 0, 0);
+  if (keys['w'] || keys['arrowup']) _wMove.add(_wDir);
+  if (keys['s'] || keys['arrowdown']) _wMove.sub(_wDir);
+  if (keys['a'] || keys['arrowleft']) _wMove.sub(_wRight);
+  if (keys['d'] || keys['arrowright']) _wMove.add(_wRight);
+  const moving = _wMove.lengthSq() > 0;
+  if (moving) {
+    _wMove.normalize().multiplyScalar((keys['shift'] ? 9.5 : 4.2) * dt);
+    player.position.add(_wMove);
+    const rr = Math.hypot(player.position.x, player.position.z);
+    if (rr > 145) { player.position.x *= 145 / rr; player.position.z *= 145 / rr; }
+    player.rotation.y = Math.atan2(_wMove.x, _wMove.z);
   }
-  const sp = (keys['shift'] ? 46 : 22) * dt;
-  const fwd = new THREE.Vector3(); camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
-  const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0));
-  const acc = new THREE.Vector3();
-  if (keys['w'] || keys['arrowup']) acc.add(fwd);
-  if (keys['s'] || keys['arrowdown']) acc.sub(fwd);
-  if (keys['a'] || keys['arrowleft']) acc.sub(right);
-  if (keys['d'] || keys['arrowright']) acc.add(right);
-  if (keys['q']) acc.y += 1;
-  if (keys['e']) acc.y -= 1;
-  saucerVel.lerp(acc.multiplyScalar(sp * 3), 0.08);
-  saucer.position.add(saucerVel.clone().multiplyScalar(dt * 10));
-  const rr = Math.hypot(saucer.position.x, saucer.position.z);
-  if (rr > 140) { saucer.position.x *= 140 / rr; saucer.position.z *= 140 / rr; }
-  saucer.position.y = Math.min(90, Math.max(6, saucer.position.y));
-  saucer.rotation.z = -saucerVel.dot(new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0,1,0))) * 0.02;
-  saucer.rotation.x = saucerVel.dot(fwd) * 0.015;
-  /* 追尾鏡頭 */
-  const camTarget = saucer.position.clone().sub(fwd.clone().multiplyScalar(20)).add(new THREE.Vector3(0, 9, 0));
-  camera.position.lerp(camTarget, 0.06);
-  camera.lookAt(saucer.position);
+  player.position.y = Math.hypot(player.position.x, player.position.z) < 10.5 ? 0.52 : 0;   // 大廳地板高度
+  animChar(player, dt, moving, keys['shift'] ? 1.6 : 1);
+  const tgt = player.position.clone(); tgt.y += 1.6;
+  controls.target.lerp(tgt, 0.3);
+  /* 走近場館 → 自動開門（面板） */
+  nearT += dt;
+  if (nearT > 0.5) {
+    nearT = 0;
+    let hit = null;
+    HALLS.forEach(h => { if (Math.hypot(player.position.x - h.x, player.position.z - h.z) < 9) hit = h; });
+    if (hit && hit.key !== lastNearHall) { lastNearHall = hit.key; openPanel(hit.panel()); if (BADGE) xpGain(2, `參觀${hit.panel().title.split('（')[0]}`); }
+    if (!hit) lastNearHall = null;
+  }
+}
+$('btn-view').onclick = () => {
+  if (INTRO.active) return;
+  walking = !walking;
+  $('btn-view').textContent = walking ? '🔭 俯瞰' : '🚶 村民視角';
+  if (!walking) {
+    controls.target.set(0, 4, 0);
+    camera.position.set(95, 60, 120);
+    controls.update();
+  } else {
+    camera.position.set(player.position.x + 7, 5.5, player.position.z + 10);
+    controls.target.copy(player.position).setY(2);
+    controls.update();
+  }
+};
+
+/* ── 時鐘／時間控制 ──────────────────────────────────── */
+let timeMode = 'live', mkState = null;
+document.querySelectorAll('#ctl button[data-h]').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('#ctl button[data-h]').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on'); timeMode = btn.dataset.h;
+  };
+});
+function updateClock() {
+  const now = taipeiNow();
+  $('clock-time').textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  $('clock-date').textContent = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}（${'日一二三四五六'[now.getDay()]}）台北`;
+  const mk = marketState(now);
+  const b = $('market-badge'); b.textContent = mk.label; b.className = mk.open ? 'mk-open' : 'mk-closed';
+  return mk;
 }
 
-/* ══════════════════════════════════════════════════════════
-   建村 & 主迴圈
-   ══════════════════════════════════════════════════════════ */
+/* ── 建村 ─────────────────────────────────────────────── */
+loadBadge();
 buildSky();
-buildTower101();
-buildWorkshop();
-buildAdmin();
-buildFundDistrict();
-buildResearch();
-buildMedia();
+buildTerrain();
+buildCentralHall();
 buildHalls();
-buildAltar();
-buildStatue();
-buildClock();
-buildSaucer();
-buildVillagers();
-buildSmoke();
-buildTrucks();
-buildCityDetail();
-buildSciFi2();
-buildOrionNPC();
-buildAmbient();
-buildWalker();
-initHud();
-let mkState = updateClock();
+buildPeople();
+renderBadge();
+refreshPlayerBadge();
+mkState = updateClock();
 setInterval(() => { mkState = updateClock(); }, 15000);
+caption('（村莊環繞中……點擊畫面任意處，讓 Orion 帶你進村。）', '🛸 獵戶村');
 
-/* 歡迎導覽 */
-setTimeout(() => openPanel({
-  tag: '🛸 歡迎來到', title: '獵戶村 ORION VILLAGE', accent: '#C8A951',
-  html: `<div class="note" style="margin-top:0">這座村莊<b style="color:#e8ddc8">零虛構</b> — 每棟建築的數據都來自 Jeff 真實運轉中的系統。</div>
-    <div class="sec">五大城區</div><div class="list">
-    <div>🏛 <b>圖靈金融區</b>（北）— 101 總部塔・併購工坊・行政小樓</div>
-    <div>🏦 <b>個人基金區</b>（東）— 13 座客戶宅邸（大小 ∝ AUM）・盤後工廠・金庫・風險燈塔</div>
-    <div>🔭 <b>投資研究區</b>（南）— 天文台・${(D.companies||[]).length} 棵公司樹・產業藍圖碑</div>
-    <div>📡 <b>M&A HUNTER 傳播區</b>（西）— 廣播塔・總經看板・週報印刷所・Shorts 劇院</div>
-    <div>💎 <b>技能祭壇</b>（東北）— ${(D.skills||[]).length} 根熟練度水晶・Lv.${(D.level||{}).lv} 轉職石碑</div></div>
-    <div class="sec">怎麼玩</div><div class="list">
-    <div>🖱 拖曳旋轉・滾輪縮放・<b>點擊任何建築</b>看真實數據</div>
-    <div>🌙 右下切換日夜（夜晚抬頭找獵戶座）</div>
-    <div>🛸 按「駕駛」接管獵戶號飛碟</div></div>
-    <div class="note">中央雕像是 Orion — 你的 AI 助手。它的箭指向獵戶座升起的方向。</div>`,
-}), 700);
-
+/* ── 主迴圈 ───────────────────────────────────────────── */
 const clock3 = new THREE.Clock();
-let liveHourCache = null;
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(0.05, clock3.getDelta());
   const el = clock3.elapsedTime;
-
   let h;
-  if (timeMode === 'live') {
-    const now = taipeiNow();
-    h = now.getHours() + now.getMinutes() / 60;
-  } else h = parseFloat(timeMode);
+  if (timeMode === 'live') { const n = taipeiNow(); h = n.getHours() + n.getMinutes() / 60; }
+  else h = parseFloat(timeMode);
   applyTime(h);
 
-  blinkers.forEach((m, i) => { m.emissiveIntensity = 0.7 + Math.sin(el * 3 + i) * 0.7; });
-  spinners.forEach((s, i) => { s.rotation.x += dt * (0.8 + i * 0.3); });
-  crystalsPulse.forEach((m, i) => { m.emissiveIntensity = 0.3 + (Math.sin(el * 2 + i * 2) + 1) * 0.28; });
-  if (lighthouseBeams) lighthouseBeams.rotation.y += dt * 0.9;
-
-  const open = mkState && mkState.open;
   try {
-    if (el - _phaseAt > 5) { _phase = villagePhase(taipeiNow(), open); _phaseAt = el; }
-    updateVillagers(dt, phaseOverride || _phase, currentNightF);
-    updateOrionNPC(dt, el);
-    updateAmbient(dt, el, currentNightF);
+    if (INTRO.active) {
+      if (INTRO.stage === 'orbit' && !INTRO.tween) {
+        INTRO.orbitA += dt * 0.12;
+        camera.position.set(Math.cos(INTRO.orbitA) * 110, 55, Math.sin(INTRO.orbitA) * 110);
+        camera.lookAt(0, 4, 0);
+      }
+      if (INTRO.tween) {
+        const tw = INTRO.tween;
+        tw.t += dt / tw.dur;
+        const k = tw.t >= 1 ? 1 : 1 - Math.pow(1 - tw.t, 3);
+        camera.position.lerpVectors(tw.fp, tw.tp, k);
+        controls.target.lerpVectors(tw.ft, tw.tt, k);
+        camera.lookAt(controls.target);
+        if (tw.t >= 1) INTRO.tween = null;
+      }
+    } else {
+      updatePlayer(dt, el);
+      controls.update();
+    }
+    updateWalkers(dt, currentNightF);
+    updateOrion(dt);
+    HALLS.forEach(hh => { if (hh.g.userData.spin) hh.g.userData.spin.rotation.y += dt * 0.5; });
+    if (holoRing) { holoRing.rotation.z += dt * 0.8; }
+    if (holoNameSprite) holoNameSprite.position.y = 3.2 + Math.sin(el * 1.5) * 0.15;
   } catch (err) {
-    console.error('[village-loop]', err.message, err.stack && err.stack.split('\n')[1]);
+    console.error('[v2-loop]', err.message, err.stack && err.stack.split('\n')[1]);
   }
-  updateSmoke(dt, open ? 1 : 0.45);
-  updateSaucer(dt);
-  updateTrucks(dt);
-  updateHovercars(dt, el);
-  updateWalk(dt, el);
-  if (holoPillar) holoPillar.rotation.y += dt * 0.6;
-  if (holoSprite) holoSprite.position.y = 5.6 + Math.sin(el * 1.5) * 0.15;
-  if (hallGlobe) hallGlobe.rotation.y += dt * 0.4;
-  if (tickerTex) tickerTex.offset.x = (tickerTex.offset.x + dt * 0.045) % 1;
-  updateDataStreams(dt);
-  updateSciFi2(dt, el);
-
-  /* 財報季：通宵觀測（光柱與研究員只在夜間現身） */
-  const es = EV.earnings_season;
-  if (obsBeam) obsBeam.visible = es && currentNightF > 0.3;
-  if (obsSprite) obsSprite.visible = es;
-  researchers.forEach((r, i) => {
-    r.visible = es && currentNightF > 0.4;
-    if (r.visible) r.position.y = Math.abs(Math.sin(el * 3 + i * 2)) * 0.08;
-  });
-
-  if (!driving) controls.update();
   renderer.render(scene, camera);
 }
 animate();
+if (BADGE) dailyLogin();
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
@@ -2987,23 +2272,16 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
 });
 
-/* 除錯掛鉤（console 用）：__orion.lookOrion() 直視獵戶座、__orion.reset() 回預設視角 */
+/* 除錯掛鉤 */
 window.__orion = {
-  camera, controls, keys, villagers,
-  phase() { return phaseOverride || _phase; },
-  walk() { toggleWalk(); },
-  forcePhase(p) { phaseOverride = p; },   // 'rush'|'work'|'plaza'|'evening'|'holiday'|'night'|null
-  talk() { orionDialog(); },
+  camera, controls, player, HALLS, keys, INTRO,
+  state() { return { introActive: INTRO.active, stage: INTRO.stage, walking }; },
   setHour(h) { timeMode = String(h); },
-  lookOrion() { controls.target.set(-130, 105, 130); camera.position.set(52, 22, -52); controls.update(); },
-  reset() { controls.target.set(0, 6, 0); camera.position.set(78, 62, 118); controls.update(); },
-  forceEvents(order, earnings) {   // 預覽事件動畫：__orion.forceEvents(true, true)
-    EV.order_day = !!order; EV.earnings_season = !!earnings;
-    EV.labels = [];
-    if (EV.order_day) EV.labels.push('📦 下單日 — 貨運車隊出動');
-    if (EV.earnings_season) EV.labels.push('🔭 財報季 — 研究區通宵觀測');
-    initHud();
-  },
+  skipIntro() { if (INTRO.active) finishIntro(); },
+  badge() { return BADGE; },
+  resetBadge() { localStorage.removeItem('orion_badge_v2'); location.reload(); },
+  xp(n) { xpGain(n, '測試'); },
+  talk() { orionDialog(); },
 };
 
 </script>
