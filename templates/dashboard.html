@@ -50,10 +50,12 @@
         /* ── Layout ── */
         .main { padding: 16px 24px; display: flex; flex-direction: column; gap: 14px; }
 
-        /* CB Rate bar — 6 央行：3 欄 × 2 列 */
+        /* CB Rate bar — 7 央行（Fed/ECB/BoE/BOJ/PBOC/BOK/CBC）：4 欄 × 2 列（4+3） */
         .cb-bar {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
         }
+        @media (max-width: 1100px) { .cb-bar { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 820px)  { .cb-bar { grid-template-columns: repeat(2, 1fr); } }
         .cb-card {
             background: var(--gold-dim);
             border: 1px solid rgba(201,165,78,0.25);
@@ -452,7 +454,7 @@
         <div class="card">
             <div class="card-title">📊 美股技術面</div>
             <div style="font-size:10px; color:var(--text-3); margin-bottom:6px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
-                過去 3 個月日 K（60 個交易日，紅漲綠跌，滑鼠移上看開高低收）｜月線 MA20／季線 MA60／年線 MA200 參考線（虛線）｜RSI(21) 動能
+                過去 3 個月日 K（60 個交易日，紅漲綠跌，滑鼠移上看開高低收）｜月線 MA20／季線 MA60／年線 MA200 移動平均線｜RSI(21) 動能
             </div>
             {% for key in ['spx', 'sox'] %}
             {% set t = data.spx_tech.get(key, {}) %}
@@ -477,9 +479,10 @@
                         <line x1="{{ c.cx }}" y1="{{ c.wick_hi }}" x2="{{ c.cx }}" y2="{{ c.wick_lo }}" stroke="{{ c.color }}" stroke-width="1" vector-effect="non-scaling-stroke"/>
                         <rect x="{{ c.x }}" y="{{ c.body_y }}" width="{{ c.w }}" height="{{ c.body_h }}" fill="{{ c.color }}" stroke="{{ c.color }}" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
                         {% endfor %}
-                        {# 均線參考線疊在 K 線「之上」（否則會被密集 K 線蓋住、看起來只剩一條）#}
-                        {% for m in t.ma_marks %}
-                        <line x1="0" y1="{{ m.y }}" x2="100" y2="{{ m.y }}" stroke="{{ m.color }}" stroke-dasharray="3,2" stroke-width="1.1" opacity="0.95" vector-effect="non-scaling-stroke"/>
+                        {# 移動平均線疊在 K 線「之上」（否則會被密集 K 線蓋住）；
+                           每根 K 一個點連成曲線，超出 viewBox 的段由 SVG 自動裁切 #}
+                        {% for m in t.ma_lines %}
+                        <polyline points="{{ m.points }}" fill="none" stroke="{{ m.color }}" stroke-width="1.1" opacity="0.95" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
                         {% endfor %}
                         {% for c in t.candles %}
                         <rect class="kc-hit" x="{{ c.slot_x }}" y="0" width="{{ c.slot_w }}" height="30" fill="transparent"
