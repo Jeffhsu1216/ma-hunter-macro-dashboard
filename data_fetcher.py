@@ -126,6 +126,15 @@ BOE_DATES_2026 = [
     date(2026, 11, 5), date(2026, 12, 17),
 ]
 
+# 2026 全年 BOK（韓國央行）金融通貨委員會「通貨政策方向決定會議」日程
+# BOK 一年 8 次利率決議（1/2/4/5/7/8/10/11 月），源：bok.or.kr 年度日程公告。
+# ⚠️ 官方 H1 詳細日期鎖在 HWP/PDF 附件內無法程式化擷取；此處僅列已查證日期，
+#    因 _next_meeting() 只取「未來」日期，H1 缺漏不影響顯示結果。
+BOK_DATES_2026 = [
+    date(2026, 1, 15), date(2026, 7, 16),
+    date(2026, 8, 27), date(2026, 10, 22), date(2026, 11, 26),
+]
+
 # 2026 全年 CBC（台灣央行）理監事會日程
 CBC_DATES_2026 = [
     date(2026, 3, 19), date(2026, 6, 18),
@@ -144,6 +153,7 @@ CB_DECISION_META = {
     "英國央行 (BoE)":  {"last_action": "維持", "last_bps": 0,  "last_date": "6/18", "forecast": "維持偏鷹（7–2 票，2 票主張升息）"},
     "日本央行 (BOJ)":  {"last_action": "升息", "last_bps": 25, "last_date": "6/16", "forecast": "維持，下次升息估 Q4"},
     "中國央行 (PBOC)": {"last_action": "維持", "last_bps": 0,  "last_date": "6/22", "forecast": "傾向降息（券商估 7 月 LPR 調降）"},
+    "韓國央行 (BOK)":  {"last_action": "升息", "last_bps": 25, "last_date": "7/16", "forecast": "偏鷹，總裁示意續緊縮（通膨 3.1% 高於目標）"},
     "中央銀行 (CBC)":  {"last_action": "維持", "last_bps": 0,  "last_date": "6/18", "forecast": "維持（連 8 凍，通膨溫和）"},
 }
 
@@ -1259,6 +1269,12 @@ def fetch_cb_rates() -> dict:
     # 2025/05 降至 1.40%（CB_DECISION_META 手動追蹤 PBOC 決議與 LPR 預期）。
     pboc_rate = "1.40"
 
+    # ── BOK（韓國央行基準利率 Base Rate，釘住手動維護）──
+    # 同 BOJ/PBOC 做法：一年僅 8 次會、利率為已知離散值，釘住比抓不穩 API 可靠。
+    # 2026/07/16 升息一碼至 2.75%（2023/01 以來首度升息；通膨 3.1% 高於 2% 目標，
+    # 總裁申鉉松示意續緊縮）。每次會後（見 BOK_DATES_2026）手動更新此值。
+    bok_rate = "2.75"
+
     # ── CBC（台灣央行重貼現率）──
     def _cbc_official():
         import re as _re
@@ -1270,12 +1286,13 @@ def fetch_cb_rates() -> dict:
 
     cbc_rate = _resolve("中央銀行 (CBC)", _cbc_official, None, "2.00")
 
-    # 顯示順序：Fed → ECB → BoE → BOJ → PBOC → CBC（依重要性與地理）
+    # 顯示順序：Fed → ECB → BoE → BOJ → PBOC → BOK → CBC（依重要性與地理，亞太由北而南）
     result["聯準會 (Fed)"]    = {"rate": fed_rate,  "next": _next_meeting(FOMC_DATES_2026)}
     result["歐洲央行 (ECB)"]  = {"rate": ecb_rate,  "next": _next_meeting(ECB_DATES_2026)}
     result["英國央行 (BoE)"]  = {"rate": boe_rate,  "next": _next_meeting(BOE_DATES_2026)}
     result["日本央行 (BOJ)"]  = {"rate": boj_rate,  "next": _next_meeting(BOJ_DATES_2026)}
     result["中國央行 (PBOC)"] = {"rate": pboc_rate, "next": _next_pboc_lpr_date() + "（LPR）"}
+    result["韓國央行 (BOK)"]  = {"rate": bok_rate,  "next": _next_meeting(BOK_DATES_2026)}
     result["中央銀行 (CBC)"]  = {"rate": cbc_rate,  "next": _next_meeting(CBC_DATES_2026)}
 
     # 合併「上次決議 + 下次預期」（手動維護的離散資料）→ 每行多出 last_action/last_bps/last_date/forecast
@@ -1331,8 +1348,10 @@ def fetch_spx_technical() -> dict:
     import datetime as _dt2
 
     def _hist(symbol):
-        """回傳 [{o,h,l,c,t}, ...]（已濾掉 close=None 的列），含 OHLC 供 K 線使用"""
-        url = f'https://query1.finance.yahoo.com/v8/finance/chart/{_urlp.quote(symbol)}?interval=1d&range=1y'
+        """回傳 [{o,h,l,c,t}, ...]（已濾掉 close=None 的列），含 OHLC 供 K 線使用
+        range=2y：畫 MA200 曲線時，最左側那根 K 也要能往前取滿 200 日，
+        故需 60（顯示窗）+ 200（均線窗）≈ 260 個交易日，1y（≈250 根）不夠。"""
+        url = f'https://query1.finance.yahoo.com/v8/finance/chart/{_urlp.quote(symbol)}?interval=1d&range=2y'
         req = _urlr.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with _urlr.urlopen(req, timeout=12) as r:
             d = json.loads(r.read())
@@ -1381,15 +1400,34 @@ def fetch_spx_technical() -> dict:
             range_pos = (price - low52w) / (high52w - low52w) * 100 if high52w > low52w else 50
             trend, trend_ok = _trend_lbl(price, ma20, ma60, ma200)
 
-            # ── 過去 3 個月（≈60 交易日）K 線 + 均線參考線幾何 ──
+            # ── 過去 3 個月（≈60 交易日）K 線 + 移動平均線幾何 ──
             # viewBox 0 0 100 30；y = 30 - (v-d_lo)/d_rng*28 - 1（上下各留 1 邊距）
-            cdl     = rows[-60:]                                   # 含 OHLC 的日 K
+            N_SHOW  = 60
+            cdl     = rows[-N_SHOW:]                               # 含 OHLC 的日 K
             spark   = [r['c'] for r in cdl]
             mtd_pct = (spark[-1] - spark[0]) / spark[0] * 100 if spark[0] else 0.0
             s_lo    = min(r['l'] for r in cdl)                     # 三月內最低（影線）
             s_hi    = max(r['h'] for r in cdl)                     # 三月內最高（影線）
-            # 值域貼齊 K 線本身的高低 + 6% 緩衝；不為了塞均線而拉寬值域（避免 K 線被壓扁、看不出趨勢）
-            d_lo, d_hi = s_lo, s_hi
+
+            # 均線＝滾動序列（每根 K 各自往前取 win 日均值），不是單一純量畫水平線。
+            # 起點對齊顯示窗第一根 K；歷史不足者該點回 None（不畫）。
+            i0 = len(closes) - N_SHOW
+            def _ma_series(win):
+                out = []
+                for i in range(i0, len(closes)):
+                    out.append(sum(closes[i + 1 - win:i + 1]) / win if i + 1 >= win else None)
+                return out
+
+            ma_series = {'月線': (_ma_series(20),  ma20,  '#60a5fa'),
+                         '季線': (_ma_series(60),  ma60,  '#a78bfa'),
+                         '年線': (_ma_series(200), ma200, '#f59e0b')}
+
+            # 值域：貼齊 K 線高低，並納入月線/季線序列（兩者貼近價格，不致壓扁 K 線）。
+            # 年線刻意不納入——它可能離價格很遠，硬塞會把 K 線壓成一條；超框由 SVG 自動裁切。
+            near_ma = [v for k in ('月線', '季線')
+                       for v in ma_series[k][0] if v is not None]
+            d_lo = min([s_lo] + near_ma)
+            d_hi = max([s_hi] + near_ma)
             pad  = (d_hi - d_lo) * 0.06 if d_hi > d_lo else (d_hi * 0.01 or 1)
             d_lo -= pad; d_hi += pad
             d_rng = (d_hi - d_lo) or 1
@@ -1421,13 +1459,22 @@ def fetch_spx_technical() -> dict:
                     'l': round(l_, 2), 'c': round(c_, 2),
                 })
 
-            ma_marks, ma_out = [], []   # 落在框內畫虛線 / 超出框外只列文字
-            for lbl, mv, col in [('月線', ma20, '#60a5fa'), ('季線', ma60, '#a78bfa'), ('年線', ma200, '#f59e0b')]:
+            # 均線折線：每根 K 對應一點，連成隨價格起伏的曲線（取代舊版單一水平線）。
+            # 全段落在框外者不畫線、只在圖例列文字（ma_out）。
+            ma_lines, ma_marks, ma_out = [], [], []
+            for lbl, (series, mv, col) in ma_series.items():
                 item = {'label': lbl, 'val': round(mv, 2),
                         'pct': round((price - mv) / mv * 100, 1), 'color': col,
                         'side': '上方' if mv > price else '下方'}
-                if d_lo <= mv <= d_hi:
-                    item['y'] = _y(mv)
+                pts, visible = [], False
+                for i, v in enumerate(series):
+                    if v is None:
+                        continue
+                    pts.append(f"{round((i + 0.5) * slot, 2)},{_y(v)}")
+                    if d_lo <= v <= d_hi:
+                        visible = True
+                if pts and visible:
+                    ma_lines.append({'label': lbl, 'color': col, 'points': ' '.join(pts)})
                     ma_marks.append(item)
                 else:
                     ma_out.append(item)
@@ -1456,6 +1503,7 @@ def fetch_spx_technical() -> dict:
                 'mtd_pct':   round(mtd_pct, 1),
                 'spark_lo':  round(s_lo, 2),
                 'spark_hi':  round(s_hi, 2),
+                'ma_lines':  ma_lines,
                 'ma_marks':  ma_marks,
                 'ma_out':    ma_out,
             }
