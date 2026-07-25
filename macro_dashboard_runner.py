@@ -94,23 +94,15 @@ def fetch_fed_rate():
     except:
         cb_res['ecb'] = '2.00'
 
-    # BoE（英國央行 Bank Rate）— 官網首頁 + tradingeconomics 備援
-    try:
-        boe_req = urllib.request.Request('https://www.bankofengland.co.uk/',
-                                          headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(boe_req, timeout=15) as r:
-            html = r.read().decode('utf-8', errors='ignore')
-        m = re.search(r'Bank Rate[^0-9%]{1,80}(\d+\.\d+)\s*%', html, re.DOTALL)
-        if m:
-            cb_res['boe'] = f'{float(m.group(1)):.2f}'
-        else:
-            cb_res['boe'] = _scrape_te_rate('united-kingdom') or '4.25'
-    except:
-        cb_res['boe'] = _scrape_te_rate('united-kingdom') or '4.25'
+    # BoE（英國央行）— 2026/07/25 起不再顯示，略過抓取
 
     # BOJ（釘住政策利率，手動維護；不靠 FRED IRSTJPN156N 落後序列）
     # 2026/06/16 升息一碼至 1.00%（7-1 票，1995/9 以來最高）。每次 BOJ 會後手動更新。
     cb_res['boj'] = '1.00'
+
+    # BOK（韓國央行基準利率，釘住手動維護）
+    # 2026/07/16 升息一碼至 2.75%。每次 BOK 會後手動更新（與 data_fetcher.py 同步）。
+    cb_res['bok'] = '2.75'
 
     # PBOC（中國央行 7 天逆回購 — 對標其他央行政策利率）
     cb_res['pboc'] = _scrape_te_rate('china') or '1.40'
@@ -511,14 +503,14 @@ def run(geopolitics_bullets=None):
     A('')
     fed  = cb_res.get('fed',  '3.50–3.75')
     ecb  = cb_res.get('ecb',  '2.00')
-    boe  = cb_res.get('boe',  '4.25')
     boj  = cb_res.get('boj',  '1.00')
     pboc = cb_res.get('pboc', '1.40')
+    bok  = cb_res.get('bok',  '2.75')
     cbc  = cb_res.get('cbc',  '2.00')
     A('🏦 <b>央行利率</b>（6 大央行）')
-    A(f'  🇺🇸 聯準會 (Fed) {fed}%  ｜  🇪🇺 歐洲央行 (ECB) {ecb}%')
-    A(f'  🇬🇧 英國央行 (BoE) {boe}%  ｜  🇯🇵 日本央行 (BOJ) {boj}%')
-    A(f'  🇨🇳 中國央行 (PBOC) {pboc}%  ｜  🇹🇼 中央銀行 (CBC) {cbc}%')
+    A(f'  🇺🇸 聯準會 (Fed) {fed}%  ｜  🇨🇳 中國央行 (PBOC) {pboc}%')
+    A(f'  🇪🇺 歐洲央行 (ECB) {ecb}%  ｜  🇹🇼 中央銀行 (CBC) {cbc}%')
+    A(f'  🇯🇵 日本央行 (BOJ) {boj}%  ｜  🇰🇷 韓國央行 (BOK) {bok}%')
 
     A('')
     A(f'🇹🇼 <b>三大法人</b>（{inst_res.get("date","N/A")}）')
