@@ -235,6 +235,69 @@ def _get_history(ticker_symbol: str, rng: str = "1mo") -> list:
         return []
 
 
+def _get_history_raw(ticker_symbol: str, rng: str = "1mo") -> dict:
+    """抓 Yahoo Chart 日線收盤，回傳 {YYYY-MM-DD: 未四捨五入收盤}。
+
+    與 `_get_history` 的差別：
+      ① 不做 round(2)——匯率交叉計算需保留精度（KRW/TWD 量級 0.0xxx，round(2) 會歸零）
+      ② 以日期為 key，供兩檔序列（X 與 USD/TWD）對齊同一交易日後再相除／相乘
+    """
+    import urllib.request as _urlr, urllib.parse as _urlp, datetime as _dt
+    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
+           f"{_urlp.quote(ticker_symbol)}?interval=1d&range={rng}")
+    try:
+        req = _urlr.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with _urlr.urlopen(req, timeout=12) as r:
+            d = json.loads(r.read())
+        result = d["chart"]["result"][0]
+        ts     = result["timestamp"]
+        closes = result["indicators"]["quote"][0]["close"]
+        out = {}
+        for t, c in zip(ts, closes):
+            if c is None:
+                continue
+            out[_dt.datetime.fromtimestamp(t).strftime("%Y-%m-%d")] = float(c)
+        return out
+    except Exception as e:
+        logger.warning(f"_get_history_raw {ticker_symbol} {rng} failed: {e}")
+        return {}
+
+
+def _build_sparkline(series: list, width: int = 100, height: int = 24, pad: float = 2.0) -> dict:
+    """把 [(date, value), ...] 轉成 SVG polyline 座標 + 近一月變動。
+
+    y 軸以「該序列自身 min~max」撐滿（非零基），因匯率波動幅度小（多在 ±3%），
+    零基會把所有線壓成一條水平線、失去可讀性。
+    """
+    vals = [v for _, v in series]
+    if len(vals) < 2:
+        return {}
+    lo, hi = min(vals), max(vals)
+    span   = hi - lo
+    n      = len(vals)
+    x_max  = width - 2.0          # 右緣留 2 單位，避免末點圓點被裁掉半顆
+    pts, area = [], []
+    for i, v in enumerate(vals):
+        x = i / (n - 1) * x_max
+        # span 為 0（整月無波動）→ 畫在垂直置中線
+        y = (height / 2) if span == 0 else height - pad - (v - lo) / span * (height - 2 * pad)
+        pts.append(f"{x:.2f},{y:.2f}")
+    first, last = vals[0], vals[-1]
+    chg_1m = round((last - first) / first * 100, 2) if first else None
+    return {
+        "points":   " ".join(pts),
+        "area":     f"0,{height} " + " ".join(pts) + f" {x_max},{height}",
+        "chg_1m":   chg_1m,
+        "last_x":   x_max,
+        "last_y":   (height / 2) if span == 0 else height - pad - (last - lo) / span * (height - 2 * pad),
+        "lo":       lo,
+        "hi":       hi,
+        "start_date": series[0][0],
+        "end_date":   series[-1][0],
+        "n":        n,
+    }
+
+
 def _fmt(price, decimals=2):
     if price is None:
         return "N/A"
@@ -1035,11 +1098,39 @@ def fetch_fx_data() -> dict:
       X/TWD_today = USD/TWD_today / (USD/X)_today        (usd_base)
       X/TWD_today = (X/USD)_today × USD/TWD_today        (quote_base)
     再用 today / prev_close 各自值算 change_pct，避免 log-linear 近似誤差。
+
+    近一月走勢圖（v13）：每檔另抓 1mo 日線，**用與現價完全相同的交叉公式**逐日換算成
+    X/TWD 序列（不是直接畫 USD/X 原始序列，否則方向會相反、幅度也不對）。
     """
+    from concurrent.futures import ThreadPoolExecutor
+
     # Step 1：先取 USD/TWD spot + prev（其他換算都要用）
     twd_q = _get_quote("TWD=X")
     usdtwd_now  = twd_q["price"]
     usdtwd_prev = twd_q["prev_close"]
+
+    # Step 1b：並行抓所有 1mo 歷史（含 USD/TWD 自己，交叉換算的分子/分母都要）
+    _tickers = {t for _, t, _, _ in FX_TICKERS} | {"TWD=X"}
+    with ThreadPoolExecutor(max_workers=len(_tickers)) as _ex:
+        _futs = {t: _ex.submit(_get_history_raw, t, "1mo") for t in _tickers}
+        hist = {t: f.result() for t, f in _futs.items()}
+    usdtwd_hist = hist.get("TWD=X", {})
+
+    def _spark_for(ticker, mode):
+        """依 mode 用與現價相同的公式，逐交易日換算 X/TWD 序列"""
+        if mode == "dxy":
+            series = sorted(hist.get(ticker, {}).items())
+        elif mode == "usd_twd":
+            series = sorted(usdtwd_hist.items())
+        else:
+            raw = hist.get(ticker, {})
+            series = []
+            for d in sorted(set(raw) & set(usdtwd_hist)):   # 只取兩邊都有報價的交易日
+                x, u = raw[d], usdtwd_hist[d]
+                if not x or not u:
+                    continue
+                series.append((d, u / x if mode == "usd_base" else x * u))
+        return _build_sparkline(series)
 
     results = []
     for name, ticker, dec, mode in FX_TICKERS:
@@ -1067,11 +1158,17 @@ def fetch_fx_data() -> dict:
                 price   = round(x_twd_now, 6)
                 chg_pct = round((x_twd_now - x_twd_prev) / x_twd_prev * 100, 2) if x_twd_prev else None
 
+        spark = _spark_for(ticker, mode)
+        if spark:
+            spark["lo_fmt"] = _fmt(spark["lo"], dec)
+            spark["hi_fmt"] = _fmt(spark["hi"], dec)
+
         results.append({
             "name": name,
             "price": price,
             "price_fmt": _fmt(price, dec) if price is not None else "N/A",
             "change_pct": chg_pct,
+            "spark": spark,
         })
 
     return {

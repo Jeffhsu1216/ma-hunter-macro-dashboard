@@ -115,6 +115,31 @@
         .down { color: var(--green); background: var(--green-bg); }
         .flat { color: var(--text-3); }
 
+        /* 匯率近一月走勢 sparkline（v13）：名稱 ｜ 走勢圖 ｜ 近1月% ｜ 現價+日變動 */
+        .fx-row      { display: flex; align-items: center; gap: 8px; padding: 6px 0;
+                       border-bottom: 1px solid rgba(255,255,255,0.025); }
+        .fx-row:last-of-type { border-bottom: none; }
+        .fx-name     { color: var(--text-2); flex: 0 0 118px; white-space: nowrap;
+                       overflow: hidden; text-overflow: ellipsis; }
+        .fx-spark    { flex: 1 1 auto; min-width: 48px; height: 24px; display: block; }
+        .fx-spark polyline { fill: none; stroke: currentColor; stroke-width: 1.5;
+                             stroke-linejoin: round; stroke-linecap: round; }
+        .fx-spark polygon  { fill: currentColor; opacity: 0.10; stroke: none; }
+        /* 末點用「零長度 + round linecap 的 line」畫圓點：preserveAspectRatio="none"
+           會把 <circle> 橫向拉成橢圓，non-scaling-stroke 的 line 則永遠是正圓 */
+        .fx-spark line     { stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; }
+        /* 台股慣例：紅漲綠跌（此處＝近一月方向） */
+        .sp-up   { color: var(--red); }
+        .sp-down { color: var(--green); }
+        .sp-flat { color: var(--text-3); }
+        .fx-1m   { flex: 0 0 54px; text-align: right; font-size: 10px; font-weight: 600;
+                   font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .fx-val  { flex: 0 0 auto; font-weight: 600; font-variant-numeric: tabular-nums;
+                   display: flex; align-items: center; gap: 5px; justify-content: flex-end;
+                   min-width: 104px; }
+        .fx-na   { flex: 1 1 auto; text-align: center; color: var(--text-3); font-size: 10px; }
+        @media (max-width: 900px) { .fx-name { flex-basis: 96px; } .fx-1m { flex-basis: 48px; } }
+
         /* Yield curve mini-bar */
         .yield-bars { margin-top: 4px; }
         .yield-bar-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
@@ -428,12 +453,29 @@
         <div class="card">
             <div class="card-title">💱 匯率</div>
             <div style="font-size:10px; color:var(--text-3); margin-bottom:8px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
-                X/TWD ↑ = X 對台幣升值（台幣貶值）｜DXY ↑ = 美元全面走強
+                X/TWD ↑ = X 對台幣升值（台幣貶值）｜DXY ↑ = 美元全面走強<br>
+                走勢圖＝近一月日線（紅漲綠跌，y 軸為該檔自身區間非零基）｜左數字＝近一月變動，右數字＝現價與當日變動
             </div>
             {% for fx in data.fx %}
-            <div class="row">
-                <div class="lbl">{{ fx.name }}</div>
-                <div class="val">
+            {% set sp = fx.spark %}
+            <div class="fx-row">
+                <div class="fx-name">{{ fx.name }}</div>
+                {% if sp and sp.points %}
+                {% set dir = 'sp-up' if sp.chg_1m > 0 else ('sp-down' if sp.chg_1m < 0 else 'sp-flat') %}
+                <svg class="fx-spark {{ dir }}" viewBox="0 0 100 24" preserveAspectRatio="none">
+                    <title>{{ fx.name }} 近一月（{{ sp.start_date }} ~ {{ sp.end_date }}，{{ sp.n }} 個交易日）　最低 {{ sp.lo_fmt }}　最高 {{ sp.hi_fmt }}</title>
+                    <polygon points="{{ sp.area }}"/>
+                    <polyline points="{{ sp.points }}" vector-effect="non-scaling-stroke"/>
+                    <line x1="{{ '%.2f'|format(sp.last_x) }}" y1="{{ '%.2f'|format(sp.last_y) }}"
+                          x2="{{ '%.2f'|format(sp.last_x) }}" y2="{{ '%.2f'|format(sp.last_y) }}"
+                          vector-effect="non-scaling-stroke"/>
+                </svg>
+                <div class="fx-1m {{ dir }}">{{ '+' if sp.chg_1m > 0 else '' }}{{ sp.chg_1m }}%</div>
+                {% else %}
+                <div class="fx-na">近一月走勢 N/A</div>
+                <div class="fx-1m sp-flat">—</div>
+                {% endif %}
+                <div class="fx-val">
                     {{ fx.price_fmt if fx.price else '<span class="na">N/A</span>'|safe }}
                     {% if fx.change_pct is not none %}
                     <span class="chg {{ 'up' if fx.change_pct > 0 else ('down' if fx.change_pct < 0 else 'flat') }}">
