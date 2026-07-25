@@ -50,11 +50,10 @@
         /* ── Layout ── */
         .main { padding: 16px 24px; display: flex; flex-direction: column; gap: 14px; }
 
-        /* CB Rate bar — 7 央行（Fed/ECB/BoE/BOJ/PBOC/BOK/CBC）：4 欄 × 2 列（4+3） */
+        /* CB Rate bar — 6 央行：3 欄 × 2 列（上列 美/中/歐、下列 台/日/韓） */
         .cb-bar {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
         }
-        @media (max-width: 1100px) { .cb-bar { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 820px)  { .cb-bar { grid-template-columns: repeat(2, 1fr); } }
         .cb-card {
             background: var(--gold-dim);
