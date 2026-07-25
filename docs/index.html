@@ -50,11 +50,10 @@
         /* ── Layout ── */
         .main { padding: 16px 24px; display: flex; flex-direction: column; gap: 14px; }
 
-        /* CB Rate bar — 7 央行（Fed/ECB/BoE/BOJ/PBOC/BOK/CBC）：4 欄 × 2 列（4+3） */
+        /* CB Rate bar — 6 央行：3 欄 × 2 列（上列 美/中/歐、下列 台/日/韓） */
         .cb-bar {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
         }
-        @media (max-width: 1100px) { .cb-bar { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 820px)  { .cb-bar { grid-template-columns: repeat(2, 1fr); } }
         .cb-card {
             background: var(--gold-dim);
@@ -418,6 +417,14 @@
         </div>
         
         <div class="cb-card">
+            <div class="cb-name">中國央行 (PBOC)</div>
+            <div class="cb-rate">1.40%</div>
+            <div class="cb-last hold">─ 維持 <span class="cb-date">· 6/22</span></div>
+            <div class="cb-next">下次會議 2026/08/20（LPR）</div>
+            <div class="cb-fore">📊 預期：傾向降息（券商估 7 月 LPR 調降）</div>
+        </div>
+        
+        <div class="cb-card">
             <div class="cb-name">歐洲央行 (ECB)</div>
             <div class="cb-rate">2.25%</div>
             <div class="cb-last up">▲ 升息 25bps <span class="cb-date">· 6/11</span></div>
@@ -426,11 +433,11 @@
         </div>
         
         <div class="cb-card">
-            <div class="cb-name">英國央行 (BoE)</div>
-            <div class="cb-rate">3.75%</div>
+            <div class="cb-name">中央銀行 (CBC)</div>
+            <div class="cb-rate">2.00%</div>
             <div class="cb-last hold">─ 維持 <span class="cb-date">· 6/18</span></div>
-            <div class="cb-next">下次會議 2026/07/30</div>
-            <div class="cb-fore">📊 預期：維持偏鷹（7–2 票，2 票主張升息）</div>
+            <div class="cb-next">下次會議 2026/09/17</div>
+            <div class="cb-fore">📊 預期：維持（連 8 凍，通膨溫和）</div>
         </div>
         
         <div class="cb-card">
@@ -442,27 +449,11 @@
         </div>
         
         <div class="cb-card">
-            <div class="cb-name">中國央行 (PBOC)</div>
-            <div class="cb-rate">1.40%</div>
-            <div class="cb-last hold">─ 維持 <span class="cb-date">· 6/22</span></div>
-            <div class="cb-next">下次會議 2026/08/20（LPR）</div>
-            <div class="cb-fore">📊 預期：傾向降息（券商估 7 月 LPR 調降）</div>
-        </div>
-        
-        <div class="cb-card">
             <div class="cb-name">韓國央行 (BOK)</div>
             <div class="cb-rate">2.75%</div>
             <div class="cb-last up">▲ 升息 25bps <span class="cb-date">· 7/16</span></div>
             <div class="cb-next">下次會議 2026/08/27</div>
             <div class="cb-fore">📊 預期：偏鷹，總裁示意續緊縮（通膨 3.1% 高於目標）</div>
-        </div>
-        
-        <div class="cb-card">
-            <div class="cb-name">中央銀行 (CBC)</div>
-            <div class="cb-rate">2.00%</div>
-            <div class="cb-last hold">─ 維持 <span class="cb-date">· 6/18</span></div>
-            <div class="cb-next">下次會議 2026/09/17</div>
-            <div class="cb-fore">📊 預期：維持（連 8 凍，通膨溫和）</div>
         </div>
         
     </div>
