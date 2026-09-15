@@ -661,17 +661,20 @@ def _scrape_pboc_omo() -> str:
     return ""
 
 
+def _lpr_date(y: int, m: int) -> date:
+    """PBOC LPR 每月 20 日 09:00 公布，遇週末順延至週一（中國國定假日未處理）"""
+    d = date(y, m, 20)
+    return d + timedelta(days={5: 2, 6: 1}.get(d.weekday(), 0))
+
+
 def _next_pboc_lpr_date() -> str:
-    """PBOC LPR 每月 20 日公布（遇假日順延），用此當作下次發布日"""
-    today = date.today()
-    if today.day < 20:
-        target = today.replace(day=20)
-    else:
-        if today.month == 12:
-            target = date(today.year + 1, 1, 20)
-        else:
-            target = date(today.year, today.month + 1, 20)
-    return target.strftime("%Y/%m/%d")
+    """下次 LPR 公布日（台北日期；當月已過則取下月）"""
+    today = datetime.now(TAIPEI_TZ).date()
+    d = _lpr_date(today.year, today.month)
+    if d < today:
+        y, m = (today.year + 1, 1) if today.month == 12 else (today.year, today.month + 1)
+        d = _lpr_date(y, m)
+    return d.strftime("%Y/%m/%d")
 
 
 # ============================================================
@@ -1672,11 +1675,12 @@ _CB_MEETING_DATES = {
 def _stale_guard(result: dict) -> None:
     """CB_DECISION_META 是手動釘住的；若某央行已開過新會議、釘住值還停在更早日期，
     改標「待更新」而不是繼續顯示舊結論（2026/09 發現 Fed/BOK/BOJ 皆停在舊會議）。
-    以台北日期「嚴格晚於」會議日才算開完，涵蓋美、歐時差（Fed 美東 14:00 ＝ 台北隔日凌晨）。"""
-    today = datetime.now(TAIPEI_TZ).date()
+    以「台北公布時刻已過」才算開完（_release_tpe，涵蓋 Fed 美東 14:00 ＝ 台北隔日凌晨等時差）。"""
+    from zoneinfo import ZoneInfo
+    now = datetime.now(ZoneInfo("Asia/Taipei"))
     for name, dates in _CB_MEETING_DATES.items():
         r = result.get(name)
-        past = [d for d in dates if d < today]
+        past = [d for d in dates if _release_tpe(name, d)[0] <= now]
         if not r or not past:
             continue
         last_mtg = max(past)
@@ -1692,6 +1696,115 @@ def _stale_guard(result: dict) -> None:
             r["last_date"] = f"{last_mtg.month}/{last_mtg.day}"
             if "odds" not in r:                     # Fed 的預期由期貨自動算，不受影響
                 r["forecast"] = f"—（{last_mtg.month}/{last_mtg.day} 會議結果待更新）"
+
+
+# 各央行決議公布時間（當地時區、時、分、是否約略、旗幟、簡稱）→ 換算台北時間、倒數、行事曆用
+# Fed 美東 14:00、ECB 法蘭克福 14:15、LPR 北京 09:00 為官方固定時間；
+# BOJ 無固定公布時間（約當地中午）、BOK 約 10:00、CBC 約 16:00，顯示時標「約」。
+_CB_RELEASE = {
+    "聯準會 (Fed)":    ("America/New_York", 14,  0, False, "🇺🇸", "Fed"),
+    "中國央行 (PBOC)": ("Asia/Shanghai",     9,  0, False, "🇨🇳", "LPR"),
+    "歐洲央行 (ECB)":  ("Europe/Berlin",    14, 15, False, "🇪🇺", "ECB"),
+    "中央銀行 (CBC)":  ("Asia/Taipei",      16,  0, True,  "🇹🇼", "央行"),
+    "日本央行 (BOJ)":  ("Asia/Tokyo",       12,  0, True,  "🇯🇵", "BOJ"),
+    "韓國央行 (BOK)":  ("Asia/Seoul",       10,  0, True,  "🇰🇷", "BOK"),
+}
+_WEEKDAY_ZH = "一二三四五六日"
+
+
+def _release_tpe(name: str, d: date):
+    """某央行在 d（當地會議日）的決議公布時刻換算成台北時間 → (aware datetime, 顯示字串)"""
+    from zoneinfo import ZoneInfo
+    tz, hh, mm, approx, _, _ = _CB_RELEASE[name]
+    tpe = datetime(d.year, d.month, d.day, hh, mm, tzinfo=ZoneInfo(tz)).astimezone(ZoneInfo("Asia/Taipei"))
+    return tpe, f"{'約 ' if approx else ''}{tpe.month}/{tpe.day} {tpe:%H:%M}"
+
+
+def _cb_schedule(name: str, start: date) -> list:
+    """該央行會議日清單（手動日程 _DATES_2026；PBOC＝自 start 所在月起 14 個月的 LPR 日）"""
+    if name == "中國央行 (PBOC)":
+        out, y, m = [], start.year, start.month
+        for _ in range(14):
+            out.append(_lpr_date(y, m))
+            y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+        return out
+    return list(_CB_MEETING_DATES.get(name, []))
+
+
+def _attach_next_meeting(result: dict) -> None:
+    """每家央行補上下次會議日、台北公布時間與倒數天數。
+    以「台北公布時刻」判斷：公布後立刻跳到下一場（例：CBC 當天 16:00 後即改顯示下一次）。"""
+    from zoneinfo import ZoneInfo
+    now = datetime.now(ZoneInfo("Asia/Taipei"))
+    for name, r in result.items():
+        if name not in _CB_RELEASE:
+            continue
+        for d in _cb_schedule(name, now.date() - timedelta(days=31)):
+            tpe, lbl = _release_tpe(name, d)
+            if tpe > now:
+                r.update({
+                    "next_date":   d.isoformat(),
+                    "next_md":     f"{d.month}/{d.day}（{_WEEKDAY_ZH[d.weekday()]}）",
+                    "release_tpe": lbl,
+                    "release_iso": tpe.isoformat(),
+                    "days_to":     (tpe.date() - now.date()).days,
+                })
+                break
+
+
+def build_cb_calendar(cal_events=None) -> dict:
+    """當月央行行事曆（週日起算的月曆格）＋ 接下來 6 場央行決議倒數。
+
+    會議日來源＝各 _DATES_2026 手動日程（年度公布後一次寫死，每年底補隔年）＋ 每月 LPR 規則日；
+    另把「本週高重要性經濟數據」（fetch_economic_calendar）標成 📊，滑鼠移上看明細。
+    """
+    import calendar as _cal
+    from zoneinfo import ZoneInfo
+    now   = datetime.now(ZoneInfo("Asia/Taipei"))
+    today = now.date()
+    y, m  = today.year, today.month
+
+    cb_ev, data_ev = {}, {}
+    for name, (_, _, _, _, flag, abbr) in _CB_RELEASE.items():
+        for d in _cb_schedule(name, today - timedelta(days=62)):
+            tpe, lbl = _release_tpe(name, d)
+            what = "LPR 公布" if abbr == "LPR" else "利率決議"
+            cb_ev.setdefault(d, []).append({
+                "flag": flag, "abbr": abbr, "name": name, "release": lbl,
+                "done": tpe <= now, "iso": tpe.isoformat(),
+                "tip": f"{flag} {name} {what}（台北 {lbl}）",
+            })
+    for e in cal_events or []:
+        mo = re.match(r"\s*(\d{1,2})/(\d{1,2})", str(e.get("date", "")))
+        if not mo:
+            continue
+        try:
+            d = date(y, int(mo.group(1)), int(mo.group(2)))
+        except ValueError:
+            continue
+        data_ev.setdefault(d, []).append(f"📊 {e.get('date', '')} {e.get('country', '')} {e.get('title', '')}")
+
+    weeks = []
+    for wk in _cal.Calendar(firstweekday=6).monthdatescalendar(y, m):
+        row = []
+        for d in wk:
+            inm  = d.month == m
+            cbs  = cb_ev.get(d, []) if inm else []
+            dats = data_ev.get(d, []) if inm else []
+            row.append({
+                "day": d.day, "in_month": inm, "is_today": d == today, "past": d < today,
+                "flags": "".join(c["flag"] for c in cbs), "has_cb": bool(cbs), "n_data": len(dats),
+                "tip": "\n".join([c["tip"] for c in cbs] + dats),
+            })
+        weeks.append(row)
+
+    nxt = sorted((c for cs in cb_ev.values() for c in cs if not c["done"]), key=lambda c: c["iso"])[:6]
+    upcoming = []
+    for c in nxt:
+        rd = datetime.fromisoformat(c["iso"]).date()
+        upcoming.append({"flag": c["flag"], "abbr": c["abbr"], "release": c["release"],
+                         "iso": c["iso"], "days": (rd - today).days})
+    return {"title": f"{y} 年 {m} 月", "weeks": weeks, "upcoming": upcoming}
 
 
 def fetch_cb_rates() -> dict:
@@ -1798,6 +1911,7 @@ def fetch_cb_rates() -> dict:
         result["聯準會 (Fed)"]["odds"] = odds
 
     _stale_guard(result)
+    _attach_next_meeting(result)
     return result
 
 
@@ -2502,6 +2616,7 @@ def fetch_all() -> dict:
         "spx_tech_updated_at": tech_ts,
         "cb_rates":      cb_data,
         "cb_rates_updated_at": cb_ts,
+        "cb_calendar":   build_cb_calendar(cal_data),
         "indices":            indices,
         "indices_commentary": _index_commentary(indices),
         "indices_updated_at": indices_ts,

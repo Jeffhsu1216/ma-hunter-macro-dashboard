@@ -437,6 +437,58 @@
         .kgroup-title span { color: var(--text-3); text-transform: none; letter-spacing: 0; }
         .cb-card .cb-last.stale { color: #f59e0b; }  /* 已開會但釘住值未更新 */
 
+        /* ── v15 央行卡片：右上倒數＋「上次」灰標膠囊＋「市場預期」藍框＋右側月曆 ── */
+        .cb-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 10px; align-items: stretch; }
+        @media (max-width: 1100px) { .cb-wrap { grid-template-columns: 1fr; } }
+        .cb-top   { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .cb-count { flex-shrink: 0; text-align: right; padding: 4px 9px 5px; border-radius: 8px;
+                    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10); }
+        .cb-count.soon { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.5); }
+        .cb-dn { font-size: 19px; font-weight: 800; line-height: 1.1; color: var(--text); font-variant-numeric: tabular-nums; }
+        .cb-dn small { font-size: 10px; font-weight: 600; color: var(--text-2); margin-left: 2px; }
+        .cb-count.soon .cb-dn { color: #fca5a5; }
+        .cb-nd { font-size: 10px; color: var(--text-2); margin-top: 1px; }
+        .cb-rt { font-size: 9.5px; color: var(--text-3); }
+        .cb-last-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 10.5px; flex-wrap: wrap; }
+        .cb-tag  { font-size: 9.5px; color: #94a3b8; background: rgba(148,163,184,0.12);
+                   border: 1px solid rgba(148,163,184,0.28); padding: 0 6px; border-radius: 3px; }
+        .cb-pill { font-weight: 700; padding: 1px 8px; border-radius: 10px; font-size: 10.5px; }
+        .cb-pill.up    { color: #fecaca; background: rgba(239,68,68,0.30); }   /* 升息＝紅 */
+        .cb-pill.down  { color: #bbf7d0; background: rgba(34,197,94,0.26); }   /* 降息＝綠 */
+        .cb-pill.hold  { color: #e2e8f0; background: rgba(148,163,184,0.24); } /* 維持＝灰 */
+        .cb-pill.stale { color: #fde68a; background: rgba(245,158,11,0.26); }  /* 待更新＝橘 */
+        .cb-last-date { color: var(--text-3); }
+        .cb-fc { margin-top: 8px; padding: 7px 10px 8px; border-radius: 7px;
+                 background: rgba(96,165,250,0.09); border: 1px solid rgba(96,165,250,0.32); border-left: 3px solid #60a5fa; }
+        .cb-fc-lbl { font-size: 9.5px; font-weight: 700; color: #93c5fd; letter-spacing: 0.5px; }
+        .cb-fc-txt { font-size: 12px; color: var(--text); line-height: 1.45; margin-top: 2px; font-weight: 500; }
+        .cb-prob { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin: 5px 0 4px; background: rgba(255,255,255,0.05); }
+        .cb-prob span { display: block; height: 100%; }
+        .cb-prob-leg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .cb-prob-leg i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+        .cb-src { font-size: 9.5px; color: var(--text-3); margin-top: 3px; }
+        /* 月曆 */
+        .cb-cal { padding: 12px 14px; display: flex; flex-direction: column; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+        .cal-head div { font-size: 10px; color: var(--text-3); text-align: center; padding-bottom: 2px; }
+        .cal-cell { min-height: 38px; border-radius: 5px; background: rgba(255,255,255,0.025); padding: 2px 2px 3px;
+                    display: flex; flex-direction: column; align-items: center; gap: 1px; cursor: default; }
+        .cal-cell.out    { visibility: hidden; }
+        .cal-cell.past   { opacity: 0.45; }
+        .cal-cell.has-cb { background: rgba(96,165,250,0.13); }
+        .cal-cell.today  { outline: 1.5px solid var(--gold); background: var(--gold-dim); opacity: 1; }
+        .cal-d     { font-size: 10px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+        .cal-cell.today .cal-d { color: var(--gold); font-weight: 700; }
+        .cal-flags { font-size: 13px; line-height: 1.05; letter-spacing: -1px; }
+        .cal-dot   { font-size: 9px; line-height: 1; }
+        .cal-legend { font-size: 9.5px; color: var(--text-3); margin: 6px 0 8px; line-height: 1.5; }
+        .cal-up { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 11px;
+                  padding: 4px 0; border-top: 1px solid rgba(255,255,255,0.04); font-variant-numeric: tabular-nums; }
+        .cal-up .who { color: var(--text); font-weight: 600; min-width: 64px; }
+        .cal-up .when { color: var(--text-3); flex: 1; }
+        .cal-up .dd { font-weight: 700; color: var(--text-2); }
+        .cal-up .dd.soon { color: #fca5a5; }
+
         /* 解釋文字 */
         .commentary {
             margin-top: 10px; padding: 9px 12px;
@@ -533,20 +585,79 @@
 
 <div class="main">
 
-    <!-- ① 央行利率 -->
+    <!-- ① 央行利率（v15：右上倒數／上次＝灰標膠囊／市場預期＝藍框；右側當月行事曆） -->
+    <div class="cb-wrap">
     <div class="cb-bar">
         {% for name, info in data.cb_rates.items() %}
+        {% set act = info.last_action %}
         <div class="cb-card">
-            <div class="cb-name">{{ name }}</div>
-            <div class="cb-rate">{{ info.rate }}%</div>
-            <div class="cb-last {{ 'up' if info.last_action == '升息' else 'down' if info.last_action == '降息' else 'stale' if info.last_action == '待更新' else 'hold' }}">{% if info.last_action == '升息' %}▲ 升息 {{ info.last_bps }}bps{% elif info.last_action == '降息' %}▼ 降息 {{ info.last_bps }}bps{% elif info.last_action == '待更新' %}⚠️ 會議結果待更新{% else %}─ 維持{% endif %} <span class="cb-date">· {{ info.last_date }}</span></div>
-            <div class="cb-next">下次會議 {{ info.next }}</div>
-            <div class="cb-fore"{% if info.odds %} title="現行 EFFR {{ info.odds.effr }}%（{{ info.odds.effr_date }}）｜期貨隱含會後利率 {{ info.odds.implied }}%（{{ info.odds.method }}，{{ '%+.1f'|format(info.odds.delta_bp) }}bp）"{% endif %}>📊 預期：{{ info.forecast }}</div>
+            <div class="cb-top">
+                <div>
+                    <div class="cb-name">{{ name }}</div>
+                    <div class="cb-rate">{{ info.rate }}%</div>
+                </div>
+                {% if info.release_iso %}
+                <div class="cb-count{{ ' soon' if info.days_to <= 3 }}" data-release="{{ info.release_iso }}" title="下次會議 {{ info.next_md }}，台北時間 {{ info.release_tpe }} 公布">
+                    <div class="cb-dn">{% if info.days_to <= 0 %}今天{% else %}D-{{ info.days_to }}<small>天</small>{% endif %}</div>
+                    <div class="cb-nd">{{ 'LPR ' if 'PBOC' in name }}{{ info.next_md }}</div>
+                    <div class="cb-rt">台北 {{ info.release_tpe }}</div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="cb-last-row">
+                <span class="cb-tag">上次</span>
+                <span class="cb-pill {{ 'up' if act == '升息' else 'down' if act == '降息' else 'stale' if act == '待更新' else 'hold' }}">{% if act == '升息' %}▲ 升息 {{ info.last_bps }}bp{% elif act == '降息' %}▼ 降息 {{ info.last_bps }}bp{% elif act == '待更新' %}⚠️ 結果待更新{% else %}─ 維持{% endif %}</span>
+                <span class="cb-last-date">{{ info.last_date }}</span>
+            </div>
+            <div class="cb-fc">
+                <div class="cb-fc-lbl">🎯 市場預期（下次會議）</div>
+                {% if info.odds and info.odds.probs %}
+                <div class="cb-prob">
+                    {% for lbl, p in info.odds.probs.items() %}
+                    <span style="width:{{ (p * 100)|round(1) }}%; background:{{ '#b91c1c' if '升息 2' in lbl else ('#ef4444' if '升息' in lbl else ('#22c55e' if '降息' in lbl else '#64748b')) }};" title="{{ lbl }} {{ (p * 100)|round|int }}%"></span>
+                    {% endfor %}
+                </div>
+                <div class="cb-prob-leg">
+                    {% for lbl, p in info.odds.probs.items() %}
+                    <span><i style="background:{{ '#b91c1c' if '升息 2' in lbl else ('#ef4444' if '升息' in lbl else ('#22c55e' if '降息' in lbl else '#64748b')) }};"></i>{{ lbl }} {{ (p * 100)|round|int }}%</span>
+                    {% endfor %}
+                </div>
+                <div class="cb-src">Fed Funds 期貨隱含（{{ info.odds.method }}）｜現行 EFFR {{ info.odds.effr }}% → 隱含會後 {{ '%.2f'|format(info.odds.implied) }}%</div>
+                {% else %}
+                <div class="cb-fc-txt">{{ info.forecast }}</div>
+                {% endif %}
+            </div>
         </div>
         {% endfor %}
     </div>
+
+    {% set cal = data.cb_calendar %}
+    {% if cal %}
+    <div class="card cb-cal">
+        <div class="card-title">🗓️ {{ cal.title }}｜央行行事曆</div>
+        <div class="cal-grid cal-head">{% for w in '日一二三四五六' %}<div>{{ w }}</div>{% endfor %}</div>
+        <div class="cal-grid">
+            {% for wk in cal.weeks %}{% for c in wk %}
+            <div class="cal-cell{{ ' out' if not c.in_month }}{{ ' past' if c.past }}{{ ' has-cb' if c.has_cb }}{{ ' today' if c.is_today }}"{% if c.tip %} title="{{ c.tip }}"{% endif %}>
+                <span class="cal-d">{{ c.day }}</span>
+                {% if c.flags %}<span class="cal-flags">{{ c.flags }}</span>{% endif %}
+                {% if c.n_data %}<span class="cal-dot">📊</span>{% endif %}
+            </div>
+            {% endfor %}{% endfor %}
+        </div>
+        <div class="cal-legend">旗幟＝央行利率決議（🇨🇳＝LPR）｜📊＝本週美國重要數據｜金框＝今天｜滑鼠移上看台北公布時間</div>
+        {% for u in cal.upcoming %}
+        <div class="cal-up">
+            <span class="who">{{ u.flag }} {{ u.abbr }}</span>
+            <span class="when">台北 {{ u.release }}</span>
+            <span class="dd{{ ' soon' if u.days <= 3 }}" data-release="{{ u.iso }}">{% if u.days <= 0 %}今天{% else %}D-{{ u.days }}{% endif %}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    </div>
     <div style="font-size:10px; color:var(--text-3); text-align:right; margin-top:-8px; margin-bottom:2px;">
-        🕐 央行利率更新時間：{{ data.cb_rates_updated_at }}（Fed 來源：FRED）
+        🕐 央行利率更新時間：{{ data.cb_rates_updated_at }}（Fed 利率：FRED；Fed 預期：Fed Funds 期貨＋紐約聯儲 EFFR；會議日程：各央行年度公告）
     </div>
 
     <!-- ② 匯率（v14：每檔一張近 3 個月日 K、3 欄格狀；解說放在各自圖下方） -->
@@ -930,6 +1041,23 @@
 
 <script>
     setTimeout(() => location.reload(), 30 * 60 * 1000);
+
+    // 央行倒數：以瀏覽器當下時間重算（頁面一天只產生兩次，隔天打開也要準）
+    (function () {
+        var TPE = 8 * 3600e3, DAY = 86400e3;
+        var tpeDay = function (ms) { return Math.floor((ms + TPE) / DAY); };   // 台北日序號
+        var now = Date.now();
+        document.querySelectorAll('[data-release]').forEach(function (el) {
+            var t = Date.parse(el.dataset.release);
+            if (isNaN(t)) return;
+            var d = tpeDay(t) - tpeDay(now);
+            var txt = t <= now ? '已公布' : (d <= 0 ? '今天' : 'D-' + d);
+            var dn = el.querySelector('.cb-dn');
+            if (dn) { dn.innerHTML = (t > now && d > 0) ? 'D-' + d + '<small>天</small>' : txt; }
+            else { el.textContent = txt; }
+            el.classList.toggle('soon', t > now && d <= 3);
+        });
+    })();
 
     // 日 K hover → 顯示開高低收（美股技術面／匯率／原物料／加密貨幣共用）
     document.querySelectorAll('.kwrap').forEach(function (wrap) {
