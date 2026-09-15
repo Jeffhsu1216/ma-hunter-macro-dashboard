@@ -399,6 +399,44 @@
             text-align: right; letter-spacing: 0.3px;
         }
 
+        /* ── v14 日 K 格狀（匯率／原物料／加密貨幣／美股技術面共用）── */
+        .grid-3 { grid-template-columns: 1.1fr 1fr 1fr; }
+        @media (max-width: 1100px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 760px)  { .grid-2, .grid-3 { grid-template-columns: 1fr; } .main { padding: 12px 16px; } .header { padding: 14px 16px; } }
+        .card-hint { font-size: 10px; color: var(--text-3); margin-bottom: 10px; padding: 5px 8px;
+                     background: rgba(255,255,255,0.02); border-radius: 4px; line-height: 1.6; }
+        .kgrid   { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .kgrid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        @media (max-width: 1100px) { .kgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 760px)  { .kgrid, .kgrid-2 { grid-template-columns: 1fr; } }
+        .kcell { min-width: 0; display: flex; flex-direction: column;
+                 background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05);
+                 border-radius: 8px; padding: 10px 10px 9px; }
+        .kcell-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+        .kcell-name { font-weight: 600; font-size: 12.5px; color: var(--text); min-width: 0;
+                      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .kcell-px   { font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums;
+                      white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+        .kcell-px .unit { font-size: 10px; font-weight: 400; color: var(--text-3); margin-left: -3px; }
+        .kcell-sub  { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+                      font-size: 10px; color: var(--text-3); margin: 2px 0 5px; font-variant-numeric: tabular-nums; }
+        .kcell-sub b { font-weight: 600; }
+        .kwrap  { position: relative; margin: 0 0 3px; }
+        .kchart { width: 100%; height: auto; display: block; border-radius: 6px;
+                  background: rgba(255,255,255,0.02); }
+        .kc-grid    { stroke: rgba(255,255,255,0.07); stroke-width: 1; }
+        .kc-ylab    { fill: var(--text-3); font-size: 10px; font-variant-numeric: tabular-nums; }
+        .kc-xlab    { fill: var(--text-3); font-size: 9.5px; font-variant-numeric: tabular-nums; }
+        .kc-lastlab { fill: #fff; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .kc-na  { text-align: center; color: var(--text-3); font-size: 11px; padding: 30px 0; }
+        .knote  { margin-top: 6px; padding: 6px 9px; font-size: 11.5px; color: var(--text-2); line-height: 1.65;
+                  background: rgba(201,165,78,0.06); border-left: 2px solid var(--gold); border-radius: 0 5px 5px 0; }
+        .knote::before { content: "💡 "; }
+        .kgroup-title { font-size: 10px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px;
+                        margin: 14px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(201,165,78,0.15); }
+        .kgroup-title span { color: var(--text-3); text-transform: none; letter-spacing: 0; }
+        .cb-card .cb-last.stale { color: #f59e0b; }  /* 已開會但釘住值未更新 */
+
         /* 解釋文字 */
         .commentary {
             margin-top: 10px; padding: 9px 12px;
@@ -413,6 +451,71 @@
     </style>
 </head>
 <body>
+
+{# ── v14 日 K 巨集：匯率／美股技術面／原物料／加密貨幣共用（幾何由 data_fetcher._build_kchart 產生）── #}
+{% macro kchart(kc, legend=True) -%}
+{% if kc and kc.candles %}
+<div class="kwrap">
+    <svg class="kchart" viewBox="0 0 {{ kc.W }} {{ kc.H }}" role="img" aria-label="日 K 線圖 {{ kc.start }} ~ {{ kc.end }}">
+        <defs><clipPath id="{{ kc.uid }}"><rect x="{{ kc.pl }}" y="{{ kc.pt }}" width="{{ kc.px2 - kc.pl }}" height="{{ kc.ph }}"/></clipPath></defs>
+        {% for g in kc.grid %}
+        <line class="kc-grid" x1="{{ kc.pl }}" x2="{{ kc.px2 }}" y1="{{ g.y }}" y2="{{ g.y }}"/>
+        {% if (g.y - kc.last_lab_y)|abs > 11 %}{# 與最新價色塊重疊的刻度文字不畫 #}
+        <text class="kc-ylab" x="{{ kc.px2 + 5 }}" y="{{ g.y + 3.5 }}">{{ g.label }}</text>
+        {% endif %}
+        {% endfor %}
+        {% for t in kc.ticks %}
+        <text class="kc-xlab" x="{{ t.x }}" y="{{ kc.H - 5 }}" text-anchor="{{ t.anchor }}">{{ t.label }}</text>
+        {% endfor %}
+        <g clip-path="url(#{{ kc.uid }})">
+            {% for c in kc.candles %}
+            <line x1="{{ c.cx }}" x2="{{ c.cx }}" y1="{{ c.wick_hi }}" y2="{{ c.wick_lo }}" stroke="{{ c.color }}" stroke-width="1"/>
+            <rect x="{{ c.x }}" y="{{ c.body_y }}" width="{{ c.w }}" height="{{ c.body_h }}" fill="{{ c.color }}"/>
+            {% endfor %}
+            {# 均線疊在 K 線之上（否則會被密集 K 線蓋住），超框段由 clipPath 裁掉 #}
+            {% for m in kc.ma_lines %}
+            <polyline points="{{ m.points }}" fill="none" stroke="{{ m.color }}" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            {% endfor %}
+            <line x1="{{ kc.pl }}" x2="{{ kc.px2 }}" y1="{{ kc.last_y }}" y2="{{ kc.last_y }}" stroke="{{ kc.last_color }}" stroke-width="0.9" stroke-dasharray="3 3"/>
+        </g>
+        <rect x="{{ kc.px2 + 1 }}" y="{{ kc.last_lab_y - 7.5 }}" width="{{ kc.W - kc.px2 - 1 }}" height="15" rx="2" fill="{{ kc.last_color }}"/>
+        <text class="kc-lastlab" x="{{ kc.px2 + 5 }}" y="{{ kc.last_lab_y + 3.8 }}">{{ kc.last_fmt }}</text>
+        {% for c in kc.candles %}
+        <rect class="kc-hit" x="{{ c.slot_x }}" y="{{ kc.pt }}" width="{{ c.slot_w }}" height="{{ kc.ph }}" fill="transparent"
+              data-d="{{ c.d }}" data-o="{{ c.o }}" data-h="{{ c.h }}" data-l="{{ c.l }}" data-c="{{ c.c }}" data-up="{{ 1 if c.up else 0 }}"></rect>
+        {% endfor %}
+    </svg>
+    <div class="ktip" hidden></div>
+</div>
+{% if legend %}
+<div class="ma-legend">
+    {% for m in kc.ma_marks %}<span style="color:{{ m.color }};"><i></i><span style="color:var(--text-2);">{{ m.label }} {{ m.val }}</span><span class="chg {{ 'up' if m.pct >= 0 else 'down' }}">{{ "%+.1f"|format(m.pct) }}%</span></span>{% endfor %}
+    {% for m in kc.ma_out %}<span style="color:{{ m.color }}; opacity:0.6;"><i></i><span style="color:var(--text-3);">{{ m.label }} {{ m.val }}（框{{ m.side }}）</span></span>{% endfor %}
+</div>
+{% endif %}
+{% else %}
+<div class="kc-na">日 K 資料暫無法取得</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro kcell(name, price_html, chg, kc, note, unit='') -%}
+<div class="kcell">
+    <div class="kcell-head">
+        <span class="kcell-name">{{ name }}</span>
+        <span class="kcell-px">{{ price_html|safe }}{% if unit %}<span class="unit">{{ unit }}</span>{% endif %}
+            {% if chg is not none %}<span class="chg {{ 'up' if chg > 0 else ('down' if chg < 0 else 'flat') }}">{{ '+' if chg > 0 else '' }}{{ chg }}%</span>{% endif %}
+        </span>
+    </div>
+    {% if kc %}
+    <div class="kcell-sub">
+        <span>近 3 個月 <b class="{{ 'sp-up' if kc.chg > 0 else ('sp-down' if kc.chg < 0 else 'sp-flat') }}">{{ "%+.2f"|format(kc.chg) }}%</b></span>
+        <span>區間 {{ kc.lo }}–{{ kc.hi }}</span>
+    </div>
+    {% endif %}
+    {{ kchart(kc) }}
+    {% if note %}<div class="knote">{{ note|safe }}</div>{% endif %}
+</div>
+{%- endmacro %}
 
 <!-- Header -->
 <header class="header">
@@ -436,9 +539,9 @@
         <div class="cb-card">
             <div class="cb-name">{{ name }}</div>
             <div class="cb-rate">{{ info.rate }}%</div>
-            <div class="cb-last {{ 'up' if info.last_action == '升息' else 'down' if info.last_action == '降息' else 'hold' }}">{% if info.last_action == '升息' %}▲ 升息 {{ info.last_bps }}bps{% elif info.last_action == '降息' %}▼ 降息 {{ info.last_bps }}bps{% else %}─ 維持{% endif %} <span class="cb-date">· {{ info.last_date }}</span></div>
+            <div class="cb-last {{ 'up' if info.last_action == '升息' else 'down' if info.last_action == '降息' else 'stale' if info.last_action == '待更新' else 'hold' }}">{% if info.last_action == '升息' %}▲ 升息 {{ info.last_bps }}bps{% elif info.last_action == '降息' %}▼ 降息 {{ info.last_bps }}bps{% elif info.last_action == '待更新' %}⚠️ 會議結果待更新{% else %}─ 維持{% endif %} <span class="cb-date">· {{ info.last_date }}</span></div>
             <div class="cb-next">下次會議 {{ info.next }}</div>
-            <div class="cb-fore">📊 預期：{{ info.forecast }}</div>
+            <div class="cb-fore"{% if info.odds %} title="現行 EFFR {{ info.odds.effr }}%（{{ info.odds.effr_date }}）｜期貨隱含會後利率 {{ info.odds.implied }}%（{{ info.odds.method }}，{{ '%+.1f'|format(info.odds.delta_bp) }}bp）"{% endif %}>📊 預期：{{ info.forecast }}</div>
         </div>
         {% endfor %}
     </div>
@@ -446,107 +549,44 @@
         🕐 央行利率更新時間：{{ data.cb_rates_updated_at }}（Fed 來源：FRED）
     </div>
 
-    <!-- ② FX + 殖利率曲線 -->
-    <div class="grid-2">
-
-        <!-- 匯率 -->
-        <div class="card">
-            <div class="card-title">💱 匯率</div>
-            <div style="font-size:10px; color:var(--text-3); margin-bottom:8px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
-                X/TWD ↑ = X 對台幣升值（台幣貶值）｜DXY ↑ = 美元全面走強<br>
-                走勢圖＝近一月日線（紅漲綠跌，y 軸為該檔自身區間非零基）｜左數字＝近一月變動，右數字＝現價與當日變動
-            </div>
-            {% for fx in data.fx %}
-            {% set sp = fx.spark %}
-            <div class="fx-row">
-                <div class="fx-name">{{ fx.name }}</div>
-                {% if sp and sp.points %}
-                {% set dir = 'sp-up' if sp.chg_1m > 0 else ('sp-down' if sp.chg_1m < 0 else 'sp-flat') %}
-                <svg class="fx-spark {{ dir }}" viewBox="0 0 100 24" preserveAspectRatio="none">
-                    <title>{{ fx.name }} 近一月（{{ sp.start_date }} ~ {{ sp.end_date }}，{{ sp.n }} 個交易日）　最低 {{ sp.lo_fmt }}　最高 {{ sp.hi_fmt }}</title>
-                    <polygon points="{{ sp.area }}"/>
-                    <polyline points="{{ sp.points }}" vector-effect="non-scaling-stroke"/>
-                    <line x1="{{ '%.2f'|format(sp.last_x) }}" y1="{{ '%.2f'|format(sp.last_y) }}"
-                          x2="{{ '%.2f'|format(sp.last_x) }}" y2="{{ '%.2f'|format(sp.last_y) }}"
-                          vector-effect="non-scaling-stroke"/>
-                </svg>
-                <div class="fx-1m {{ dir }}">{{ '+' if sp.chg_1m > 0 else '' }}{{ sp.chg_1m }}%</div>
-                {% else %}
-                <div class="fx-na">近一月走勢 N/A</div>
-                <div class="fx-1m sp-flat">—</div>
-                {% endif %}
-                <div class="fx-val">
-                    {{ fx.price_fmt if fx.price else '<span class="na">N/A</span>'|safe }}
-                    {% if fx.change_pct is not none %}
-                    <span class="chg {{ 'up' if fx.change_pct > 0 else ('down' if fx.change_pct < 0 else 'flat') }}">
-                        {{ '+' if fx.change_pct > 0 else '' }}{{ fx.change_pct }}%
-                    </span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-            {% if data.fx_commentary %}
-            <div class="commentary">{{ data.fx_commentary | safe }}</div>
-            {% endif %}
-            <div class="card-ts">🕐 更新時間：{{ data.fx_updated_at }}</div>
+    <!-- ② 匯率（v14：每檔一張近 3 個月日 K、3 欄格狀；解說放在各自圖下方） -->
+    <div class="card">
+        <div class="card-title">💱 匯率</div>
+        <div class="card-hint">
+            X/TWD ↑ = X 對台幣升值（台幣貶值）｜DXY ↑ = 美元全面走強｜標題右側＝現價與當日變動<br>
+            日 K＝近 3 個月（60 個交易日），紅漲綠跌，滑鼠移上看開高低收｜彩色線＝月線 MA20／季線 MA60／年線 MA200｜右側色塊＝最新價
         </div>
+        <div class="kgrid">
+            {% for fx in data.fx %}
+            {{ kcell(fx.name, fx.price_fmt if fx.price else '<span class="na">N/A</span>', fx.change_pct, fx.kc, fx.note) }}
+            {% endfor %}
+        </div>
+        <div class="card-ts">🕐 更新時間：{{ data.fx_updated_at }}</div>
+    </div>
 
-        <!-- 美股技術面（價格軸定位圖 + RSI gauge） -->
-        <div class="card">
-            <div class="card-title">📊 美股技術面</div>
-            <div style="font-size:10px; color:var(--text-3); margin-bottom:6px; padding:4px 8px; background:rgba(255,255,255,0.02); border-radius:4px;">
-                過去 3 個月日 K（60 個交易日，紅漲綠跌，滑鼠移上看開高低收）｜月線 MA20／季線 MA60／年線 MA200 移動平均線｜RSI(21) 動能
-            </div>
+    <!-- 美股技術面（v14：兩檔並排、日 K 加高＋價格／日期刻度；解說放在各自圖下方） -->
+    <div class="card">
+        <div class="card-title">📊 美股技術面</div>
+        <div class="card-hint">
+            過去 3 個月日 K（60 個交易日，紅漲綠跌，滑鼠移上看開高低收）｜月線 MA20／季線 MA60／年線 MA200 移動平均線｜右側色塊＝最新價｜RSI(21) 動能
+        </div>
+        <div class="kgrid kgrid-2">
             {% for key in ['spx', 'sox'] %}
             {% set t = data.spx_tech.get(key, {}) %}
             {% if t.get('ok') %}
-            <div style="margin-bottom:18px;">
-                <!-- 標題 -->
-                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;">
-                    <span style="font-weight:600; font-size:13px;">{{ t.name }}</span>
-                    <span style="font-size:15px; font-weight:700; color:var(--text-1);">
-                        {{ "{:,.0f}".format(t.price) }}
-                        <span class="chg {{ 'up' if t.trend_ok else ('down' if t.trend_ok is sameas false else 'flat') }}" style="margin-left:6px; font-size:10px;">
-                            {{ t.trend }}
-                        </span>
+            <div class="kcell">
+                <div class="kcell-head">
+                    <span class="kcell-name" style="font-size:13px;">{{ t.name }}</span>
+                    <span class="kcell-px" style="font-size:15px;">{{ "{:,.0f}".format(t.price) }}
+                        <span class="chg {{ 'up' if t.trend_ok else ('down' if t.trend_ok is sameas false else 'flat') }}" style="font-size:10px;">{{ t.trend }}</span>
                     </span>
                 </div>
-
-                <!-- 過去 3 個月日 K 線圖（紅漲綠跌 + 月/季/年線參考線 + hover 開高低收）-->
-                <div class="tech-trend">
-                    <svg class="tech-spark" viewBox="0 0 100 30" preserveAspectRatio="none">
-                        {# 先畫 K 線 #}
-                        {% for c in t.candles %}
-                        <line x1="{{ c.cx }}" y1="{{ c.wick_hi }}" x2="{{ c.cx }}" y2="{{ c.wick_lo }}" stroke="{{ c.color }}" stroke-width="1" vector-effect="non-scaling-stroke"/>
-                        <rect x="{{ c.x }}" y="{{ c.body_y }}" width="{{ c.w }}" height="{{ c.body_h }}" fill="{{ c.color }}" stroke="{{ c.color }}" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
-                        {% endfor %}
-                        {# 移動平均線疊在 K 線「之上」（否則會被密集 K 線蓋住）；
-                           每根 K 一個點連成曲線，超出 viewBox 的段由 SVG 自動裁切 #}
-                        {% for m in t.ma_lines %}
-                        <polyline points="{{ m.points }}" fill="none" stroke="{{ m.color }}" stroke-width="1.1" opacity="0.95" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-                        {% endfor %}
-                        {% for c in t.candles %}
-                        <rect class="kc-hit" x="{{ c.slot_x }}" y="0" width="{{ c.slot_w }}" height="30" fill="transparent"
-                              data-d="{{ c.d }}" data-o="{{ "{:,.0f}".format(c.o) }}" data-h="{{ "{:,.0f}".format(c.h) }}" data-l="{{ "{:,.0f}".format(c.l) }}" data-c="{{ "{:,.0f}".format(c.c) }}" data-up="{{ 1 if c.up else 0 }}"></rect>
-                        {% endfor %}
-                    </svg>
-                    <div class="ktip" hidden></div>
+                <div class="kcell-sub">
+                    <span>近 3 個月 <b class="{{ 'sp-up' if t.mtd_pct >= 0 else 'sp-down' }}">{{ "%+.1f"|format(t.mtd_pct) }}%</b>{% if t.kc %}<span style="margin-left:8px;">區間 {{ t.kc.lo }}–{{ t.kc.hi }}</span>{% endif %}</span>
+                    <span>距 52W 高 <b class="{{ 'sp-up' if t.pct_high >= -3 else 'sp-down' }}">{{ t.pct_high }}%</b></span>
                 </div>
-
-                <!-- 走勢 meta + 均線圖例 -->
-                <div class="tech-meta">
-                    <span>近 3 個月 <b class="chg {{ 'up' if t.mtd_pct >= 0 else 'down' }}">{{ "%+.1f"|format(t.mtd_pct) }}%</b>
-                        <span style="color:var(--text-3); margin-left:6px;">區間 {{ "{:,.0f}".format(t.spark_lo) }}–{{ "{:,.0f}".format(t.spark_hi) }}</span></span>
-                    <span style="color:var(--text-3);">距 52W 高 <span class="chg {{ 'up' if t.pct_high >= -3 else 'down' }}">{{ t.pct_high }}%</span></span>
-                </div>
-                <div class="ma-legend">
-                    {% for m in t.ma_marks %}
-                    <span style="color:{{ m.color }};"><i></i><span style="color:var(--text-2);">{{ m.label }} {{ "{:,.0f}".format(m.val) }}</span><span class="chg {{ 'up' if m.pct >= 0 else 'down' }}">{{ "%+.1f"|format(m.pct) }}%</span></span>
-                    {% endfor %}
-                    {% for m in t.ma_out %}
-                    <span style="color:{{ m.color }}; opacity:0.6;"><i></i><span style="color:var(--text-3);">{{ m.label }} {{ "{:,.0f}".format(m.val) }}（框{{ m.side }}）</span></span>
-                    {% endfor %}
-                </div>
+                {{ kchart(t.kc) }}
+                {% if t.note %}<div class="knote">{{ t.note|safe }}</div>{% endif %}
 
                 <!-- RSI gauge -->
                 <div class="rsi-wrap">
@@ -564,19 +604,14 @@
                     </div>
                 </div>
             </div>
-            {% if not loop.last %}<hr style="border:none; border-top:1px solid rgba(255,255,255,0.05); margin:6px 0;">{% endif %}
             {% endif %}
             {% endfor %}
-            {% if data.tech_commentary %}
-            <div class="commentary">{{ data.tech_commentary | safe }}</div>
-            {% endif %}
-            <div class="card-ts">🕐 更新時間：{{ data.spx_tech_updated_at }}</div>
         </div>
-
+        <div class="card-ts">🕐 更新時間：{{ data.spx_tech_updated_at }}</div>
     </div>
 
-    <!-- ③ 全球股市 + 市場情緒（VIX + Put/Call Ratio） -->
-    <div class="grid-2">
+    <!-- ③ 全球股市 + 市場情緒（VIX + Put/Call Ratio）+ 台灣三大法人 -->
+    <div class="grid-3">
 
         <!-- 全球股市 -->
         <div class="card">
@@ -739,48 +774,6 @@
             <div class="card-ts">🕐 更新時間：{{ data.fg_updated_at }}</div>
         </div>
 
-    </div>
-
-    <!-- ④ 原物料 + 台灣市場 -->
-    <div class="grid-2">
-
-        <!-- 原物料 -->
-        <div class="card">
-            <div class="card-title">🛢️ 原物料</div>
-            {% for c in data.commodities %}
-            <div class="row">
-                <div class="lbl">{{ c.name }}</div>
-                <div class="val">
-                    {% if c.price %}{{ c.symbol }}{{ c.price_fmt }}{% else %}<span class="na">N/A</span>{% endif %}
-                    {% if c.change_pct is not none %}
-                    <span class="chg {{ 'up' if c.change_pct > 0 else ('down' if c.change_pct < 0 else 'flat') }}">
-                        {{ '+' if c.change_pct > 0 else '' }}{{ c.change_pct }}%
-                    </span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-            <div class="divider"></div>
-            <div style="font-size:10px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin:6px 0 4px;">₿ 加密貨幣 <span style="color:var(--text-3); text-transform:none; letter-spacing:0;">（CoinGecko 24h）</span></div>
-            {% for c in data.crypto %}
-            <div class="row">
-                <div class="lbl">{{ c.name }}</div>
-                <div class="val">
-                    {% if c.price %}{{ c.symbol }}{{ c.price_fmt }}{% else %}<span class="na">N/A</span>{% endif %}
-                    {% if c.change_pct is not none %}
-                    <span class="chg {{ 'up' if c.change_pct > 0 else ('down' if c.change_pct < 0 else 'flat') }}">
-                        {{ '+' if c.change_pct > 0 else '' }}{{ c.change_pct }}%
-                    </span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-            {% if data.commodities_commentary %}
-            <div class="commentary">{{ data.commodities_commentary | safe }}</div>
-            {% endif %}
-            <div class="card-ts">🕐 原物料：{{ data.commodities_updated_at }}｜加密貨幣（CoinGecko）：{{ data.crypto_updated_at }}</div>
-        </div>
-
         <!-- 台灣市場 三大法人 -->
         <div class="card">
             <div class="card-title">🇹🇼 台灣市場｜三大法人買賣超</div>
@@ -827,6 +820,27 @@
             {% endif %}
         </div>
 
+    </div>
+
+    <!-- ④ 原物料＋加密貨幣（v14：每檔一張近 3 個月日 K，排列固定；解說放在各自圖下方） -->
+    <div class="card">
+        <div class="card-title">🛢️ 原物料</div>
+        <div class="card-hint">
+            日 K＝近 3 個月（原物料 60 個交易日；加密貨幣 24 小時交易，取 90 個日曆日），紅漲綠跌，滑鼠移上看開高低收<br>
+            彩色線＝月線 MA20／季線 MA60／年線 MA200｜右側色塊＝最新價｜排列固定：能源 → 金屬 → 加密貨幣
+        </div>
+        <div class="kgrid">
+            {% for c in data.commodities %}
+            {{ kcell(c.name, (c.symbol ~ c.price_fmt) if c.price else '<span class="na">N/A</span>', c.change_pct, c.kc, c.note, c.unit) }}
+            {% endfor %}
+        </div>
+        <div class="kgroup-title">₿ 加密貨幣 <span>（現價與 24h 變動：{{ 'Binance' if data.crypto and data.crypto[0].source == 'binance' else 'Yahoo Finance' }}；日 K：Yahoo Finance）</span></div>
+        <div class="kgrid">
+            {% for c in data.crypto %}
+            {{ kcell(c.name, (c.symbol ~ c.price_fmt) if c.price else '<span class="na">N/A</span>', c.change_pct, c.kc, c.note) }}
+            {% endfor %}
+        </div>
+        <div class="card-ts">🕐 原物料：{{ data.commodities_updated_at }}｜加密貨幣：{{ data.crypto_updated_at }}</div>
     </div>
 
     <!-- ⑤ 本週經濟日曆 -->
@@ -917,8 +931,8 @@
 <script>
     setTimeout(() => location.reload(), 30 * 60 * 1000);
 
-    // 美股技術面 K 線 hover → 顯示開高低收
-    document.querySelectorAll('.tech-trend').forEach(function (wrap) {
+    // 日 K hover → 顯示開高低收（美股技術面／匯率／原物料／加密貨幣共用）
+    document.querySelectorAll('.kwrap').forEach(function (wrap) {
         var tip = wrap.querySelector('.ktip');
         if (!tip) return;
         wrap.querySelectorAll('.kc-hit').forEach(function (hit) {
