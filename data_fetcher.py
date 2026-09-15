@@ -147,14 +147,17 @@ CBC_DATES_2026 = [
 # 每次該央行會後（見上方各 _DATES_2026）更新對應條目：
 #   last_action：升息 / 降息 / 維持   last_bps：本次變動基點（維持填 0）
 #   last_date：決議日 M/D            forecast：下次會議市場預期（一句話）
-# 最後更新：2026/06/30（依各央行 6 月會議結果；BOJ 6/16 升息、ECB 6/11 升息）
+# 最後更新：2026/09/16（Fed 7/29 維持 9-3；PBOC 8/20 LPR 未調；BOK 8/27 再升 25bps 至 3.00%；
+#          ECB 9/10 再升 25bps，DFR 2.50% 自 9/16 生效）
+# ⚠️ Fed 的 forecast 由 fetch_fed_hike_odds() 以 Fed Funds 期貨自動計算覆寫，此處僅為抓取失敗時的備援。
+# ⚠️ 若某央行已開過新會議、這裡還停在舊日期，_stale_guard() 會把卡片標成「待更新」而不是顯示舊結論。
 CB_DECISION_META = {
-    "聯準會 (Fed)":    {"last_action": "維持", "last_bps": 0,  "last_date": "6/17", "forecast": "維持（CME FedWatch 約 70%）"},
-    "中國央行 (PBOC)": {"last_action": "維持", "last_bps": 0,  "last_date": "6/22", "forecast": "傾向降息（券商估 7 月 LPR 調降）"},
-    "歐洲央行 (ECB)":  {"last_action": "升息", "last_bps": 25, "last_date": "6/11", "forecast": "觀望，數據依賴（無前瞻指引）"},
+    "聯準會 (Fed)":    {"last_action": "維持", "last_bps": 0,  "last_date": "7/29", "forecast": "期貨隱含機率暫無法取得（9/10 報導 CME FedWatch 升息機率逾 60%）"},
+    "中國央行 (PBOC)": {"last_action": "維持", "last_bps": 0,  "last_date": "8/20", "forecast": "無調整訊號（8/20 LPR 1 年期 3.0%、5 年期 3.5% 皆未調）"},
+    "歐洲央行 (ECB)":  {"last_action": "升息", "last_bps": 25, "last_date": "9/10", "forecast": "數據依賴、逐次決議（中東戰事推升通膨，不預設路徑）"},
     "中央銀行 (CBC)":  {"last_action": "維持", "last_bps": 0,  "last_date": "6/18", "forecast": "維持（連 8 凍，通膨溫和）"},
-    "日本央行 (BOJ)":  {"last_action": "升息", "last_bps": 25, "last_date": "6/16", "forecast": "維持，下次升息估 Q4"},
-    "韓國央行 (BOK)":  {"last_action": "升息", "last_bps": 25, "last_date": "7/16", "forecast": "偏鷹，總裁示意續緊縮（通膨 3.1% 高於目標）"},
+    "日本央行 (BOJ)":  {"last_action": "維持", "last_bps": 0,  "last_date": "7/31", "forecast": "偏鷹（7/31 維持 8-1，高田創主張升至 1.25%；稱核心通膨將明顯高於 2%）"},
+    "韓國央行 (BOK)":  {"last_action": "升息", "last_bps": 25, "last_date": "8/27", "forecast": "偏鷹，總裁稱連兩升為「預防性」緊縮（6-1 票）"},
 }
 
 # PBOC 沒有固定會議日程；LPR 每月 20 日例行公布（遇假日順延）
@@ -296,6 +299,202 @@ def _build_sparkline(series: list, width: int = 100, height: int = 24, pad: floa
         "end_date":   series[-1][0],
         "n":        n,
     }
+
+
+# ── 日 K 線圖（v14）：美股技術面／匯率／原物料／加密貨幣共用 ───────────────────────────
+# v13 前的走勢圖用 viewBox 0 0 100 24 ＋ preserveAspectRatio="none" 硬拉滿寬 → 圖被壓扁、無刻度。
+# v14 改為「像素座標 viewBox（W×H）＋ 模板 width:100%／height:auto 等比縮放」：
+#   右側 y 軸價格刻度、底部日期刻度、最新價虛線＋色塊標籤；文字與圓點都不會變形。
+from itertools import count as _count
+_KC_SEQ = _count(1)                      # clipPath id 流水號（同頁多張圖不可重複）
+KC_MA = (("月線", 20, "#60a5fa"), ("季線", 60, "#a78bfa"), ("年線", 200, "#f59e0b"))
+
+
+def _get_ohlc(ticker_symbol: str, rng: str = "2y") -> list:
+    """Yahoo Chart 日線 OHLC，回傳 [{'d': 'YYYY-MM-DD', 'o','h','l','c'}, ...]（舊→新）。
+
+    日期以交易所當地時區（meta.gmtoffset）換算，同交易所的兩檔（如 JPY=X 與 TWD=X）可直接按日對齊。
+    range=2y：顯示 60 根 K 時，最左那根也要能往前取滿 200 日畫年線（60+200≈260 個交易日）。
+    """
+    import urllib.request as _urlr, urllib.parse as _urlp, datetime as _dt
+    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
+           f"{_urlp.quote(ticker_symbol)}?interval=1d&range={rng}")
+    for attempt in range(2):
+        try:
+            req = _urlr.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with _urlr.urlopen(req, timeout=12) as r:
+                d = json.loads(r.read())
+            res = d["chart"]["result"][0]
+            off = res.get("meta", {}).get("gmtoffset", 0) or 0
+            q   = res["indicators"]["quote"][0]
+            ts  = res.get("timestamp") or []
+            rows = {}
+            for i, t in enumerate(ts):
+                c = q["close"][i] if i < len(q["close"]) else None
+                if c is None:
+                    continue
+                o = q["open"][i] if i < len(q["open"]) and q["open"][i] is not None else c
+                h = q["high"][i] if i < len(q["high"]) and q["high"][i] is not None else c
+                l = q["low"][i]  if i < len(q["low"])  and q["low"][i]  is not None else c
+                day = _dt.datetime.fromtimestamp(t + off, _dt.timezone.utc).strftime("%Y-%m-%d")
+                rows[day] = {"d": day, "o": float(o), "c": float(c),
+                             "h": float(max(h, o, c)), "l": float(min(l, o, c))}
+            return [rows[k] for k in sorted(rows)]      # 同日重複（盤中即時列）以最後一筆為準
+        except Exception as e:
+            logger.warning(f"_get_ohlc {ticker_symbol} attempt {attempt+1}: {e}")
+            time.sleep(0.4)
+    return []
+
+
+def _axis_step(lo: float, hi: float, n: int = 5) -> float:
+    """y 軸刻度間距：在 1/2/2.5/5×10^k 候選中，挑「落在 [lo, hi] 內的刻度條數」最接近 n 者
+    （同樣接近時取較小間距＝較細）。不能只挑「≥ span/n 的最小間距」——那樣條數一定 ≤ n，實測常只剩 2–3 條。"""
+    import math
+    span = hi - lo
+    if span <= 0:
+        return 1.0
+    base = 10 ** math.floor(math.log10(span / n))
+    best = None
+    for mag in (base / 10, base, base * 10):
+        for m in (1, 2, 2.5, 5):
+            step = m * mag
+            cnt = math.floor(hi / step) - math.ceil(lo / step) + 1
+            key = (abs(cnt - n), step)
+            if best is None or key < best[0]:
+                best = (key, step)
+    return best[1]
+
+
+def _step_decimals(step: float) -> int:
+    s = f"{step:.8f}".rstrip("0").rstrip(".")
+    return min(len(s.split(".")[1]), 5) if "." in s else 0
+
+
+def _build_kchart(rows: list, dec: int = 2, n_show: int = 60,
+                  W: int = 360, H: int = 190, ma=KC_MA) -> dict:
+    """日 K 幾何（像素座標 viewBox 0 0 W H，模板等比縮放，不會被拉扁）。
+
+    rows：_get_ohlc() 格式（舊→新）。顯示最後 n_show 根；均線用全段歷史逐根往前取窗
+    （滾動序列曲線，不是水平線）。y 值域貼齊 K 線高低＋月線／季線；年線可能離價格很遠，
+    不納入值域以免把 K 線壓扁，超框段以 clipPath 裁掉、圖例標「框上方／下方」。
+    """
+    import math
+    if len(rows) < 2:
+        return {}
+    closes = [r["c"] for r in rows]
+    cdl    = rows[-n_show:]
+    n, i0  = len(cdl), len(rows) - len(cdl)
+    PL, PR, PT, PB = 4, 56, 8, 18            # 右側留 y 軸刻度、底部留日期
+    px2, ph = W - PR, H - PT - PB
+    slot    = (px2 - PL) / n
+    bw      = max(slot * 0.64, 1.0)
+
+    ma_series = []
+    for lbl, win, col in ma:
+        s = [sum(closes[i + 1 - win:i + 1]) / win if i + 1 >= win else None
+             for i in range(i0, len(rows))]
+        ma_series.append((lbl, win, col, s))
+
+    lo = min(r["l"] for r in cdl)
+    hi = max(r["h"] for r in cdl)
+    near = [v for _, win, _, s in ma_series if win <= 60 for v in s if v is not None]
+    d_lo, d_hi = min([lo] + near), max([hi] + near)
+    pad = (d_hi - d_lo) * 0.06 if d_hi > d_lo else (abs(d_hi) * 0.01 or 1.0)
+    d_lo, d_hi = d_lo - pad, d_hi + pad
+    rng = d_hi - d_lo
+
+    def _y(v):
+        return round(PT + (d_hi - v) / rng * ph, 1)
+
+    def _x(i):
+        return round(PL + (i + 0.5) * slot, 1)
+
+    candles = []
+    for i, r in enumerate(cdl):
+        up = r["c"] >= r["o"]
+        top, bot = _y(max(r["o"], r["c"])), _y(min(r["o"], r["c"]))
+        candles.append({
+            "cx": _x(i), "x": round(_x(i) - bw / 2, 1), "w": round(bw, 1),
+            "body_y": top, "body_h": max(round(bot - top, 1), 0.8),   # 最小實體高（十字線可見）
+            "wick_hi": _y(r["h"]), "wick_lo": _y(r["l"]),
+            "up": up, "color": "#ef4444" if up else "#22c55e",        # 台股慣例：紅漲綠跌
+            "slot_x": round(PL + i * slot, 1), "slot_w": round(slot, 1),
+            "d": r["d"][5:].replace("-", "/"),
+            "o": _fmt(r["o"], dec), "h": _fmt(r["h"], dec),
+            "l": _fmt(r["l"], dec), "c": _fmt(r["c"], dec),
+        })
+
+    step = _axis_step(d_lo, d_hi, 6 if H >= 240 else 5)   # 刻度約 5–6 條（大圖 6、小圖 5）
+    sdec = _step_decimals(step)
+    grid = [{"y": _y(k * step), "label": f"{k * step:,.{sdec}f}"}
+            for k in range(math.ceil(d_lo / step), math.floor(d_hi / step) + 1)]
+
+    idxs  = sorted({round(k * (n - 1) / 4) for k in range(5)})
+    ticks = []
+    for j, i in enumerate(idxs):
+        if j == 0:
+            ticks.append({"x": PL, "label": candles[i]["d"], "anchor": "start"})
+        elif j == len(idxs) - 1:
+            ticks.append({"x": px2, "label": candles[i]["d"], "anchor": "end"})
+        else:
+            ticks.append({"x": candles[i]["cx"], "label": candles[i]["d"], "anchor": "middle"})
+
+    last = cdl[-1]["c"]
+    ma_lines, ma_marks, ma_out, ma_vals = [], [], [], {}
+    for lbl, win, col, s in ma_series:
+        mv = s[-1]
+        if mv is None:
+            continue
+        ma_vals[lbl] = mv
+        item = {"label": lbl, "val": _fmt(mv, dec), "color": col,
+                "pct": round((last - mv) / mv * 100, 1) if mv else 0.0,
+                "side": "上方" if mv > last else "下方"}
+        if any(d_lo <= v <= d_hi for v in s if v is not None):
+            pts = [f"{_x(i)},{_y(v)}" for i, v in enumerate(s) if v is not None]
+            ma_lines.append({"label": lbl, "color": col, "points": " ".join(pts)})
+            ma_marks.append(item)
+        else:
+            ma_out.append(item)                    # 全段在框外：不畫線、圖例列文字
+
+    last_y = _y(last)
+    first  = cdl[0]["c"]
+    return {
+        "uid": f"kc{next(_KC_SEQ)}", "W": W, "H": H,
+        "pl": PL, "px2": px2, "pt": PT, "ph": ph,
+        "grid": grid, "ticks": ticks, "candles": candles,
+        "ma_lines": ma_lines, "ma_marks": ma_marks, "ma_out": ma_out, "ma_vals": ma_vals,
+        "last": last, "last_fmt": _fmt(last, dec), "last_y": last_y,
+        "last_lab_y": min(max(last_y, PT + 7.5), PT + ph - 7.5),
+        "last_color": candles[-1]["color"],
+        "chg": round((last - first) / first * 100, 2) if first else 0.0,
+        "lo": _fmt(lo, dec), "hi": _fmt(hi, dec),
+        "pos": (last - lo) / (hi - lo) if hi > lo else 0.5,
+        "n": n, "start": cdl[0]["d"], "end": cdl[-1]["d"],
+    }
+
+
+def _kc_trend_note(kc: dict) -> str:
+    """由日 K 幾何產生一句趨勢解說：近 3 個月漲跌＋均線位置＋區間位置"""
+    if not kc:
+        return ""
+    last, mv = kc["last"], kc.get("ma_vals", {})
+    parts = [f"近 3 個月 {kc['chg']:+.2f}%"]
+    order = [l for l in ("月線", "季線", "年線") if l in mv]
+    above = [l for l in order if last >= mv[l]]
+    below = [l for l in order if last < mv[l]]
+    if order:
+        if not below:
+            bull = len(order) == 3 and mv["月線"] > mv["季線"] > mv["年線"]
+            parts.append("站上" + "、".join(above) + ("，均線多頭排列" if bull else ""))
+        elif not above:
+            bear = len(order) == 3 and mv["月線"] < mv["季線"] < mv["年線"]
+            parts.append("跌破" + "、".join(below) + ("，均線空頭排列" if bear else ""))
+        else:
+            parts.append("站上" + "、".join(above) + "，但跌破" + "、".join(below))
+    pos = kc.get("pos", 0.5)
+    parts.append("處於 3 個月區間高檔" if pos >= 0.8 else
+                 ("處於 3 個月區間低檔" if pos <= 0.2 else "處於 3 個月區間中段"))
+    return "，".join(parts)
 
 
 def _fmt(price, decimals=2):
@@ -613,10 +812,8 @@ def _next_meeting(schedule: list) -> str:
 # 解釋文字生成
 # ============================================================
 
-def _fx_commentary(fx_list: list) -> str:
-    """從 TWD 視角解釋匯率變動：X/TWD ↑ = X 對 TWD 升值（TWD 貶值）；DXY ↑ = 美元走強。"""
-    # 各幣對的中文名稱與漲/跌時的解讀（從 TWD 視角）
-    _META = {
+# 各幣對的中文名稱與漲/跌時的解讀（從 TWD 視角）
+_FX_META = {
         "美元 (USD/TWD)":      ("美元",     "美元對台幣升值（外資匯出壓力增、進口成本上升）", "美元對台幣貶值（外資匯入支撐、進口成本下降）"),
         "人民幣 (CNY/TWD)":    ("人民幣",   "人民幣對台幣升值（中國經濟信心回升或政策引導）", "人民幣對台幣貶值（中國資本外流壓力或政策寬鬆）"),
         "歐元 (EUR/TWD)":      ("歐元",     "歐元對台幣升值（歐洲經濟優於預期或 ECB 鷹派）",   "歐元對台幣貶值（歐洲經濟疲弱或美元避險需求）"),
@@ -624,34 +821,44 @@ def _fx_commentary(fx_list: list) -> str:
         "瑞士法郎 (CHF/TWD)":  ("瑞郎",     "瑞郎對台幣升值（避險資金流入、SNB 偏鷹）",        "瑞郎對台幣貶值（全球風險偏好回升、避險消退）"),
         "日圓 (JPY/TWD)":      ("日圓",     "日圓對台幣升值（避險資金湧入或日銀調整政策）",     "日圓對台幣貶值（日本出口導向但進口通膨壓力）"),
         "韓元 (KRW/TWD)":      ("韓元",     "韓元對台幣升值（外資回流韓股）",                   "韓元對台幣貶值（外資流出壓力）"),
-        "澳幣 (AUD/TWD)":      ("澳幣",     "澳幣對台幣升值（大宗商品需求回升或中國經濟改善）", "澳幣對台幣貶值（商品價格走弱或全球風險趨避）"),
-    }
-    parts = []
+    "澳幣 (AUD/TWD)":      ("澳幣",     "澳幣對台幣升值（大宗商品需求回升或中國經濟改善）", "澳幣對台幣貶值（商品價格走弱或全球風險趨避）"),
+}
 
-    for item in fx_list:
-        name = item["name"]
-        c    = item.get("change_pct")
 
-        # ── DXY 總覽（永遠第一）──
-        if "DXY" in name:
-            if c is None: continue
-            if   c >  0.5: parts.append(f"DXY 美元指數上漲 {c:+.2f}%，美元全面走強，非美貨幣承壓")
-            elif c >  0.1: parts.append(f"DXY 小幅走強 {c:+.2f}%，美元偏強格局")
-            elif c < -0.5: parts.append(f"DXY 下跌 {c:+.2f}%，美元走弱，非美貨幣反彈")
-            elif c < -0.1: parts.append(f"DXY 微跌 {c:+.2f}%，美元稍弱")
-            else:           parts.append("DXY 持平，匯市觀望")
-            continue
+def _fx_day_sentence(item: dict, in_cell: bool = False) -> str:
+    """單檔匯率「當日」解讀。in_cell=True（放在該檔日 K 下方）時：小波動也寫一句、主詞改「今日」"""
+    name, c = item["name"], item.get("change_pct")
+    if c is None:
+        return ""
+    if "DXY" in name:
+        if   c >  0.5: return f"DXY 美元指數上漲 {c:+.2f}%，美元全面走強，非美貨幣承壓"
+        elif c >  0.1: return f"DXY 小幅走強 {c:+.2f}%，美元偏強格局"
+        elif c < -0.5: return f"DXY 下跌 {c:+.2f}%，美元走弱，非美貨幣反彈"
+        elif c < -0.1: return f"DXY 微跌 {c:+.2f}%，美元稍弱"
+        return "DXY 持平，匯市觀望"
+    meta = _FX_META.get(name)
+    if not meta:
+        return ""
+    cname, up_reason, dn_reason = meta
+    if abs(c) < 0.2:
+        return f"今日 {c:+.2f}%，{cname}對台幣窄幅波動" if in_cell else ""
+    head = "今日" if in_cell else name
+    return f"{head} {'↑' if c > 0 else '↓'} {abs(c):.2f}%：{up_reason if c > 0 else dn_reason}"
 
-        meta = _META.get(name)
-        if not meta or c is None or abs(c) < 0.2:
-            continue
-        cname, up_reason, dn_reason = meta
-        if c > 0:
-            parts.append(f"{name} ↑ {abs(c):.2f}%：{up_reason}")
-        else:
-            parts.append(f"{name} ↓ {abs(c):.2f}%：{dn_reason}")
 
+def _fx_commentary(fx_list: list) -> str:
+    """從 TWD 視角解釋匯率變動：X/TWD ↑ = X 對 TWD 升值（TWD 貶值）；DXY ↑ = 美元走強。"""
+    parts = [s for s in (_fx_day_sentence(i) for i in fx_list) if s]
     return "<br>".join(p + "。" for p in parts) if parts else "匯率整體變動不大，市場觀望氣氛濃厚。"
+
+
+def _fx_notes(fx_list: list) -> dict:
+    """每檔匯率一段解說（v14：放在各自日 K 下方）＝當日解讀＋近 3 個月趨勢，回傳 {name: str}"""
+    out = {}
+    for item in fx_list:
+        parts = [p for p in (_fx_day_sentence(item, in_cell=True), _kc_trend_note(item.get("kc"))) if p]
+        out[item["name"]] = "；".join(parts) + "。" if parts else ""
+    return out
 
 
 def _yield_commentary(yields: dict) -> str:
@@ -757,9 +964,9 @@ def _sentiment_commentary(vix_price: float = None, vix_chg: float = None,
     return "<br>".join(p + "。" for p in parts) if parts else "市場情緒數據暫無法取得。"
 
 
-def _tech_commentary(tech: dict) -> str:
-    """根據美股技術面數據生成 SPX/SOX 文字總結"""
-    parts = []
+def _tech_notes(tech: dict) -> dict:
+    """SPX/SOX 各一段技術面解說（v14：放在各自日 K 下方），回傳 {key: str}"""
+    out = {}
     for key in ('spx', 'sox'):
         t = tech.get(key, {})
         if not t.get('ok'):
@@ -804,46 +1011,56 @@ def _tech_commentary(tech: dict) -> str:
         else:
             rsi_lbl = f"RSI {rsi} <b>超賣</b>（技術面可能反彈）"
 
-        parts.append(f"{trend}；{high_lbl}；{rsi_lbl}")
+        out[key] = f"{trend}；{high_lbl}；{rsi_lbl}。"
 
-    return "<br>".join(p + "。" for p in parts) if parts else ""
+    return out
 
 
-def _commodity_commentary(cm) -> str:
-    """根據原物料+加密數據生成詳細解釋，敘述順序與顯示排序一致（按漲跌幅降冪）"""
-    # 統一轉為排序後的 list
-    if isinstance(cm, dict):
-        cm_list = sorted(cm.values(), key=lambda x: x.get("change_pct") or -999, reverse=True)
-    else:
-        cm_list = list(cm)
+def _tech_commentary(tech: dict) -> str:
+    """根據美股技術面數據生成 SPX/SOX 文字總結（相容舊介面；v14 儀表板改逐檔顯示 _tech_notes）"""
+    notes = _tech_notes(tech)
+    return "<br>".join(notes[k] for k in ('spx', 'sox') if k in notes)
+
+
+def _commodity_notes(cm) -> dict:
+    """原物料＋加密每檔的解說句（v14：放在各自日 K 下方），回傳 {name: [句子, ...]}。
+
+    每檔至少一句：當日變動解讀（無特別訊號時寫「變動不大」）＋ 近 3 個月趨勢（由日 K 推導）。
+    """
+    cm_list = list(cm.values()) if isinstance(cm, dict) else list(cm)
 
     # 建 dict 供多品項比較邏輯使用
     cm_dict = {c["name"]: c for c in cm_list}
-    parts = []
+    notes = {}
 
     for item in cm_list:
         name = item["name"]
         c = item.get("change_pct")
         p = item.get("price", 0) or 0
+        parts = []
 
         # ── WTI 原油 ──
         if name == "WTI 原油":
-            if c is None: continue
-            if   c >  3: parts.append(f"WTI 原油大漲 {c:+.2f}% 至 ${p:.2f}，可能受地緣衝突升級（中東局勢/制裁）或 OPEC+ 減產等供給面因素推動")
-            elif c >  1: parts.append(f"WTI 上漲 {c:+.2f}% 至 ${p:.2f}，供需面偏緊")
-            elif c < -3: parts.append(f"WTI 重挫 {c:+.2f}% 至 ${p:.2f}，可能反映全球需求放緩預期、美國庫存意外增加或 OPEC+ 增產訊號")
-            elif c < -1: parts.append(f"WTI 下跌 {c:+.2f}% 至 ${p:.2f}，需求面偏弱")
-            else:        parts.append(f"WTI 原油 ${p:.2f}（{c:+.2f}%），價格窄幅震盪")
-            if   p > 90: parts.append(f"油價處於 ${p:.0f} 高位，推升運輸與製造成本，通膨壓力可能延遲 Fed 降息時程")
-            elif p < 60: parts.append(f"油價跌至 ${p:.0f} 低位，有利消費者但打擊能源類股獲利")
+            if c is not None:
+                if   c >  3: parts.append(f"WTI 原油大漲 {c:+.2f}% 至 ${p:.2f}，可能受地緣衝突升級（中東局勢/制裁）或 OPEC+ 減產等供給面因素推動")
+                elif c >  1: parts.append(f"WTI 上漲 {c:+.2f}% 至 ${p:.2f}，供需面偏緊")
+                elif c < -3: parts.append(f"WTI 重挫 {c:+.2f}% 至 ${p:.2f}，可能反映全球需求放緩預期、美國庫存意外增加或 OPEC+ 增產訊號")
+                elif c < -1: parts.append(f"WTI 下跌 {c:+.2f}% 至 ${p:.2f}，需求面偏弱")
+                else:        parts.append(f"WTI 原油 ${p:.2f}（{c:+.2f}%），價格窄幅震盪")
+            if   p > 90: parts.append(f"油價處於 ${p:.0f} 高位，推升運輸與製造成本，通膨壓力不利 Fed 轉向寬鬆")
+            elif 0 < p < 60: parts.append(f"油價跌至 ${p:.0f} 低位，有利消費者但打擊能源類股獲利")
 
-        # ── 布蘭特原油（主要顯示 Brent-WTI 價差）──
+        # ── 布蘭特原油（當日變動＋ Brent-WTI 價差）──
         elif name == "布蘭特原油":
+            if c is not None and abs(c) > 1:
+                parts.append(f"布蘭特{'上漲' if c > 0 else '下跌'} {c:+.2f}% 至 ${p:.2f}")
             wti_p = cm_dict.get("WTI 原油", {}).get("price", 0) or 0
             if p and wti_p:
                 spread = p - wti_p
                 if spread > 8:
                     parts.append(f"Brent-WTI 價差擴至 ${spread:.1f}，反映國際市場供給緊於美國")
+                else:
+                    parts.append(f"Brent-WTI 價差 ${spread:.1f}，處常態區間")
 
         # ── 天然氣 ──
         elif name == "天然氣":
@@ -881,12 +1098,12 @@ def _commodity_commentary(cm) -> str:
 
         # ── BTC ──
         elif name == "BTC":
-            if c is None: continue
-            if   c >  5: parts.append(f"BTC 大漲 {c:+.2f}% 至 ${p:,.0f}，機構資金流入或監管利多，風險偏好顯著回升")
-            elif c >  2: parts.append(f"BTC 上漲 {c:+.2f}%，加密市場情緒偏多")
-            elif c < -5: parts.append(f"BTC 重挫 {c:+.2f}%，流動性收緊或大戶拋售，風險資產全面承壓")
-            elif c < -2: parts.append(f"BTC 下跌 {c:+.2f}%，加密市場風險偏好下降")
-            else:        parts.append(f"BTC ${p:,.0f}（{c:+.2f}%），窄幅整理")
+            if c is not None:
+                if   c >  5: parts.append(f"BTC 大漲 {c:+.2f}% 至 ${p:,.0f}，機構資金流入或監管利多，風險偏好顯著回升")
+                elif c >  2: parts.append(f"BTC 上漲 {c:+.2f}%，加密市場情緒偏多")
+                elif c < -5: parts.append(f"BTC 重挫 {c:+.2f}%，流動性收緊或大戶拋售，風險資產全面承壓")
+                elif c < -2: parts.append(f"BTC 下跌 {c:+.2f}%，加密市場風險偏好下降")
+                else:        parts.append(f"BTC ${p:,.0f}（{c:+.2f}%），窄幅整理")
 
         # ── ETH（與 BTC 相對表現）──
         elif name == "ETH":
@@ -895,6 +1112,28 @@ def _commodity_commentary(cm) -> str:
                 if   c - btc_c >  3: parts.append("ETH 明顯跑贏 BTC，山寨幣輪動行情啟動")
                 elif btc_c - c >  3: parts.append("BTC 獨強、ETH 落後，資金集中流向比特幣避險")
 
+        if not parts and c is not None:              # 無專屬規則時依幅度給一句（不可一律寫「變動不大」）
+            if abs(c) < 1:
+                parts.append(f"今日 {c:+.2f}%，變動不大")
+            else:
+                parts.append(f"今日{'上漲' if c > 0 else '下跌'} {abs(c):.2f}%"
+                             + ("，波動劇烈" if abs(c) >= 3 else "，波動偏大"))
+        trend = _kc_trend_note(item.get("kc"))
+        if trend:
+            parts.append(trend)
+        notes[name] = parts
+
+    return notes
+
+
+def _commodity_commentary(cm) -> str:
+    """原物料+加密總評（相容舊介面；v14 儀表板改逐檔顯示 _commodity_notes），順序＝漲跌幅降冪"""
+    if isinstance(cm, dict):
+        cm_list = sorted(cm.values(), key=lambda x: x.get("change_pct") or -999, reverse=True)
+    else:
+        cm_list = list(cm)
+    notes = _commodity_notes(cm_list)
+    parts = [s for i in cm_list for s in notes.get(i["name"], [])]
     return "<br>".join(p + "。" for p in parts) if parts else "原物料整體變動不大，市場觀望。"
 
 
@@ -1099,8 +1338,11 @@ def fetch_fx_data() -> dict:
       X/TWD_today = (X/USD)_today × USD/TWD_today        (quote_base)
     再用 today / prev_close 各自值算 change_pct，避免 log-linear 近似誤差。
 
-    近一月走勢圖（v13）：每檔另抓 1mo 日線，**用與現價完全相同的交叉公式**逐日換算成
-    X/TWD 序列（不是直接畫 USD/X 原始序列，否則方向會相反、幅度也不對）。
+    日 K（v14，取代 v13 近一月 sparkline）：每檔抓 2y 日線 OHLC，**用與現價相同的交叉公式**逐日換算成
+    X/TWD（不是直接畫 USD/X 原始序列，否則方向會相反、幅度也不對）：
+      開＝兩邊開盤交叉、收＝兩邊收盤交叉；高／低＝{開、收、高×高、低×低} 四個交叉值的最大／最小
+      （兩邊高低點未必同時發生，嚴格的交叉高低無法由日線還原，此為近似；DXY、USD/TWD 用原始 OHLC）。
+    只取兩邊都有報價的交易日。⚠️ Yahoo 的 CNY=X 約 3/4 日子開高低收同價，CNY/TWD 的 K 棒因此偏細。
     """
     from concurrent.futures import ThreadPoolExecutor
 
@@ -1109,28 +1351,31 @@ def fetch_fx_data() -> dict:
     usdtwd_now  = twd_q["price"]
     usdtwd_prev = twd_q["prev_close"]
 
-    # Step 1b：並行抓所有 1mo 歷史（含 USD/TWD 自己，交叉換算的分子/分母都要）
+    # Step 1b：並行抓所有 2y 日線 OHLC（含 USD/TWD 自己，交叉換算的分子/分母都要）
     _tickers = {t for _, t, _, _ in FX_TICKERS} | {"TWD=X"}
     with ThreadPoolExecutor(max_workers=len(_tickers)) as _ex:
-        _futs = {t: _ex.submit(_get_history_raw, t, "1mo") for t in _tickers}
-        hist = {t: f.result() for t, f in _futs.items()}
-    usdtwd_hist = hist.get("TWD=X", {})
+        _futs = {t: _ex.submit(_get_ohlc, t, "2y") for t in _tickers}
+        ohlc = {t: f.result() for t, f in _futs.items()}
+    usd_rows = ohlc.get("TWD=X", [])
 
-    def _spark_for(ticker, mode):
-        """依 mode 用與現價相同的公式，逐交易日換算 X/TWD 序列"""
+    def _rows_for(ticker, mode):
+        """依 mode 用與現價相同的公式，逐交易日換算 X/TWD 的 OHLC"""
         if mode == "dxy":
-            series = sorted(hist.get(ticker, {}).items())
-        elif mode == "usd_twd":
-            series = sorted(usdtwd_hist.items())
-        else:
-            raw = hist.get(ticker, {})
-            series = []
-            for d in sorted(set(raw) & set(usdtwd_hist)):   # 只取兩邊都有報價的交易日
-                x, u = raw[d], usdtwd_hist[d]
-                if not x or not u:
-                    continue
-                series.append((d, u / x if mode == "usd_base" else x * u))
-        return _build_sparkline(series)
+            return ohlc.get(ticker, [])
+        if mode == "usd_twd":
+            return usd_rows
+        um    = {r["d"]: r for r in usd_rows}
+        cross = (lambda x, u: u / x) if mode == "usd_base" else (lambda x, u: x * u)
+        out = []
+        for r in ohlc.get(ticker, []):
+            u = um.get(r["d"])                      # 只取兩邊都有報價的交易日
+            if not u or not all((r["o"], r["h"], r["l"], r["c"])):
+                continue
+            o, c   = cross(r["o"], u["o"]), cross(r["c"], u["c"])
+            e1, e2 = cross(r["h"], u["h"]), cross(r["l"], u["l"])
+            out.append({"d": r["d"], "o": o, "c": c,
+                        "h": max(o, c, e1, e2), "l": min(o, c, e1, e2)})
+        return out
 
     results = []
     for name, ticker, dec, mode in FX_TICKERS:
@@ -1158,18 +1403,17 @@ def fetch_fx_data() -> dict:
                 price   = round(x_twd_now, 6)
                 chg_pct = round((x_twd_now - x_twd_prev) / x_twd_prev * 100, 2) if x_twd_prev else None
 
-        spark = _spark_for(ticker, mode)
-        if spark:
-            spark["lo_fmt"] = _fmt(spark["lo"], dec)
-            spark["hi_fmt"] = _fmt(spark["hi"], dec)
-
         results.append({
             "name": name,
             "price": price,
             "price_fmt": _fmt(price, dec) if price is not None else "N/A",
             "change_pct": chg_pct,
-            "spark": spark,
+            "kc": _build_kchart(_rows_for(ticker, mode), dec=dec),
         })
+
+    notes = _fx_notes(results)
+    for r in results:
+        r["note"] = notes.get(r["name"], "")
 
     return {
         "items": results,
@@ -1224,19 +1468,31 @@ def fetch_index_data() -> list:
     return results
 
 
+COMMODITY_UNITS = {"WTI 原油": "/桶", "布蘭特原油": "/桶", "天然氣": "/MMBtu",
+                   "黃金": "/盎司", "白銀": "/盎司", "銅": "/磅"}
+
+
 def fetch_commodity_data() -> dict:
-    """抓原物料，按漲跌幅排序 + 解釋"""
+    """抓原物料現價＋日 K。
+
+    v14：每檔一張日 K（近 3 個月），排列固定為 COMMODITY_TICKERS 順序（能源 → 金屬），
+    不再依漲跌幅排序——圖卡每天換位置會很難對照。
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=len(COMMODITY_TICKERS)) as ex:
+        futs = {t: ex.submit(_get_ohlc, t, "2y") for _, t, _, _ in COMMODITY_TICKERS}
+        ohlc = {t: f.result() for t, f in futs.items()}
+
     results = []
     for name, ticker, dec, sym in COMMODITY_TICKERS:
         q = _get_quote(ticker)
         results.append({
-            "name": name, "symbol": sym,
+            "name": name, "symbol": sym, "unit": COMMODITY_UNITS.get(name, ""),
             "price": q["price"],
             "price_fmt": _fmt(q["price"], dec),
             "change_pct": q["change_pct"],
+            "kc": _build_kchart(ohlc.get(ticker, []), dec=dec),
         })
-
-    results.sort(key=lambda x: x["change_pct"] if x["change_pct"] is not None else -999, reverse=True)
 
     return {
         "items": results,
@@ -1245,6 +1501,21 @@ def fetch_commodity_data() -> dict:
 
 
 def fetch_crypto_data() -> list:
+    """加密貨幣現價（Binance，失敗退 Yahoo）＋日 K（Yahoo {名}-USD）。
+
+    加密貨幣 24 小時交易、週末也有 K，近 3 個月取 90 根（日曆日）；均線窗同樣以「根」計。
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    results = _fetch_crypto_spot()
+    decs = {"BTC": 0, "ETH": 2, "SOL": 2}
+    with ThreadPoolExecutor(max_workers=max(len(results), 1)) as ex:
+        futs = {r["name"]: ex.submit(_get_ohlc, f"{r['name']}-USD", "2y") for r in results}
+        for r in results:
+            r["kc"] = _build_kchart(futs[r["name"]].result(), dec=decs.get(r["name"], 2), n_show=90)
+    return results
+
+
+def _fetch_crypto_spot() -> list:
     """從 Binance 抓加密貨幣（免費、無需 Key、24h 即時變動）
     端點：GET https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT"]
     """
@@ -1303,6 +1574,126 @@ def fetch_geopolitics() -> dict:
     return None
 
 
+FF_MONTH_CODES = "FGHJKMNQUVXZ"          # 期貨月份代碼 1~12 月
+
+
+def _ff_implied_rate(year: int, month: int):
+    """30 天期 Fed Funds 期貨（CBOT ZQ）該月合約的隱含平均利率＝100 − 期貨價"""
+    sym = f"ZQ{FF_MONTH_CODES[month - 1]}{year % 100:02d}.CBT"
+    p = _get_quote(sym).get("price")
+    return (100.0 - p) if p else None
+
+
+def _get_effr():
+    """紐約聯儲公布的最新有效聯邦資金利率（EFFR），回傳 (利率, 日期)"""
+    try:
+        r = requests.get("https://markets.newyorkfed.org/api/rates/unsecured/effr/last/1.json",
+                         headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+        x = r.json()["refRates"][0]
+        return float(x["percentRate"]), x.get("effectiveDate")
+    except Exception as e:
+        logger.warning(f"EFFR fetch failed: {e}")
+        return None, None
+
+
+def fetch_fed_hike_odds() -> dict:
+    """Fed 下次 FOMC 升／降息機率——CME FedWatch 同一套方法，用 Fed Funds 期貨反推。
+
+    會議月合約均價 = (會前天數 × 現行 EFFR + 會後天數 × 會後利率) / 當月天數
+      → 會後利率 = (均價 × 當月天數 − 現行 EFFR × 會前天數) / 會後天數
+    會議落在月底（會後不足 7 天）時單月資訊太少，改用下個月合約均價當會後利率（FedWatch 同法）。
+    會後利率 − 現行 EFFR 的差距以 25bp 為一碼，拆成相鄰兩個碼數的機率。
+
+    為何不沿用手動釘住：2026/06 手寫「維持（CME FedWatch 約 70%）」到 9 月仍掛在卡片上，
+    當時期貨已隱含逾九成升息——市場預期每天在變，只能即時算。
+    """
+    import calendar, math
+    from zoneinfo import ZoneInfo
+    ny  = datetime.now(ZoneInfo("America/New_York"))
+    tdy = ny.date()
+    # 決議於美東 14:00 公布；當天 14:30 後視為已開完、改看下一場
+    upcoming = [d for d in FOMC_DATES_2026
+                if d > tdy or (d == tdy and ny.hour * 60 + ny.minute < 14 * 60 + 30)]
+    if not upcoming:
+        return {}
+    mtg = upcoming[0]
+    effr, effr_date = _get_effr()
+    if effr is None:
+        return {}
+    days = calendar.monthrange(mtg.year, mtg.month)[1]
+    pre, post_days = mtg.day, days - mtg.day          # 決議隔日生效：會議當天仍計舊利率
+    if post_days >= 7:
+        avg = _ff_implied_rate(mtg.year, mtg.month)
+        if avg is None:
+            return {}
+        post   = (avg * days - effr * pre) / post_days
+        method = f"{mtg.month} 月合約"
+    else:
+        ny_, nm_ = (mtg.year + 1, 1) if mtg.month == 12 else (mtg.year, mtg.month + 1)
+        post = _ff_implied_rate(ny_, nm_)
+        if post is None:
+            return {}
+        method = f"{nm_} 月合約"
+
+    delta = (post - effr) * 100                       # bp
+    steps = delta / 25.0
+    if abs(steps) < 0.02:
+        probs = {0: 1.0}
+    else:
+        lo_step = math.floor(steps)
+        p_hi    = steps - lo_step
+        probs   = {lo_step: 1 - p_hi, lo_step + 1: p_hi}
+
+    def _lbl(k):
+        return "維持" if k == 0 else (f"升息 {k} 碼" if k > 0 else f"降息 {-k} 碼")
+
+    ranked = sorted(((k, p) for k, p in probs.items() if p >= 0.005), key=lambda kv: -kv[1])
+    text = "／".join(f"{_lbl(k)} {p * 100:.0f}%" for k, p in ranked)
+    return {
+        "meeting":  f"{mtg.month}/{mtg.day}",
+        "effr":     round(effr, 2), "effr_date": effr_date,
+        "implied":  round(post, 3), "delta_bp": round(delta, 1),
+        "method":   method,
+        "probs":    {_lbl(k): round(p, 3) for k, p in ranked},
+        "text":     f"{text}（Fed Funds 期貨隱含，{mtg.month}/{mtg.day} 會議）",
+    }
+
+
+# 有固定會議日程的央行（PBOC 為每月 LPR，無會議日程，不列入）
+_CB_MEETING_DATES = {
+    "聯準會 (Fed)":   FOMC_DATES_2026,
+    "歐洲央行 (ECB)": ECB_DATES_2026,
+    "中央銀行 (CBC)": CBC_DATES_2026,
+    "日本央行 (BOJ)": BOJ_DATES_2026,
+    "韓國央行 (BOK)": BOK_DATES_2026,
+}
+
+
+def _stale_guard(result: dict) -> None:
+    """CB_DECISION_META 是手動釘住的；若某央行已開過新會議、釘住值還停在更早日期，
+    改標「待更新」而不是繼續顯示舊結論（2026/09 發現 Fed/BOK/BOJ 皆停在舊會議）。
+    以台北日期「嚴格晚於」會議日才算開完，涵蓋美、歐時差（Fed 美東 14:00 ＝ 台北隔日凌晨）。"""
+    today = datetime.now(TAIPEI_TZ).date()
+    for name, dates in _CB_MEETING_DATES.items():
+        r = result.get(name)
+        past = [d for d in dates if d < today]
+        if not r or not past:
+            continue
+        last_mtg = max(past)
+        try:
+            m, dd = (int(x) for x in str(r.get("last_date", "")).split("/"))
+            meta_d = date(last_mtg.year, m, dd)
+        except Exception:
+            continue
+        if meta_d < last_mtg:
+            logger.warning(f"{name} CB_DECISION_META 停在 {r.get('last_date')}，"
+                           f"但 {last_mtg:%m/%d} 已開會 → 標示待更新")
+            r["last_action"], r["last_bps"] = "待更新", 0
+            r["last_date"] = f"{last_mtg.month}/{last_mtg.day}"
+            if "odds" not in r:                     # Fed 的預期由期貨自動算，不受影響
+                r["forecast"] = f"—（{last_mtg.month}/{last_mtg.day} 會議結果待更新）"
+
+
 def fetch_cb_rates() -> dict:
     """央行利率：四家每日自動抓，每家三層 fallback（主來源 → 備援爬蟲 → 上次 cache → hardcoded）"""
     result = {}
@@ -1348,7 +1739,7 @@ def fetch_cb_rates() -> dict:
         r = _get_fred_csv("ECBDFR", 3)
         return f"{r[-1][1]:.2f}" if r else ""
 
-    ecb_rate = _resolve("歐洲央行 (ECB)", _ecb_fred, _scrape_ecb_official, "2.25")
+    ecb_rate = _resolve("歐洲央行 (ECB)", _ecb_fred, _scrape_ecb_official, "2.50")
 
     # ── BOJ（釘住政策利率，手動維護）──
     # 不靠 FRED IRSTJPN156N：該序列為舊貼現率定義、嚴重落後，會與真實政策利率日日打架。
@@ -1368,9 +1759,9 @@ def fetch_cb_rates() -> dict:
 
     # ── BOK（韓國央行基準利率 Base Rate，釘住手動維護）──
     # 同 BOJ/PBOC 做法：一年僅 8 次會、利率為已知離散值，釘住比抓不穩 API 可靠。
-    # 2026/07/16 升息一碼至 2.75%（2023/01 以來首度升息；通膨 3.1% 高於 2% 目標，
-    # 總裁申鉉松示意續緊縮）。每次會後（見 BOK_DATES_2026）手動更新此值。
-    bok_rate = "2.75"
+    # 2026/07/16 升息一碼至 2.75%（2023/01 以來首度升息）；2026/08/27 再升一碼至 3.00%
+    # （6-1 票，連兩升，2025/01 以來最高）。每次會後（見 BOK_DATES_2026）手動更新此值。
+    bok_rate = "3.00"
 
     # ── CBC（台灣央行重貼現率）──
     def _cbc_official():
@@ -1396,6 +1787,17 @@ def fetch_cb_rates() -> dict:
         if _name in result:
             result[_name].update(_meta)
 
+    # Fed 下次會議預期：以 Fed Funds 期貨即時計算，覆寫手動釘住的 forecast（失敗才用釘住備援）
+    try:
+        odds = fetch_fed_hike_odds()
+    except Exception as e:
+        logger.warning(f"fetch_fed_hike_odds failed: {e}")
+        odds = {}
+    if odds.get("text"):
+        result["聯準會 (Fed)"]["forecast"] = odds["text"]
+        result["聯準會 (Fed)"]["odds"] = odds
+
+    _stale_guard(result)
     return result
 
 
@@ -1439,46 +1841,10 @@ def fetch_spx_technical() -> dict:
         if pct_from_high >= -30:  return '熊市邊緣'
         return '深度熊市'
 
-    import urllib.request as _urlr, urllib.parse as _urlp
-
-    import datetime as _dt2
-
-    def _hist(symbol):
-        """回傳 [{o,h,l,c,t}, ...]（已濾掉 close=None 的列），含 OHLC 供 K 線使用
-        range=2y：畫 MA200 曲線時，最左側那根 K 也要能往前取滿 200 日，
-        故需 60（顯示窗）+ 200（均線窗）≈ 260 個交易日，1y（≈250 根）不夠。"""
-        url = f'https://query1.finance.yahoo.com/v8/finance/chart/{_urlp.quote(symbol)}?interval=1d&range=2y'
-        req = _urlr.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with _urlr.urlopen(req, timeout=12) as r:
-            d = json.loads(r.read())
-        res = d['chart']['result'][0]
-        q   = res['indicators']['quote'][0]
-        ts  = res.get('timestamp') or []
-        o, h, l, c = q.get('open', []), q.get('high', []), q.get('low', []), q.get('close', [])
-        rows = []
-        for i in range(len(c)):
-            cv = c[i]
-            if cv is None:
-                continue
-            ov = o[i] if i < len(o) and o[i] is not None else cv
-            hv = h[i] if i < len(h) and h[i] is not None else cv
-            lv = l[i] if i < len(l) and l[i] is not None else cv
-            rows.append({'o': ov, 'h': hv, 'l': lv, 'c': cv,
-                         't': ts[i] if i < len(ts) else None})
-        return rows
-
-    def _mmdd(t):
-        if not t:
-            return ''
-        try:
-            return _dt2.datetime.utcfromtimestamp(t).strftime('%m/%d')
-        except Exception:
-            return ''
-
     result = {}
     for key, sym, name in [('spx', '^GSPC', '標普 500 (S&P 500)'), ('sox', '^SOX', '費城半導體 (SOX)')]:
         try:
-            rows   = _hist(sym)
+            rows   = _get_ohlc(sym, '2y')   # 2y：最左那根 K 也要能往前取滿 200 日畫年線
             closes = [r['c'] for r in rows]
             if len(closes) < 200:
                 result[key] = {'ok': False, 'name': name}
@@ -1496,84 +1862,8 @@ def fetch_spx_technical() -> dict:
             range_pos = (price - low52w) / (high52w - low52w) * 100 if high52w > low52w else 50
             trend, trend_ok = _trend_lbl(price, ma20, ma60, ma200)
 
-            # ── 過去 3 個月（≈60 交易日）K 線 + 移動平均線幾何 ──
-            # viewBox 0 0 100 30；y = 30 - (v-d_lo)/d_rng*28 - 1（上下各留 1 邊距）
-            N_SHOW  = 60
-            cdl     = rows[-N_SHOW:]                               # 含 OHLC 的日 K
-            spark   = [r['c'] for r in cdl]
-            mtd_pct = (spark[-1] - spark[0]) / spark[0] * 100 if spark[0] else 0.0
-            s_lo    = min(r['l'] for r in cdl)                     # 三月內最低（影線）
-            s_hi    = max(r['h'] for r in cdl)                     # 三月內最高（影線）
-
-            # 均線＝滾動序列（每根 K 各自往前取 win 日均值），不是單一純量畫水平線。
-            # 起點對齊顯示窗第一根 K；歷史不足者該點回 None（不畫）。
-            i0 = len(closes) - N_SHOW
-            def _ma_series(win):
-                out = []
-                for i in range(i0, len(closes)):
-                    out.append(sum(closes[i + 1 - win:i + 1]) / win if i + 1 >= win else None)
-                return out
-
-            ma_series = {'月線': (_ma_series(20),  ma20,  '#60a5fa'),
-                         '季線': (_ma_series(60),  ma60,  '#a78bfa'),
-                         '年線': (_ma_series(200), ma200, '#f59e0b')}
-
-            # 值域：貼齊 K 線高低，並納入月線/季線序列（兩者貼近價格，不致壓扁 K 線）。
-            # 年線刻意不納入——它可能離價格很遠，硬塞會把 K 線壓成一條；超框由 SVG 自動裁切。
-            near_ma = [v for k in ('月線', '季線')
-                       for v in ma_series[k][0] if v is not None]
-            d_lo = min([s_lo] + near_ma)
-            d_hi = max([s_hi] + near_ma)
-            pad  = (d_hi - d_lo) * 0.06 if d_hi > d_lo else (d_hi * 0.01 or 1)
-            d_lo -= pad; d_hi += pad
-            d_rng = (d_hi - d_lo) or 1
-            def _y(v):
-                return round(30 - (v - d_lo) / d_rng * 28 - 1, 2)
-
-            n    = len(cdl)
-            slot = 100.0 / n
-            bw   = slot * 0.62                                     # 實體寬度
-            candles = []
-            for i, r in enumerate(cdl):
-                o_, h_, l_, c_ = r['o'], r['h'], r['l'], r['c']
-                up = c_ >= o_                                      # 台股慣例：紅漲綠跌
-                top = _y(max(o_, c_)); bot = _y(min(o_, c_))
-                candles.append({
-                    'x':      round((i + 0.5) * slot - bw / 2, 2), # 實體左緣
-                    'cx':     round((i + 0.5) * slot, 2),          # 影線中心
-                    'slot_x': round(i * slot, 2),                  # hover 區左緣
-                    'w':      round(bw, 2),
-                    'slot_w': round(slot, 2),
-                    'body_y': round(top, 2),
-                    'body_h': round(max(bot - top, 0.5), 2),       # 最小實體高（十字線可見）
-                    'wick_hi': _y(h_),
-                    'wick_lo': _y(l_),
-                    'up':     up,
-                    'color':  '#ef4444' if up else '#22c55e',
-                    'd':      _mmdd(r['t']),
-                    'o': round(o_, 2), 'h': round(h_, 2),
-                    'l': round(l_, 2), 'c': round(c_, 2),
-                })
-
-            # 均線折線：每根 K 對應一點，連成隨價格起伏的曲線（取代舊版單一水平線）。
-            # 全段落在框外者不畫線、只在圖例列文字（ma_out）。
-            ma_lines, ma_marks, ma_out = [], [], []
-            for lbl, (series, mv, col) in ma_series.items():
-                item = {'label': lbl, 'val': round(mv, 2),
-                        'pct': round((price - mv) / mv * 100, 1), 'color': col,
-                        'side': '上方' if mv > price else '下方'}
-                pts, visible = [], False
-                for i, v in enumerate(series):
-                    if v is None:
-                        continue
-                    pts.append(f"{round((i + 0.5) * slot, 2)},{_y(v)}")
-                    if d_lo <= v <= d_hi:
-                        visible = True
-                if pts and visible:
-                    ma_lines.append({'label': lbl, 'color': col, 'points': ' '.join(pts)})
-                    ma_marks.append(item)
-                else:
-                    ma_out.append(item)
+            # ── 過去 3 個月（60 交易日）日 K + 月/季/年線滾動序列（v14 共用引擎，加高＋刻度）──
+            kc = _build_kchart(rows, dec=0, n_show=60, W=600, H=270)
 
             result[key] = {
                 'ok':       True,
@@ -1594,14 +1884,9 @@ def fetch_spx_technical() -> dict:
                 'range_pos': round(range_pos, 1),  # 現價在 52W 區間的位置 0~100
                 'trend':    trend,
                 'trend_ok': trend_ok,
-                # 過去 1 個月 K 線
-                'candles':   candles,
-                'mtd_pct':   round(mtd_pct, 1),
-                'spark_lo':  round(s_lo, 2),
-                'spark_hi':  round(s_hi, 2),
-                'ma_lines':  ma_lines,
-                'ma_marks':  ma_marks,
-                'ma_out':    ma_out,
+                # 過去 3 個月日 K（v14：像素座標等比縮放、含價格／日期刻度）
+                'kc':        kc,
+                'mtd_pct':   round(kc['chg'], 1) if kc else 0.0,
             }
         except Exception as e:
             logger.warning(f"fetch_spx_technical {sym}: {e}")
@@ -2191,6 +2476,14 @@ def fetch_all() -> dict:
     all_comm = comm_data["items"] + crypto_data
     all_comm_sorted = sorted(all_comm, key=lambda x: x.get("change_pct") or -999, reverse=True)
     combined_commentary = _commodity_commentary(all_comm_sorted)
+
+    # v14：解說改放在各自日 K 下方（每檔一段）
+    _cm_notes = _commodity_notes(comm_data["items"] + crypto_data)
+    for _item in comm_data["items"] + crypto_data:
+        _s = _cm_notes.get(_item["name"], [])
+        _item["note"] = "；".join(_s) + "。" if _s else ""
+    for _k, _v in _tech_notes(tech_data).items():
+        tech_data[_k]["note"] = _v
 
     # 台灣三大法人：用 TWSE 資料日期
     if tw_data and tw_data.get("date"):
