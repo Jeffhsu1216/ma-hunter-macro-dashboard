@@ -1566,6 +1566,189 @@ def _fetch_crypto_spot() -> list:
         return results
 
 
+def fetch_vol_term() -> dict:
+    """VIX 期限結構（v16）：VIX9D（9 天）／VIX（30 天）／VIX3M（3 個月）。
+
+    看 VIX ÷ VIX3M：
+      < 0.95  正價差＝常態（近月波動低於遠月，市場沒有立即壓力）
+      ≥ 1.00  逆價差＝壓力（搶短期保護，歷史上對應急跌與事件風險）
+    比單看 VIX 絕對值更能分辨「高波動但穩定」與「正在出事」。
+    """
+    q = {k: _get_quote(t) for k, t in (("vix9d", "^VIX9D"), ("vix", "^VIX"),
+                                       ("vix3m", "^VIX3M"), ("vvix", "^VVIX"))}
+    vix, v3m = q["vix"]["price"], q["vix3m"]["price"]
+    ratio = round(vix / v3m, 3) if (vix and v3m) else None
+    if ratio is None:
+        state, color, note = "N/A", "#6b7280", ""
+    elif ratio >= 1.05:
+        state, color = "深度逆價差", "#ef4444"
+        note = "近月恐慌明顯高於遠月，市場正在搶短期保護，通常對應急跌或重大事件"
+    elif ratio >= 1.00:
+        state, color = "逆價差", "#f97316"
+        note = "短期避險需求高於中期，風險意識升高，留意事件與消息面"
+    elif ratio >= 0.95:
+        state, color = "接近持平", "#eab308"
+        note = "期限結構轉平，市場對短期波動的定價開始上升"
+    else:
+        state, color = "正價差", "#22c55e"
+        note = "近月波動低於遠月，屬常態結構，無立即壓力訊號"
+    return {
+        "vix9d": q["vix9d"]["price"], "vix": vix, "vix3m": v3m, "vvix": q["vvix"]["price"],
+        "ratio": ratio, "state": state, "color": color, "note": note,
+        # 刻度 0.85~1.15 對應 0~100%
+        "pos": None if ratio is None else round(min(max((ratio - 0.85) / 0.30 * 100, 0), 100), 1),
+    }
+
+
+def fetch_taifex_pc() -> dict:
+    """台指選擇權 Put/Call Ratio（期交所官方 CSV，v16 取代長期失效的 ycharts CBOE P/C）。
+
+    台灣慣例看「未平倉量比率」＝賣權未平倉 ÷ 買權未平倉：
+      > 1.0  偏多（賣權未平倉較多，多為法人賣 put 收權利金）
+      < 0.8  偏空
+    與美股 CBOE 的「成交量 P/C 高＝恐慌」方向相反，不可混用。
+    """
+    end   = datetime.now(TAIPEI_TZ).date()
+    start = end - timedelta(days=20)
+    url = ("https://www.taifex.com.tw/cht/3/pcRatioDown?down_type=1"
+           f"&queryStartDate={start:%Y/%m/%d}&queryEndDate={end:%Y/%m/%d}")
+    try:
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=12)
+        text = resp.content.decode("big5", errors="replace")
+        rows = []
+        for line in text.strip().splitlines()[1:]:
+            c = [x.strip() for x in line.split(",")]
+            if len(c) < 7 or not re.match(r"\d{4}/\d{2}/\d{2}", c[0]):
+                continue
+            try:
+                rows.append({"date": c[0], "vol_pc": round(float(c[3]) / 100, 3),
+                             "oi_pc": round(float(c[6]) / 100, 3)})
+            except ValueError:
+                continue
+        if not rows:
+            raise ValueError("no rows")
+        rows.sort(key=lambda r: r["date"])           # 官方 CSV 為新→舊
+        last = rows[-1]
+        prev = rows[-2] if len(rows) >= 2 else None
+        oi = last["oi_pc"]
+        if   oi >= 1.20: rating, color = "偏多濃厚", "#ef4444"
+        elif oi >= 1.00: rating, color = "偏多",     "#f97316"
+        elif oi >= 0.85: rating, color = "中性",     "#eab308"
+        elif oi >= 0.70: rating, color = "偏空",     "#22c55e"
+        else:            rating, color = "極度偏空", "#16a34a"
+        return {
+            "date": last["date"], "oi_pc": oi, "vol_pc": last["vol_pc"],
+            "chg": round(oi - prev["oi_pc"], 3) if prev else None,
+            "rating": rating, "color": color,
+            # 刻度 0.6~1.4 對應 0~100%
+            "pos": round(min(max((oi - 0.6) / 0.8 * 100, 0), 100), 1),
+            "hist": rows[-10:],
+        }
+    except Exception as e:
+        logger.warning(f"TAIFEX P/C failed: {e}")
+        return {}
+
+
+def _twse_market_stats() -> dict:
+    """台股量能與市場寬度（v16）：成交金額（FMTQIK，含 5／20 日均量）、漲跌家數（MI_INDEX）、
+    融資餘額（MI_MARGN）。⚠️ TWSE 對海外 IP 可能封鎖（GitHub Actions 在美國），
+    失敗時由 taiwan_backup.json 帶出上次本機跑的結果（與三大法人同一份備份）。"""
+    out, hdr = {}, {"User-Agent": "Mozilla/5.0"}
+    today = datetime.now(TAIPEI_TZ).date()
+
+    # ── 每日成交金額（本月＋上月，湊滿 20 個交易日）──
+    rows = []
+    first_this = today.replace(day=1)
+    for first in (first_this, (first_this - timedelta(days=1)).replace(day=1)):
+        try:
+            r = requests.get("https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK"
+                             f"?date={first:%Y%m%d}&response=json", headers=hdr, timeout=8).json()
+            for d in r.get("data", []) or []:
+                yy, mm, dd = (int(x) for x in d[0].split("/"))
+                rows.append({"d": date(yy + 1911, mm, dd),
+                             "amt": float(str(d[2]).replace(",", "")),
+                             "idx": float(str(d[4]).replace(",", "")),
+                             "chg": float(str(d[5]).replace(",", ""))})
+        except Exception as e:
+            logger.warning(f"FMTQIK {first:%Y%m} failed: {e}")
+    dstr = today.strftime("%Y%m%d")
+    if rows:
+        rows.sort(key=lambda x: x["d"])
+        last = rows[-1]
+        amts = [r["amt"] for r in rows]
+        ma5  = sum(amts[-5:])  / min(5,  len(amts))
+        ma20 = sum(amts[-20:]) / min(20, len(amts))
+        dstr = last["d"].strftime("%Y%m%d")
+        out.update({
+            "turnover_yi":      round(last["amt"] / 1e8),
+            "turnover_date":    last["d"].strftime("%Y/%m/%d"),
+            "turnover_ma5_yi":  round(ma5 / 1e8),
+            "turnover_ma20_yi": round(ma20 / 1e8),
+            "turnover_vs_ma5":  round(last["amt"] / ma5 * 100 - 100, 1) if ma5 else None,
+            "turnover_vs_ma20": round(last["amt"] / ma20 * 100 - 100, 1) if ma20 else None,
+            "taiex_close":      last["idx"],
+            "taiex_chg_pt":     last["chg"],
+            "turnover_hist":    [{"d": r["d"].strftime("%m/%d"), "amt_yi": round(r["amt"] / 1e8)}
+                                 for r in rows[-20:]],
+        })
+
+    # ── 漲跌家數（取「股票」欄，不含 ETF／權證）──
+    try:
+        r = requests.get("https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX"
+                         f"?date={dstr}&type=MS&response=json", headers=hdr, timeout=8).json()
+        def _n(s):
+            mo = re.match(r"([\d,]+)(?:\((\d+)\))?", str(s).strip())
+            return (int(mo.group(1).replace(",", "")), int(mo.group(2) or 0)) if mo else (0, 0)
+        for t in r.get("tables", []) or []:
+            if str(t.get("title", "")).startswith("漲跌證券數"):
+                for row in t.get("data", []) or []:
+                    if   str(row[0]).startswith("上漲"): out["adv"], out["limit_up"] = _n(row[2])
+                    elif str(row[0]).startswith("下跌"): out["dec"], out["limit_dn"] = _n(row[2])
+                    elif str(row[0]).startswith("持平"): out["flat"] = _n(row[2])[0]
+    except Exception as e:
+        logger.warning(f"MI_INDEX 漲跌家數 failed: {e}")
+
+    # ── 融資餘額（仟元 → 億元）──
+    try:
+        r = requests.get("https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN"
+                         f"?date={dstr}&selectType=MS&response=json", headers=hdr, timeout=8).json()
+        for t in r.get("tables", []) or []:
+            for row in t.get("data", []) or []:
+                if str(row[0]).startswith("融資金額"):
+                    prev_amt = float(str(row[4]).replace(",", "")) * 1000
+                    now_amt  = float(str(row[5]).replace(",", "")) * 1000
+                    out["margin_yi"]     = round(now_amt / 1e8)
+                    out["margin_chg_yi"] = round((now_amt - prev_amt) / 1e8, 1)
+    except Exception as e:
+        logger.warning(f"MI_MARGN 融資餘額 failed: {e}")
+
+    return out
+
+
+def _tw_stats_note(tw) -> str:
+    """台股量能／寬度／融資的白話解讀（接在三大法人解說之後）"""
+    if not tw:
+        return ""
+    parts = []
+    if tw.get("turnover_yi"):
+        v5, v20 = tw.get("turnover_vs_ma5"), tw.get("turnover_vs_ma20")
+        lvl = ("量能明顯放大" if (v5 or 0) >= 15 else "量能放大" if (v5 or 0) >= 5 else
+               "量能明顯萎縮" if (v5 or 0) <= -15 else "量能萎縮" if (v5 or 0) <= -5 else "量能持平")
+        parts.append(f"成交金額 {tw['turnover_yi']:,} 億元，較 5 日均量 {v5:+.1f}%、"
+                     f"20 日均量 {v20:+.1f}%，{lvl}")
+    if tw.get("adv") is not None and tw.get("dec") is not None:
+        a, d = tw["adv"], tw["dec"]
+        breadth = ("上漲家數居多，市場寬度偏多" if a > d * 1.2 else
+                   "下跌家數居多，市場寬度偏空" if d > a * 1.2 else "漲跌家數接近，個股分歧")
+        parts.append(f"上市股票上漲 {a:,} 家（漲停 {tw.get('limit_up', 0)}）、"
+                     f"下跌 {d:,} 家（跌停 {tw.get('limit_dn', 0)}），{breadth}")
+    if tw.get("margin_yi"):
+        c = tw.get("margin_chg_yi") or 0
+        parts.append(f"融資餘額 {tw['margin_yi']:,} 億元（{c:+.1f} 億），"
+                     f"{'散戶加碼' if c > 0 else '散戶去槓桿' if c < 0 else '持平'}")
+    return ("<br>" + "<br>".join(p + "。" for p in parts)) if parts else ""
+
+
 def fetch_geopolitics() -> dict:
     """讀取 geopolitics.json（由 Claude WebSearch 生成）"""
     try:
@@ -1782,7 +1965,13 @@ def build_cb_calendar(cal_events=None) -> dict:
             d = date(y, int(mo.group(1)), int(mo.group(2)))
         except ValueError:
             continue
-        data_ev.setdefault(d, []).append(f"📊 {e.get('date', '')} {e.get('country', '')} {e.get('title', '')}")
+        data_ev.setdefault(d, []).append({
+            "flag": "📊", "abbr": str(e.get("country", "")) or "數據",
+            "title": f"{e.get('country', '')} {e.get('title', '')}".strip(),
+            "when": str(e.get("date", "")), "kind": "data", "done": bool(e.get("actual")),
+            "extra": f"預期 {e.get('forecast', '—')}／前值 {e.get('previous', '—')}"
+                     + (f"／實際 {e.get('actual')}" if e.get("actual") else ""),
+        })
 
     weeks = []
     for wk in _cal.Calendar(firstweekday=6).monthdatescalendar(y, m):
@@ -1791,10 +1980,17 @@ def build_cb_calendar(cal_events=None) -> dict:
             inm  = d.month == m
             cbs  = cb_ev.get(d, []) if inm else []
             dats = data_ev.get(d, []) if inm else []
+            evs  = [{"flag": c["flag"], "abbr": c["abbr"],
+                     "title": f"{c['name']} {'LPR 公布' if c['abbr'] == 'LPR' else '利率決議'}",
+                     "when": f"台北 {c['release']}", "kind": "cb", "done": c["done"],
+                     "extra": ""} for c in cbs] + dats
             row.append({
                 "day": d.day, "in_month": inm, "is_today": d == today, "past": d < today,
-                "flags": "".join(c["flag"] for c in cbs), "has_cb": bool(cbs), "n_data": len(dats),
-                "tip": "\n".join([c["tip"] for c in cbs] + dats),
+                "date_md": f"{d.month}/{d.day}（{_WEEKDAY_ZH[d.weekday()]}）",
+                "flags": "".join(c["flag"] for c in cbs),
+                "abbrs": [c["abbr"] for c in cbs],
+                "has_cb": bool(cbs), "n_data": len(dats), "events": evs,
+                "tip": "\n".join([c["tip"] for c in cbs] + [f"📊 {x['when']} {x['title']}" for x in dats]),
             })
         weeks.append(row)
 
@@ -2527,6 +2723,7 @@ def fetch_taiwan_market() -> dict:
             "unit": "億元",
             "source": "live",
         }
+        result.update(_twse_market_stats())      # v16：量能／漲跌家數／融資餘額
         # 成功就更新 backup
         try:
             with open(TAIWAN_BACKUP, "w", encoding="utf-8") as f:
@@ -2573,6 +2770,8 @@ def fetch_all() -> dict:
     indices     = fetch_index_data();   indices_ts  = _now_taipei()
     fg          = fetch_fear_greed();   fg_ts       = _now_taipei()
     pc_ratio    = fetch_put_call_ratio()
+    vol_term    = fetch_vol_term()
+    taifex_pc   = fetch_taifex_pc()
     comm_data   = fetch_commodity_data(); comm_ts   = _now_taipei()
     crypto_data = fetch_crypto_data(); crypto_ts    = _now_taipei()
     tw_data     = fetch_taiwan_market(); tw_ts      = _now_taipei()
@@ -2628,13 +2827,20 @@ def fetch_all() -> dict:
         "fear_greed":    fg,
         "put_call_ratio": pc_ratio,
         "vix_history":   vix_history,
-        "sentiment_commentary": _sentiment_commentary(vix_price, vix_chg, pc_ratio),
+        "vol_term":      vol_term,
+        "taifex_pc":     taifex_pc,
+        "sentiment_commentary": _sentiment_commentary(vix_price, vix_chg, pc_ratio)
+            + (f"<br>VIX 期限結構 {vol_term['ratio']}（VIX {vol_term['vix']} ÷ VIX3M {vol_term['vix3m']}）"
+               f"— <b>{vol_term['state']}</b>，{vol_term['note']}。" if vol_term.get("ratio") else "")
+            + (f"<br>台指選擇權未平倉 P/C {taifex_pc['oi_pc']}（{taifex_pc['date']}）— <b>{taifex_pc['rating']}</b>，"
+               "台灣口徑：比值越高（賣權未平倉越多、多為法人賣 put）越偏多，與美股成交量 P/C 方向相反。"
+               if taifex_pc.get("oi_pc") else ""),
         "fg_updated_at": fg_ts,
         "calendar":             cal_data,
         "calendar_commentary":  _calendar_commentary(cal_data),
         "calendar_updated_at":  cal_ts,
         "taiwan":             tw_data,
-        "taiwan_commentary":  _taiwan_commentary(tw_data),
+        "taiwan_commentary":  _taiwan_commentary(tw_data) + _tw_stats_note(tw_data),
         "taiwan_updated_at":  tw_ts,
         "geopolitics":   fetch_geopolitics(),
         "updated_at":    _now_taipei(),
