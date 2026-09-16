@@ -489,6 +489,14 @@
         .cal-up .dd { font-weight: 700; color: var(--text-2); }
         .cal-up .dd.soon { color: #fca5a5; }
 
+        /* ── v17：市場預期框等高＋鷹鴿標色 ── */
+        /* margin-top:auto 讓六張卡的預期框都貼齊底部；min-height＋3 行截斷讓框大小一致
+           （完整文字用 title 提示），避免各國預期字數不同造成框忽大忽小 */
+        .cb-fc { margin-top: auto; min-height: 96px; }
+        .cb-fc-lbl { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+        .cb-stance { font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 9px; letter-spacing: 0.5px; }
+        .cb-fc-txt { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
         /* ── v16：行事曆放大＋可點擊／台股量能／國際局勢可展開 ── */
         .cb-cal .cal-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; }
         @media (max-width: 900px) { .cb-cal .cal-layout { grid-template-columns: 1fr; } }
@@ -574,7 +582,7 @@
             2026/09/16（週三）
             
         </div>
-        <div class="sub">數據截至 2026/09/16｜更新 2026/09/16 12:24</div>
+        <div class="sub">數據截至 2026/09/16｜更新 2026/09/16 12:53</div>
     </div>
 </header>
 
@@ -603,8 +611,10 @@
                 <span class="cb-pill hold">─ 維持</span>
                 <span class="cb-last-date">7/29</span>
             </div>
-            <div class="cb-fc">
-                <div class="cb-fc-lbl">🎯 市場預期（下次會議）</div>
+            <div class="cb-fc" style="border-left-color:#ef4444;">
+                <div class="cb-fc-lbl">🎯 市場預期（下次會議）
+                    <span class="cb-stance" style="color:#ef4444; background:rgba(239,68,68,0.18);">鷹派</span>
+                </div>
                 
                 <div class="cb-prob">
                     
@@ -645,10 +655,12 @@
                 <span class="cb-pill hold">─ 維持</span>
                 <span class="cb-last-date">8/20</span>
             </div>
-            <div class="cb-fc">
-                <div class="cb-fc-lbl">🎯 市場預期（下次會議）</div>
+            <div class="cb-fc" style="border-left-color:#94a3b8;">
+                <div class="cb-fc-lbl">🎯 市場預期（下次會議）
+                    <span class="cb-stance" style="color:#94a3b8; background:rgba(148,163,184,0.16);">中性</span>
+                </div>
                 
-                <div class="cb-fc-txt">無調整訊號（8/20 LPR 1 年期 3.0%、5 年期 3.5% 皆未調）</div>
+                <div class="cb-fc-txt" title="無調整訊號（8/20 LPR 1 年期 3.0%、5 年期 3.5% 皆未調）">無調整訊號（8/20 LPR 1 年期 3.0%、5 年期 3.5% 皆未調）</div>
                 
             </div>
         </div>
@@ -673,10 +685,12 @@
                 <span class="cb-pill up">▲ 升息 25bp</span>
                 <span class="cb-last-date">9/10</span>
             </div>
-            <div class="cb-fc">
-                <div class="cb-fc-lbl">🎯 市場預期（下次會議）</div>
+            <div class="cb-fc" style="border-left-color:#94a3b8;">
+                <div class="cb-fc-lbl">🎯 市場預期（下次會議）
+                    <span class="cb-stance" style="color:#94a3b8; background:rgba(148,163,184,0.16);">中性</span>
+                </div>
                 
-                <div class="cb-fc-txt">數據依賴、逐次決議（中東戰事推升通膨，不預設路徑）</div>
+                <div class="cb-fc-txt" title="數據依賴、逐次決議（中東戰事推升通膨，不預設路徑）">數據依賴、逐次決議（中東戰事推升通膨，不預設路徑）</div>
                 
             </div>
         </div>
@@ -701,10 +715,12 @@
                 <span class="cb-pill hold">─ 維持</span>
                 <span class="cb-last-date">6/18</span>
             </div>
-            <div class="cb-fc">
-                <div class="cb-fc-lbl">🎯 市場預期（下次會議）</div>
+            <div class="cb-fc" style="border-left-color:#94a3b8;">
+                <div class="cb-fc-lbl">🎯 市場預期（下次會議）
+                    <span class="cb-stance" style="color:#94a3b8; background:rgba(148,163,184,0.16);">中性</span>
+                </div>
                 
-                <div class="cb-fc-txt">維持（連 8 凍，通膨溫和）</div>
+                <div class="cb-fc-txt" title="維持（連 8 凍，通膨溫和）">維持（連 8 凍，通膨溫和）</div>
                 
             </div>
         </div>
@@ -729,10 +745,12 @@
                 <span class="cb-pill hold">─ 維持</span>
                 <span class="cb-last-date">7/31</span>
             </div>
-            <div class="cb-fc">
-                <div class="cb-fc-lbl">🎯 市場預期（下次會議）</div>
+            <div class="cb-fc" style="border-left-color:#ef4444;">
+                <div class="cb-fc-lbl">🎯 市場預期（下次會議）
+                    <span class="cb-stance" style="color:#ef4444; background:rgba(239,68,68,0.18);">鷹派</span>
+                </div>
                 
-                <div class="cb-fc-txt">偏鷹（7/31 維持 8-1，高田創主張升至 1.25%；稱核心通膨將明顯高於 2%）</div>
+                <div class="cb-fc-txt" title="偏鷹（7/31 維持 8-1，高田創主張升至 1.25%；稱核心通膨將明顯高於 2%）">偏鷹（7/31 維持 8-1，高田創主張升至 1.25%；稱核心通膨將明顯高於 2%）</div>
                 
             </div>
         </div>
@@ -757,10 +775,12 @@
                 <span class="cb-pill up">▲ 升息 25bp</span>
                 <span class="cb-last-date">8/27</span>
             </div>
-            <div class="cb-fc">
-                <div class="cb-fc-lbl">🎯 市場預期（下次會議）</div>
+            <div class="cb-fc" style="border-left-color:#ef4444;">
+                <div class="cb-fc-lbl">🎯 市場預期（下次會議）
+                    <span class="cb-stance" style="color:#ef4444; background:rgba(239,68,68,0.18);">鷹派</span>
+                </div>
                 
-                <div class="cb-fc-txt">偏鷹，總裁稱連兩升為「預防性」緊縮（6-1 票）</div>
+                <div class="cb-fc-txt" title="偏鷹，總裁稱連兩升為「預防性」緊縮（6-1 票）">偏鷹，總裁稱連兩升為「預防性」緊縮（6-1 票）</div>
                 
             </div>
         </div>
@@ -768,7 +788,7 @@
     </div>
 
     <div style="font-size:10px; color:var(--text-3); text-align:right; margin-top:-8px; margin-bottom:2px;">
-        🕐 央行利率更新時間：2026/09/16 12:24（Fed 利率：FRED；Fed 預期：Fed Funds 期貨＋紐約聯儲 EFFR；會議日程：各央行年度公告）
+        🕐 央行利率更新時間：2026/09/16 12:53（Fed 利率：FRED；Fed 預期：Fed Funds 期貨＋紐約聯儲 EFFR；會議日程：各央行年度公告）
     </div>
 
     
@@ -976,9 +996,9 @@
                 </div>
                 <div class="cal-legend">旗幟＋簡稱＝央行利率決議（🇨🇳＝LPR）｜📊＝本週美國重要數據｜金框＝今天｜淡色＝已公布</div>
             </div>
+            
             <div class="cal-side">
-                <div class="cal-detail" id="cal-detail">點左邊有標記的日期，看當天的央行決議與重要數據</div>
-                <div class="kgroup-title" style="margin-top:10px;">接下來 <span>（倒數以台北公布時間計）</span></div>
+                <div class="kgroup-title" style="margin-top:0;">接下來 <span>（倒數以台北公布時間計）</span></div>
                 
                 <div class="cal-up">
                     <span class="who">🇺🇸 Fed</span>
@@ -1016,6 +1036,7 @@
                     <span class="dd" data-release="2026-10-22T09:00:00+08:00">倒數 36 天</span>
                 </div>
                 
+                <div class="cal-detail" id="cal-detail" style="margin-top:10px;">點左邊有標記的日期，看當天的央行決議與重要數據</div>
             </div>
         </div>
         <script type="application/json" id="cal-json">[[{"abbrs": [], "date_md": "8/30\uff08\u65e5\uff09", "day": 30, "events": [], "flags": "", "has_cb": false, "in_month": false, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "8/31\uff08\u4e00\uff09", "day": 31, "events": [], "flags": "", "has_cb": false, "in_month": false, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/1\uff08\u4e8c\uff09", "day": 1, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/2\uff08\u4e09\uff09", "day": 2, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/3\uff08\u56db\uff09", "day": 3, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/4\uff08\u4e94\uff09", "day": 4, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/5\uff08\u516d\uff09", "day": 5, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}], [{"abbrs": [], "date_md": "9/6\uff08\u65e5\uff09", "day": 6, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/7\uff08\u4e00\uff09", "day": 7, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/8\uff08\u4e8c\uff09", "day": 8, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/9\uff08\u4e09\uff09", "day": 9, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": ["ECB"], "date_md": "9/10\uff08\u56db\uff09", "day": 10, "events": [{"abbr": "ECB", "done": true, "extra": "", "flag": "\ud83c\uddea\ud83c\uddfa", "kind": "cb", "title": "\u6b50\u6d32\u592e\u884c (ECB) \u5229\u7387\u6c7a\u8b70", "when": "\u53f0\u5317 9/10 20:15"}], "flags": "\ud83c\uddea\ud83c\uddfa", "has_cb": true, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": "\ud83c\uddea\ud83c\uddfa \u6b50\u6d32\u592e\u884c (ECB) \u5229\u7387\u6c7a\u8b70\uff08\u53f0\u5317 9/10 20:15\uff09"}, {"abbrs": [], "date_md": "9/11\uff08\u4e94\uff09", "day": 11, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/12\uff08\u516d\uff09", "day": 12, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}], [{"abbrs": [], "date_md": "9/13\uff08\u65e5\uff09", "day": 13, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/14\uff08\u4e00\uff09", "day": 14, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": [], "date_md": "9/15\uff08\u4e8c\uff09", "day": 15, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": true, "tip": ""}, {"abbrs": ["Fed"], "date_md": "9/16\uff08\u4e09\uff09", "day": 16, "events": [{"abbr": "Fed", "done": false, "extra": "", "flag": "\ud83c\uddfa\ud83c\uddf8", "kind": "cb", "title": "\u806f\u6e96\u6703 (Fed) \u5229\u7387\u6c7a\u8b70", "when": "\u53f0\u5317 9/17 02:00"}, {"abbr": "USD", "done": false, "extra": "\u9810\u671f 0.8\uff0f\u524d\u503c -0.6", "flag": "\ud83d\udcca", "kind": "data", "title": "USD \u96f6\u552e\u92b7\u552e\u6708\u589e\u7387", "when": "09/16 20:30"}], "flags": "\ud83c\uddfa\ud83c\uddf8", "has_cb": true, "in_month": true, "is_today": true, "n_data": 1, "past": false, "tip": "\ud83c\uddfa\ud83c\uddf8 \u806f\u6e96\u6703 (Fed) \u5229\u7387\u6c7a\u8b70\uff08\u53f0\u5317 9/17 02:00\uff09\n\ud83d\udcca 09/16 20:30 USD \u96f6\u552e\u92b7\u552e\u6708\u589e\u7387"}, {"abbrs": ["\u592e\u884c"], "date_md": "9/17\uff08\u56db\uff09", "day": 17, "events": [{"abbr": "\u592e\u884c", "done": false, "extra": "", "flag": "\ud83c\uddf9\ud83c\uddfc", "kind": "cb", "title": "\u4e2d\u592e\u9280\u884c (CBC) \u5229\u7387\u6c7a\u8b70", "when": "\u53f0\u5317 \u7d04 9/17 16:00"}, {"abbr": "USD", "done": false, "extra": "\u9810\u671f 4\uff0f\u524d\u503c 3.75", "flag": "\ud83d\udcca", "kind": "data", "title": "USD Fed \u5229\u7387\u6c7a\u7b56", "when": "09/17 02:00"}, {"abbr": "USD", "done": false, "extra": "\u9810\u671f 208.0K\uff0f\u524d\u503c 206.0K", "flag": "\ud83d\udcca", "kind": "data", "title": "USD \u521d\u9818\u5931\u696d\u91d1\u4eba\u6578", "when": "09/17 20:30"}], "flags": "\ud83c\uddf9\ud83c\uddfc", "has_cb": true, "in_month": true, "is_today": false, "n_data": 2, "past": false, "tip": "\ud83c\uddf9\ud83c\uddfc \u4e2d\u592e\u9280\u884c (CBC) \u5229\u7387\u6c7a\u8b70\uff08\u53f0\u5317 \u7d04 9/17 16:00\uff09\n\ud83d\udcca 09/17 02:00 USD Fed \u5229\u7387\u6c7a\u7b56\n\ud83d\udcca 09/17 20:30 USD \u521d\u9818\u5931\u696d\u91d1\u4eba\u6578"}, {"abbrs": ["BOJ"], "date_md": "9/18\uff08\u4e94\uff09", "day": 18, "events": [{"abbr": "BOJ", "done": false, "extra": "", "flag": "\ud83c\uddef\ud83c\uddf5", "kind": "cb", "title": "\u65e5\u672c\u592e\u884c (BOJ) \u5229\u7387\u6c7a\u8b70", "when": "\u53f0\u5317 \u7d04 9/18 11:00"}], "flags": "\ud83c\uddef\ud83c\uddf5", "has_cb": true, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": "\ud83c\uddef\ud83c\uddf5 \u65e5\u672c\u592e\u884c (BOJ) \u5229\u7387\u6c7a\u8b70\uff08\u53f0\u5317 \u7d04 9/18 11:00\uff09"}, {"abbrs": [], "date_md": "9/19\uff08\u516d\uff09", "day": 19, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}], [{"abbrs": [], "date_md": "9/20\uff08\u65e5\uff09", "day": 20, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": ["LPR"], "date_md": "9/21\uff08\u4e00\uff09", "day": 21, "events": [{"abbr": "LPR", "done": false, "extra": "", "flag": "\ud83c\udde8\ud83c\uddf3", "kind": "cb", "title": "\u4e2d\u570b\u592e\u884c (PBOC) LPR \u516c\u5e03", "when": "\u53f0\u5317 9/21 09:00"}], "flags": "\ud83c\udde8\ud83c\uddf3", "has_cb": true, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": "\ud83c\udde8\ud83c\uddf3 \u4e2d\u570b\u592e\u884c (PBOC) LPR \u516c\u5e03\uff08\u53f0\u5317 9/21 09:00\uff09"}, {"abbrs": [], "date_md": "9/22\uff08\u4e8c\uff09", "day": 22, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": [], "date_md": "9/23\uff08\u4e09\uff09", "day": 23, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": [], "date_md": "9/24\uff08\u56db\uff09", "day": 24, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": [], "date_md": "9/25\uff08\u4e94\uff09", "day": 25, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": [], "date_md": "9/26\uff08\u516d\uff09", "day": 26, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}], [{"abbrs": [], "date_md": "9/27\uff08\u65e5\uff09", "day": 27, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": [], "date_md": "9/28\uff08\u4e00\uff09", "day": 28, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": [], "date_md": "9/29\uff08\u4e8c\uff09", "day": 29, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": [], "date_md": "9/30\uff08\u4e09\uff09", "day": 30, "events": [], "flags": "", "has_cb": false, "in_month": true, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": [], "date_md": "10/1\uff08\u56db\uff09", "day": 1, "events": [], "flags": "", "has_cb": false, "in_month": false, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": [], "date_md": "10/2\uff08\u4e94\uff09", "day": 2, "events": [], "flags": "", "has_cb": false, "in_month": false, "is_today": false, "n_data": 0, "past": false, "tip": ""}, {"abbrs": [], "date_md": "10/3\uff08\u516d\uff09", "day": 3, "events": [], "flags": "", "has_cb": false, "in_month": false, "is_today": false, "n_data": 0, "past": false, "tip": ""}]]</script>
@@ -1030,13 +1051,13 @@
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">美元指數 (DXY)</span>
-        <span class="kcell-px">99.64
-            <span class="chg up">+0.03%</span>
+        <span class="kcell-px">99.62
+            <span class="chg up">+0.01%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-down">-1.74%</b></span>
+        <span>近 3 個月 <b class="sp-down">-1.76%</b></span>
         <span>區間 98.56–101.80</span>
     </div>
     
@@ -1268,8 +1289,8 @@
             <line x1="296.5" x2="296.5" y1="112.1" y2="121.6" stroke="#ef4444" stroke-width="1"/>
             <rect x="294.9" y="114.0" width="3.2" height="7.6" fill="#ef4444"/>
             
-            <line x1="301.5" x2="301.5" y1="110.1" y2="114.6" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="111.9" width="3.2" height="2.3" fill="#22c55e"/>
+            <line x1="301.5" x2="301.5" y1="110.1" y2="115.4" stroke="#22c55e" stroke-width="1"/>
+            <rect x="299.9" y="111.9" width="3.2" height="3.3" fill="#22c55e"/>
             
             
             
@@ -1277,12 +1298,12 @@
             
             <polyline points="6.5,137.6 11.5,136.5 16.5,135.8 21.5,134.7 26.5,133.6 31.5,132.7 36.5,131.7 41.5,130.7 46.5,129.5 51.5,127.7 56.5,125.9 61.5,124.0 66.5,121.8 71.5,119.4 76.5,117.3 81.5,115.5 86.5,113.5 91.5,111.8 96.5,109.9 101.5,108.2 106.5,106.2 111.5,103.9 116.5,101.8 121.5,99.9 126.5,97.4 131.5,95.4 136.5,94.3 141.5,93.3 146.5,91.8 151.5,90.6 156.5,89.2 161.5,87.6 166.5,86.7 171.5,85.7 176.5,84.9 181.5,84.4 186.5,83.6 191.5,83.4 196.5,83.0 201.5,82.6 206.5,83.0 211.5,83.2 216.5,83.5 221.5,83.5 226.5,83.5 231.5,83.5 236.5,83.6 241.5,83.4 246.5,83.4 251.5,83.7 256.5,84.1 261.5,84.8 266.5,85.4 271.5,86.2 276.5,86.9 281.5,87.3 286.5,87.6 291.5,88.1 296.5,89.0 301.5,90.0" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <polyline points="6.5,156.3 11.5,155.4 16.5,154.5 21.5,153.7 26.5,152.9 31.5,152.1 36.5,151.2 41.5,150.4 46.5,149.5 51.5,148.5 56.5,147.7 61.5,146.9 66.5,146.1 71.5,145.2 76.5,144.5 81.5,144.1 86.5,143.5 91.5,142.9 96.5,142.1 101.5,141.3 106.5,140.6 111.5,139.8 116.5,139.0 121.5,138.3 126.5,137.8 131.5,137.5 136.5,137.3 141.5,137.1 146.5,136.9 151.5,136.7 156.5,136.4 161.5,136.0 166.5,135.8 171.5,135.6 176.5,135.4 181.5,135.2 186.5,134.9 191.5,134.7 196.5,134.5 201.5,134.4 206.5,134.6 211.5,134.8 216.5,135.0 221.5,135.3 226.5,135.6 231.5,135.7 236.5,135.8 241.5,135.8 246.5,135.8 251.5,135.8 256.5,135.7 261.5,135.7 266.5,135.8 271.5,136.0 276.5,136.3 281.5,136.6 286.5,136.8 291.5,137.0 296.5,137.0 301.5,136.9" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            <polyline points="6.5,156.3 11.5,155.4 16.5,154.5 21.5,153.7 26.5,152.9 31.5,152.1 36.5,151.2 41.5,150.4 46.5,149.5 51.5,148.5 56.5,147.7 61.5,146.9 66.5,146.1 71.5,145.2 76.5,144.5 81.5,144.1 86.5,143.5 91.5,142.9 96.5,142.1 101.5,141.3 106.5,140.6 111.5,139.8 116.5,139.0 121.5,138.3 126.5,137.8 131.5,137.5 136.5,137.3 141.5,137.1 146.5,136.9 151.5,136.7 156.5,136.4 161.5,136.0 166.5,135.8 171.5,135.6 176.5,135.4 181.5,135.2 186.5,134.9 191.5,134.7 196.5,134.5 201.5,134.4 206.5,134.6 211.5,134.8 216.5,135.0 221.5,135.3 226.5,135.6 231.5,135.7 236.5,135.8 241.5,135.8 246.5,135.8 251.5,135.8 256.5,135.7 261.5,135.7 266.5,135.8 271.5,136.0 276.5,136.3 281.5,136.6 286.5,136.8 291.5,137.0 296.5,137.0 301.5,137.0" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="114.2" y2="114.2" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="115.2" y2="115.2" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="106.7" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="118.0">99.64</text>
+        <rect x="305" y="107.7" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="119.0">99.62</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/23" data-o="101.01" data-h="101.43" data-l="100.95" data-c="101.41" data-up="1"></rect>
@@ -1462,31 +1483,31 @@
               data-d="09/15" data-o="99.48" data-h="99.69" data-l="99.48" data-c="99.65" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="99.70" data-h="99.74" data-l="99.64" data-c="99.64" data-up="0"></rect>
+              data-d="09/16" data-o="99.70" data-h="99.74" data-l="99.62" data-c="99.62" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 99.19</span><span class="chg up">+0.5%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 100.18</span><span class="chg down">-0.5%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 99.14</span><span class="chg up">+0.5%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 99.19</span><span class="chg up">+0.4%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 100.18</span><span class="chg down">-0.6%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 99.14</span><span class="chg up">+0.5%</span></span>
     
 </div>
 
 
-    <div class="knote">DXY 持平，匯市觀望；近 3 個月 -1.74%，站上月線、年線，但跌破季線，處於 3 個月區間中段。</div>
+    <div class="knote">DXY 持平，匯市觀望；近 3 個月 -1.76%，站上月線、年線，但跌破季線，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">美元 (USD/TWD)</span>
-        <span class="kcell-px">31.748
-            <span class="chg down">-0.15%</span>
+        <span class="kcell-px">31.741
+            <span class="chg down">-0.18%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-down">-0.19%</b></span>
+        <span>近 3 個月 <b class="sp-down">-0.21%</b></span>
         <span>區間 31.416–32.552</span>
     </div>
     
@@ -1708,21 +1729,21 @@
             <line x1="296.5" x2="296.5" y1="99.2" y2="127.4" stroke="#ef4444" stroke-width="1"/>
             <rect x="294.9" y="124.4" width="3.2" height="0.8" fill="#ef4444"/>
             
-            <line x1="301.5" x2="301.5" y1="98.1" y2="123.7" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="114.1" width="3.2" height="6.3" fill="#22c55e"/>
+            <line x1="301.5" x2="301.5" y1="98.1" y2="124.8" stroke="#22c55e" stroke-width="1"/>
+            <rect x="299.9" y="114.1" width="3.2" height="7.2" fill="#22c55e"/>
             
             
             
-            <polyline points="6.5,143.0 11.5,140.2 16.5,137.4 21.5,133.9 26.5,131.6 31.5,129.1 36.5,126.4 41.5,124.2 46.5,121.1 51.5,117.3 56.5,114.3 61.5,111.0 66.5,107.8 71.5,103.7 76.5,100.0 81.5,96.3 86.5,92.3 91.5,88.3 96.5,84.6 101.5,80.5 106.5,76.9 111.5,74.0 116.5,71.0 121.5,68.1 126.5,64.7 131.5,61.8 136.5,58.8 141.5,56.5 146.5,54.3 151.5,52.6 156.5,51.6 161.5,50.9 166.5,50.0 171.5,49.6 176.5,49.1 181.5,49.2 186.5,50.1 191.5,52.1 196.5,54.9 201.5,57.7 206.5,61.4 211.5,64.3 216.5,67.6 221.5,70.7 226.5,74.1 231.5,77.6 236.5,82.3 241.5,86.6 246.5,91.2 251.5,95.8 256.5,99.3 261.5,102.6 266.5,106.6 271.5,111.2 276.5,115.8 281.5,120.6 286.5,123.7 291.5,125.7 296.5,126.6 301.5,127.4" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            <polyline points="6.5,143.0 11.5,140.2 16.5,137.4 21.5,133.9 26.5,131.6 31.5,129.1 36.5,126.4 41.5,124.2 46.5,121.1 51.5,117.3 56.5,114.3 61.5,111.0 66.5,107.8 71.5,103.7 76.5,100.0 81.5,96.3 86.5,92.3 91.5,88.3 96.5,84.6 101.5,80.5 106.5,76.9 111.5,74.0 116.5,71.0 121.5,68.1 126.5,64.7 131.5,61.8 136.5,58.8 141.5,56.5 146.5,54.3 151.5,52.6 156.5,51.6 161.5,50.9 166.5,50.0 171.5,49.6 176.5,49.1 181.5,49.2 186.5,50.1 191.5,52.1 196.5,54.9 201.5,57.7 206.5,61.4 211.5,64.3 216.5,67.6 221.5,70.7 226.5,74.1 231.5,77.6 236.5,82.3 241.5,86.6 246.5,91.2 251.5,95.8 256.5,99.3 261.5,102.6 266.5,106.6 271.5,111.2 276.5,115.8 281.5,120.6 286.5,123.7 291.5,125.7 296.5,126.6 301.5,127.5" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,143.3 11.5,143.5 16.5,143.7 21.5,143.8 26.5,144.0 31.5,143.6 36.5,143.1 41.5,142.8 46.5,141.9 51.5,140.6 56.5,139.5 61.5,138.3 66.5,136.9 71.5,135.3 76.5,133.9 81.5,132.3 86.5,130.8 91.5,128.9 96.5,127.1 101.5,125.4 106.5,123.8 111.5,122.2 116.5,120.5 121.5,119.0 126.5,117.3 131.5,115.2 136.5,113.1 141.5,110.9 146.5,108.7 151.5,106.8 156.5,105.3 161.5,103.9 166.5,102.5 171.5,101.0 176.5,100.0 181.5,98.7 186.5,97.5 191.5,96.3 196.5,95.4 201.5,94.5 206.5,93.7 211.5,92.8 216.5,92.0 221.5,90.9 226.5,90.2 231.5,89.5 236.5,89.2 241.5,89.1 246.5,88.9 251.5,88.6 256.5,88.4 261.5,88.2 266.5,88.1 271.5,88.2 276.5,88.3 281.5,88.7 286.5,88.7 291.5,88.7 296.5,88.7 301.5,88.6" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,173.1 11.5,171.9 16.5,170.8 21.5,169.7 26.5,168.6 31.5,167.6 36.5,166.5 41.5,165.5 46.5,164.5 51.5,163.4 56.5,162.4 61.5,161.3 66.5,160.2 71.5,159.1 76.5,158.0 81.5,156.9 86.5,155.8 91.5,154.7 96.5,153.6 101.5,152.5 106.5,151.4 111.5,150.4 116.5,149.3 121.5,148.2 126.5,147.1 131.5,145.9 136.5,144.8 141.5,143.8 146.5,142.8 151.5,141.8 156.5,140.7 161.5,139.6 166.5,138.6 171.5,137.7 176.5,136.7 181.5,135.9 186.5,135.1 191.5,134.4 196.5,133.8 201.5,133.3 206.5,132.7 211.5,132.1 216.5,131.7 221.5,131.2 226.5,130.4 231.5,130.0 236.5,129.6 241.5,129.3 246.5,129.1 251.5,128.9 256.5,128.7 261.5,128.5 266.5,128.3 271.5,128.1 276.5,128.1 281.5,128.0 286.5,127.9 291.5,127.6 296.5,127.4 301.5,127.1" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="120.4" y2="120.4" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="121.3" y2="121.3" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="112.9" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="124.2">31.748</text>
+        <rect x="305" y="113.8" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="125.1">31.741</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/25" data-o="31.808" data-h="31.871" data-l="31.766" data-c="31.808" data-up="1"></rect>
@@ -1902,31 +1923,31 @@
               data-d="09/15" data-o="31.716" data-h="31.913" data-l="31.694" data-c="31.718" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="31.797" data-h="31.921" data-l="31.723" data-c="31.748" data-up="0"></rect>
+              data-d="09/16" data-o="31.797" data-h="31.921" data-l="31.714" data-c="31.741" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 31.694</span><span class="chg up">+0.2%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 31.995</span><span class="chg down">-0.8%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 31.696</span><span class="chg up">+0.2%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 31.693</span><span class="chg up">+0.2%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 31.995</span><span class="chg down">-0.8%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 31.696</span><span class="chg up">+0.1%</span></span>
     
 </div>
 
 
-    <div class="knote">今日 -0.15%，美元對台幣窄幅波動；近 3 個月 -0.19%，站上月線、年線，但跌破季線，處於 3 個月區間中段。</div>
+    <div class="knote">今日 -0.18%，美元對台幣窄幅波動；近 3 個月 -0.21%，站上月線、年線，但跌破季線，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">人民幣 (CNY/TWD)</span>
-        <span class="kcell-px">4.732
-            <span class="chg down">-0.28%</span>
+        <span class="kcell-px">4.731
+            <span class="chg down">-0.3%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+1.02%</b></span>
+        <span>近 3 個月 <b class="sp-up">+1.00%</b></span>
         <span>區間 4.678–4.813</span>
     </div>
     
@@ -2145,21 +2166,21 @@
             <line x1="296.5" x2="296.5" y1="65.3" y2="91.8" stroke="#ef4444" stroke-width="1"/>
             <rect x="294.9" y="88.8" width="3.2" height="0.8" fill="#ef4444"/>
             
-            <line x1="301.5" x2="301.5" y1="65.6" y2="85.4" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="74.2" width="3.2" height="11.2" fill="#22c55e"/>
+            <line x1="301.5" x2="301.5" y1="65.6" y2="86.2" stroke="#22c55e" stroke-width="1"/>
+            <rect x="299.9" y="74.2" width="3.2" height="12.0" fill="#22c55e"/>
             
             
             
-            <polyline points="6.5,143.5 11.5,141.1 16.5,139.3 21.5,136.8 26.5,135.5 31.5,133.8 36.5,131.5 41.5,130.1 46.5,128.0 51.5,124.9 56.5,122.9 61.5,120.1 66.5,117.4 71.5,114.0 76.5,110.8 81.5,107.5 86.5,103.7 91.5,100.0 96.5,96.2 101.5,91.6 106.5,87.5 111.5,84.2 116.5,80.5 121.5,76.9 126.5,72.9 131.5,69.2 136.5,65.3 141.5,61.9 146.5,58.5 151.5,55.6 156.5,53.1 161.5,51.1 166.5,49.4 171.5,48.0 176.5,46.8 181.5,46.1 186.5,46.1 191.5,47.2 196.5,48.9 201.5,51.0 206.5,53.3 211.5,54.7 216.5,56.3 221.5,58.1 226.5,59.9 231.5,62.0 236.5,65.6 241.5,69.1 246.5,72.8 251.5,76.3 256.5,78.8 261.5,81.2 266.5,83.9 271.5,87.4 276.5,90.9 281.5,94.6 286.5,96.5 291.5,97.5 296.5,97.4 301.5,97.2" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            <polyline points="6.5,143.5 11.5,141.1 16.5,139.3 21.5,136.8 26.5,135.5 31.5,133.8 36.5,131.5 41.5,130.1 46.5,128.0 51.5,124.9 56.5,122.9 61.5,120.1 66.5,117.4 71.5,114.0 76.5,110.8 81.5,107.5 86.5,103.7 91.5,100.0 96.5,96.2 101.5,91.6 106.5,87.5 111.5,84.2 116.5,80.5 121.5,76.9 126.5,72.9 131.5,69.2 136.5,65.3 141.5,61.9 146.5,58.5 151.5,55.6 156.5,53.1 161.5,51.1 166.5,49.4 171.5,48.0 176.5,46.8 181.5,46.1 186.5,46.1 191.5,47.2 196.5,48.9 201.5,51.0 206.5,53.3 211.5,54.7 216.5,56.3 221.5,58.1 226.5,59.9 231.5,62.0 236.5,65.6 241.5,69.1 246.5,72.8 251.5,76.3 256.5,78.8 261.5,81.2 266.5,83.9 271.5,87.4 276.5,90.9 281.5,94.6 286.5,96.5 291.5,97.5 296.5,97.4 301.5,97.3" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <polyline points="6.5,163.2 11.5,162.5 16.5,161.9 21.5,161.1 26.5,160.6 31.5,159.9 36.5,159.1 41.5,158.4 46.5,157.2 51.5,155.7 56.5,154.4 61.5,153.0 66.5,151.3 71.5,149.4 76.5,147.5 81.5,145.4 86.5,143.4 91.5,141.0 96.5,138.8 101.5,136.4 106.5,134.2 111.5,132.1 116.5,129.9 121.5,127.8 126.5,125.6 131.5,123.1 136.5,120.6 141.5,118.0 146.5,115.4 151.5,113.2 156.5,111.3 161.5,109.6 166.5,107.6 171.5,105.7 176.5,104.0 181.5,102.2 186.5,100.4 191.5,98.7 196.5,97.3 201.5,96.0 206.5,94.8 211.5,93.3 216.5,92.0 221.5,90.6 226.5,89.4 231.5,88.3 236.5,87.5 241.5,87.0 246.5,86.4 251.5,85.6 256.5,84.9 261.5,84.1 266.5,83.6 271.5,83.1 276.5,82.8 281.5,82.7 286.5,82.1 291.5,81.6 296.5,80.8 301.5,79.9" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            <polyline points="6.5,163.2 11.5,162.5 16.5,161.9 21.5,161.1 26.5,160.6 31.5,159.9 36.5,159.1 41.5,158.4 46.5,157.2 51.5,155.7 56.5,154.4 61.5,153.0 66.5,151.3 71.5,149.4 76.5,147.5 81.5,145.4 86.5,143.4 91.5,141.0 96.5,138.8 101.5,136.4 106.5,134.2 111.5,132.1 116.5,129.9 121.5,127.8 126.5,125.6 131.5,123.1 136.5,120.6 141.5,118.0 146.5,115.4 151.5,113.2 156.5,111.3 161.5,109.6 166.5,107.6 171.5,105.7 176.5,104.0 181.5,102.2 186.5,100.4 191.5,98.7 196.5,97.3 201.5,96.0 206.5,94.8 211.5,93.3 216.5,92.0 221.5,90.6 226.5,89.4 231.5,88.3 236.5,87.5 241.5,87.0 246.5,86.4 251.5,85.6 256.5,84.9 261.5,84.1 266.5,83.6 271.5,83.1 276.5,82.8 281.5,82.7 286.5,82.1 291.5,81.6 296.5,80.8 301.5,80.0" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,274.3 11.5,272.3 16.5,270.4 21.5,268.4 26.5,266.6 31.5,264.7 36.5,262.8 41.5,260.9 46.5,259.0 51.5,257.1 56.5,255.2 61.5,253.3 66.5,251.3 71.5,249.4 76.5,247.3 81.5,245.3 86.5,243.3 91.5,241.3 96.5,239.2 101.5,237.3 106.5,235.3 111.5,233.3 116.5,231.3 121.5,229.3 126.5,227.2 131.5,225.2 136.5,223.1 141.5,221.1 146.5,219.1 151.5,217.1 156.5,215.0 161.5,213.0 166.5,211.1 171.5,209.2 176.5,207.3 181.5,205.3 186.5,203.5 191.5,201.7 196.5,200.1 201.5,198.5 206.5,196.9 211.5,195.3 216.5,193.7 221.5,192.2 226.5,190.3 231.5,188.9 236.5,187.4 241.5,186.1 246.5,184.8 251.5,183.5 256.5,182.3 261.5,181.0 266.5,179.8 271.5,178.6 276.5,177.5 281.5,176.5 286.5,175.3 291.5,174.1 296.5,172.8 301.5,171.5" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="85.4" y2="85.4" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="86.2" y2="86.2" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="77.9" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="89.2">4.732</text>
+        <rect x="305" y="78.7" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="90.0">4.731</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/25" data-o="4.685" data-h="4.694" data-l="4.678" data-c="4.685" data-up="1"></rect>
@@ -2339,31 +2360,31 @@
               data-d="09/15" data-o="4.728" data-h="4.756" data-l="4.725" data-c="4.728" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="4.745" data-h="4.755" data-l="4.732" data-c="4.732" data-up="0"></rect>
+              data-d="09/16" data-o="4.745" data-h="4.755" data-l="4.731" data-c="4.731" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 4.718</span><span class="chg up">+0.3%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 4.739</span><span class="chg down">-0.1%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 4.631</span><span class="chg up">+2.2%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 4.718</span><span class="chg up">+0.3%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 4.739</span><span class="chg down">-0.2%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 4.631</span><span class="chg up">+2.2%</span></span>
     
 </div>
 
 
-    <div class="knote">今日 ↓ 0.28%：人民幣對台幣貶值（中國資本外流壓力或政策寬鬆）；近 3 個月 +1.02%，站上月線、年線，但跌破季線，處於 3 個月區間中段。</div>
+    <div class="knote">今日 ↓ 0.30%：人民幣對台幣貶值（中國資本外流壓力或政策寬鬆）；近 3 個月 +1.00%，站上月線、年線，但跌破季線，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">歐元 (EUR/TWD)</span>
-        <span class="kcell-px">36.656
-            <span class="chg down">-0.12%</span>
+        <span class="kcell-px">36.651
+            <span class="chg down">-0.13%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+1.50%</b></span>
+        <span>近 3 個月 <b class="sp-up">+1.49%</b></span>
         <span>區間 36.004–37.548</span>
     </div>
     
@@ -2582,21 +2603,21 @@
             <line x1="296.5" x2="296.5" y1="81.3" y2="112.9" stroke="#ef4444" stroke-width="1"/>
             <rect x="294.9" y="103.9" width="3.2" height="0.8" fill="#ef4444"/>
             
-            <line x1="301.5" x2="301.5" y1="81.6" y2="107.3" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="96.4" width="3.2" height="5.0" fill="#22c55e"/>
+            <line x1="301.5" x2="301.5" y1="81.2" y2="108.3" stroke="#22c55e" stroke-width="1"/>
+            <rect x="299.9" y="96.4" width="3.2" height="5.3" fill="#22c55e"/>
             
             
             
-            <polyline points="6.5,121.3 11.5,123.3 16.5,124.8 21.5,125.1 26.5,126.3 31.5,127.6 36.5,128.2 41.5,127.6 46.5,126.3 51.5,125.1 56.5,124.3 61.5,123.6 66.5,124.0 71.5,123.6 76.5,123.3 81.5,120.8 86.5,117.6 91.5,114.8 96.5,111.7 101.5,108.0 106.5,104.0 111.5,101.4 116.5,98.7 121.5,97.2 126.5,94.7 131.5,90.9 136.5,86.8 141.5,83.2 146.5,80.4 151.5,77.0 156.5,74.1 161.5,72.1 166.5,69.0 171.5,66.2 176.5,64.0 181.5,63.1 186.5,62.5 191.5,62.0 196.5,61.8 201.5,61.6 206.5,60.7 211.5,58.5 216.5,56.8 221.5,55.0 226.5,53.4 231.5,53.6 236.5,55.6 241.5,58.6 246.5,60.8 251.5,63.8 256.5,66.3 261.5,67.5 266.5,70.0 271.5,72.8 276.5,75.4 281.5,77.9 286.5,79.4 291.5,80.9 296.5,82.1 301.5,83.3" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            <polyline points="6.5,121.3 11.5,123.3 16.5,124.8 21.5,125.1 26.5,126.3 31.5,127.6 36.5,128.2 41.5,127.6 46.5,126.3 51.5,125.1 56.5,124.3 61.5,123.6 66.5,124.0 71.5,123.6 76.5,123.3 81.5,120.8 86.5,117.6 91.5,114.8 96.5,111.7 101.5,108.0 106.5,104.0 111.5,101.4 116.5,98.7 121.5,97.2 126.5,94.7 131.5,90.9 136.5,86.8 141.5,83.2 146.5,80.4 151.5,77.0 156.5,74.1 161.5,72.1 166.5,69.0 171.5,66.2 176.5,64.0 181.5,63.1 186.5,62.5 191.5,62.0 196.5,61.8 201.5,61.6 206.5,60.7 211.5,58.5 216.5,56.8 221.5,55.0 226.5,53.4 231.5,53.6 236.5,55.6 241.5,58.6 246.5,60.8 251.5,63.8 256.5,66.3 261.5,67.5 266.5,70.0 271.5,72.8 276.5,75.4 281.5,77.9 286.5,79.4 291.5,80.9 296.5,82.1 301.5,83.4" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,92.2 11.5,93.3 16.5,94.1 21.5,94.8 26.5,96.3 31.5,97.4 36.5,98.4 41.5,99.3 46.5,100.2 51.5,101.0 56.5,102.0 61.5,102.8 66.5,103.3 71.5,104.0 76.5,104.4 81.5,104.2 86.5,104.1 91.5,103.9 96.5,103.9 101.5,104.0 106.5,104.0 111.5,104.5 116.5,104.7 121.5,105.1 126.5,105.3 131.5,104.9 136.5,104.1 141.5,103.4 146.5,102.9 151.5,102.3 156.5,101.8 161.5,101.3 166.5,100.4 171.5,99.7 176.5,99.1 181.5,98.5 186.5,97.9 191.5,97.2 196.5,96.8 201.5,96.2 206.5,95.3 211.5,94.4 216.5,93.5 221.5,92.4 226.5,91.5 231.5,90.7 236.5,90.2 241.5,89.8 246.5,89.1 251.5,88.6 256.5,88.2 261.5,87.7 266.5,87.7 271.5,87.5 276.5,87.6 281.5,87.2 286.5,86.5 291.5,85.9 296.5,85.2 301.5,84.3" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,110.2 11.5,110.0 16.5,109.7 21.5,109.2 26.5,108.8 31.5,108.5 36.5,108.2 41.5,107.8 46.5,107.3 51.5,106.8 56.5,106.4 61.5,105.9 66.5,105.5 71.5,105.1 76.5,104.6 81.5,104.0 86.5,103.3 91.5,102.7 96.5,102.0 101.5,101.4 106.5,100.7 111.5,100.1 116.5,99.6 121.5,99.1 126.5,98.6 131.5,97.9 136.5,97.1 141.5,96.3 146.5,95.6 151.5,94.9 156.5,94.1 161.5,93.4 166.5,92.6 171.5,91.8 176.5,91.0 181.5,90.3 186.5,89.6 191.5,88.8 196.5,88.3 201.5,87.8 206.5,87.1 211.5,86.5 216.5,85.9 221.5,85.5 226.5,84.7 231.5,84.3 236.5,83.8 241.5,83.5 246.5,83.2 251.5,82.9 256.5,82.6 261.5,82.4 266.5,82.1 271.5,82.0 276.5,81.9 281.5,81.8 286.5,81.7 291.5,81.6 296.5,81.6 301.5,81.5" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="101.4" y2="101.4" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="101.7" y2="101.7" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="93.9" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="105.2">36.656</text>
+        <rect x="305" y="94.2" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="105.5">36.652</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/25" data-o="36.113" data-h="36.296" data-l="36.004" data-c="36.115" data-up="1"></rect>
@@ -2776,7 +2797,7 @@
               data-d="09/15" data-o="36.626" data-h="36.868" data-l="36.535" data-c="36.629" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="36.709" data-h="36.865" data-l="36.594" data-c="36.656" data-up="0"></rect>
+              data-d="09/16" data-o="36.709" data-h="36.869" data-l="36.583" data-c="36.652" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
@@ -2788,19 +2809,19 @@
 </div>
 
 
-    <div class="knote">今日 -0.12%，歐元對台幣窄幅波動；近 3 個月 +1.50%，跌破月線、季線、年線，處於 3 個月區間中段。</div>
+    <div class="knote">今日 -0.13%，歐元對台幣窄幅波動；近 3 個月 +1.49%，跌破月線、季線、年線，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">英鎊 (GBP/TWD)</span>
-        <span class="kcell-px">42.803
-            <span class="chg down">-0.08%</span>
+        <span class="kcell-px">42.800
+            <span class="chg down">-0.09%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+2.21%</b></span>
+        <span>近 3 個月 <b class="sp-up">+2.19%</b></span>
         <span>區間 41.782–43.867</span>
     </div>
     
@@ -3019,8 +3040,8 @@
             <line x1="296.5" x2="296.5" y1="71.3" y2="100.4" stroke="#ef4444" stroke-width="1"/>
             <rect x="294.9" y="90.2" width="3.2" height="0.8" fill="#ef4444"/>
             
-            <line x1="301.5" x2="301.5" y1="75.0" y2="97.5" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="89.3" width="3.2" height="2.2" fill="#22c55e"/>
+            <line x1="301.5" x2="301.5" y1="74.2" y2="98.4" stroke="#22c55e" stroke-width="1"/>
+            <rect x="299.9" y="89.3" width="3.2" height="2.5" fill="#22c55e"/>
             
             
             
@@ -3030,10 +3051,10 @@
             
             <polyline points="6.5,146.7 11.5,146.4 16.5,146.0 21.5,145.5 26.5,145.0 31.5,144.5 36.5,143.9 41.5,143.2 46.5,142.5 51.5,141.7 56.5,141.0 61.5,140.3 66.5,139.6 71.5,138.9 76.5,138.1 81.5,137.3 86.5,136.4 91.5,135.5 96.5,134.6 101.5,133.7 106.5,132.9 111.5,132.1 116.5,131.4 121.5,130.8 126.5,130.1 131.5,129.3 136.5,128.4 141.5,127.5 146.5,126.7 151.5,125.8 156.5,124.9 161.5,123.9 166.5,122.8 171.5,121.7 176.5,120.6 181.5,119.6 186.5,118.6 191.5,117.5 196.5,116.6 201.5,115.8 206.5,114.9 211.5,114.0 216.5,113.0 221.5,112.2 226.5,111.0 231.5,110.2 236.5,109.5 241.5,108.7 246.5,108.1 251.5,107.4 256.5,106.9 261.5,106.3 266.5,105.9 271.5,105.4 276.5,105.0 281.5,104.6 286.5,104.2 291.5,103.8 296.5,103.5 301.5,103.1" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="91.5" y2="91.5" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="91.8" y2="91.8" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="84.0" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="95.3">42.804</text>
+        <rect x="305" y="84.3" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="95.6">42.799</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/25" data-o="41.868" data-h="42.124" data-l="41.782" data-c="41.880" data-up="1"></rect>
@@ -3213,7 +3234,7 @@
               data-d="09/15" data-o="42.818" data-h="43.091" data-l="42.676" data-c="42.822" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="42.834" data-h="43.038" data-l="42.718" data-c="42.804" data-up="0"></rect>
+              data-d="09/16" data-o="42.834" data-h="43.049" data-l="42.706" data-c="42.799" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
@@ -3225,19 +3246,19 @@
 </div>
 
 
-    <div class="knote">今日 -0.08%，英鎊對台幣窄幅波動；近 3 個月 +2.21%，站上年線，但跌破月線、季線，處於 3 個月區間中段。</div>
+    <div class="knote">今日 -0.09%，英鎊對台幣窄幅波動；近 3 個月 +2.19%，站上年線，但跌破月線、季線，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">瑞士法郎 (CHF/TWD)</span>
-        <span class="kcell-px">38.788
-            <span class="chg down">-0.18%</span>
+        <span class="kcell-px">38.770
+            <span class="chg down">-0.22%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-down">-0.91%</b></span>
+        <span>近 3 個月 <b class="sp-down">-0.96%</b></span>
         <span>區間 38.734–40.204</span>
     </div>
     
@@ -3469,21 +3490,21 @@
             <line x1="296.5" x2="296.5" y1="144.2" y2="156.1" stroke="#ef4444" stroke-width="1"/>
             <rect x="294.9" y="154.9" width="3.2" height="1.0" fill="#ef4444"/>
             
-            <line x1="301.5" x2="301.5" y1="142.2" y2="157.7" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="150.8" width="3.2" height="6.9" fill="#22c55e"/>
+            <line x1="301.5" x2="301.5" y1="142.2" y2="159.5" stroke="#22c55e" stroke-width="1"/>
+            <rect x="299.9" y="150.8" width="3.2" height="8.7" fill="#22c55e"/>
             
             
             
-            <polyline points="6.5,73.5 11.5,77.4 16.5,81.7 21.5,83.7 26.5,86.5 31.5,88.6 36.5,89.8 41.5,89.5 46.5,88.3 51.5,86.9 56.5,86.1 61.5,85.7 66.5,86.5 71.5,87.5 76.5,87.9 81.5,85.6 86.5,82.6 91.5,78.9 96.5,75.6 101.5,72.4 106.5,69.3 111.5,68.1 116.5,66.7 121.5,66.9 126.5,66.2 131.5,64.5 136.5,61.9 141.5,60.5 146.5,59.7 151.5,58.2 156.5,56.8 161.5,57.6 166.5,56.5 171.5,54.9 176.5,54.9 181.5,57.0 186.5,59.3 191.5,62.3 196.5,65.0 201.5,67.7 206.5,67.1 211.5,65.8 216.5,65.0 221.5,63.8 226.5,62.7 231.5,64.0 236.5,68.1 241.5,72.6 246.5,76.5 251.5,81.5 256.5,86.4 261.5,88.3 266.5,92.5 271.5,96.8 276.5,100.7 281.5,104.5 286.5,107.3 291.5,110.2 296.5,112.5 301.5,114.8" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            <polyline points="6.5,73.5 11.5,77.4 16.5,81.7 21.5,83.7 26.5,86.5 31.5,88.6 36.5,89.8 41.5,89.5 46.5,88.3 51.5,86.9 56.5,86.1 61.5,85.7 66.5,86.5 71.5,87.5 76.5,87.9 81.5,85.6 86.5,82.6 91.5,78.9 96.5,75.6 101.5,72.4 106.5,69.3 111.5,68.1 116.5,66.7 121.5,66.9 126.5,66.2 131.5,64.5 136.5,61.9 141.5,60.5 146.5,59.7 151.5,58.2 156.5,56.8 161.5,57.6 166.5,56.5 171.5,54.9 176.5,54.9 181.5,57.0 186.5,59.3 191.5,62.3 196.5,65.0 201.5,67.7 206.5,67.1 211.5,65.8 216.5,65.0 221.5,63.8 226.5,62.7 231.5,64.0 236.5,68.1 241.5,72.6 246.5,76.5 251.5,81.5 256.5,86.4 261.5,88.3 266.5,92.5 271.5,96.8 276.5,100.7 281.5,104.5 286.5,107.3 291.5,110.2 296.5,112.5 301.5,114.9" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,36.4 11.5,37.5 16.5,38.5 21.5,39.4 26.5,41.0 31.5,42.1 36.5,42.8 41.5,43.4 46.5,44.4 51.5,45.4 56.5,46.5 61.5,47.4 66.5,48.2 71.5,49.7 76.5,50.7 81.5,50.8 86.5,51.1 91.5,51.1 96.5,51.5 101.5,51.7 106.5,52.1 111.5,53.5 116.5,54.9 121.5,56.3 126.5,57.8 131.5,58.7 136.5,58.7 141.5,59.1 146.5,59.6 151.5,60.2 156.5,60.8 161.5,61.8 166.5,62.2 171.5,62.9 176.5,63.8 181.5,64.7 186.5,65.7 191.5,67.1 196.5,68.6 201.5,69.9 206.5,70.0 211.5,70.4 216.5,71.2 221.5,71.5 226.5,71.8 231.5,72.4 236.5,73.3 241.5,74.2 246.5,74.8 251.5,75.5 256.5,76.4 261.5,77.2 266.5,78.5 271.5,79.7 276.5,81.1 281.5,82.4 286.5,83.0 291.5,83.8 296.5,84.4 301.5,85.0" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,73.3 11.5,72.8 16.5,72.2 21.5,71.4 26.5,70.7 31.5,70.1 36.5,69.4 41.5,68.6 46.5,67.8 51.5,67.1 56.5,66.3 61.5,65.5 66.5,64.8 71.5,64.2 76.5,63.4 81.5,62.6 86.5,61.7 91.5,60.8 96.5,59.8 101.5,59.1 106.5,58.3 111.5,57.6 116.5,57.1 121.5,56.7 126.5,56.2 131.5,55.6 136.5,54.8 141.5,54.1 146.5,53.5 151.5,52.8 156.5,52.1 161.5,51.5 166.5,50.8 171.5,50.0 176.5,49.3 181.5,48.6 186.5,48.0 191.5,47.4 196.5,46.9 201.5,46.5 206.5,45.8 211.5,45.2 216.5,44.8 221.5,44.6 226.5,44.0 231.5,43.8 236.5,43.5 241.5,43.4 246.5,43.2 251.5,43.1 256.5,43.0 261.5,42.8 266.5,42.7 271.5,42.7 276.5,42.8 281.5,42.9 286.5,43.0 291.5,43.2 296.5,43.3 301.5,43.3" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="157.7" y2="157.7" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="159.5" y2="159.5" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="150.2" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="161.5">38.789</text>
+        <rect x="305" y="152.0" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="163.3">38.770</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/25" data-o="39.140" data-h="39.266" data-l="39.140" data-c="39.144" data-up="1"></rect>
@@ -3663,31 +3684,31 @@
               data-d="09/15" data-o="38.807" data-h="38.925" data-l="38.805" data-c="38.817" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="38.858" data-h="38.944" data-l="38.789" data-c="38.789" data-up="0"></rect>
+              data-d="09/16" data-o="38.858" data-h="38.944" data-l="38.770" data-c="38.770" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 39.219</span><span class="chg down">-1.1%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 39.519</span><span class="chg down">-1.8%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 39.938</span><span class="chg down">-2.9%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 39.219</span><span class="chg down">-1.1%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 39.519</span><span class="chg down">-1.9%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 39.938</span><span class="chg down">-2.9%</span></span>
     
 </div>
 
 
-    <div class="knote">今日 -0.18%，瑞郎對台幣窄幅波動；近 3 個月 -0.91%，跌破月線、季線、年線，均線空頭排列，處於 3 個月區間低檔。</div>
+    <div class="knote">今日 ↓ 0.22%：瑞郎對台幣貶值（全球風險偏好回升、避險消退）；近 3 個月 -0.96%，跌破月線、季線、年線，均線空頭排列，處於 3 個月區間低檔。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">日圓 (JPY/TWD)</span>
-        <span class="kcell-px">0.2044
-            <span class="chg down">-0.32%</span>
+        <span class="kcell-px">0.2043
+            <span class="chg down">-0.35%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+3.94%</b></span>
+        <span>近 3 個月 <b class="sp-up">+3.91%</b></span>
         <span>區間 0.1957–0.2075</span>
     </div>
     
@@ -3914,8 +3935,8 @@
             <line x1="296.5" x2="296.5" y1="40.2" y2="44.0" stroke="#ef4444" stroke-width="1"/>
             <rect x="294.9" y="42.1" width="3.2" height="0.8" fill="#ef4444"/>
             
-            <line x1="301.5" x2="301.5" y1="43.9" y2="55.2" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="47.2" width="3.2" height="8.0" fill="#22c55e"/>
+            <line x1="301.5" x2="301.5" y1="43.9" y2="56.1" stroke="#22c55e" stroke-width="1"/>
+            <rect x="299.9" y="47.2" width="3.2" height="8.9" fill="#22c55e"/>
             
             
             
@@ -3925,10 +3946,10 @@
             
             <polyline points="6.5,102.0 11.5,102.5 16.5,103.0 21.5,103.4 26.5,104.0 31.5,104.5 36.5,104.9 41.5,105.3 46.5,105.7 51.5,106.1 56.5,106.5 61.5,107.0 66.5,107.6 71.5,108.1 76.5,108.5 81.5,108.7 86.5,108.9 91.5,108.9 96.5,109.0 101.5,109.2 106.5,109.4 111.5,109.7 116.5,110.0 121.5,110.4 126.5,110.8 131.5,111.1 136.5,111.1 141.5,110.9 146.5,110.7 151.5,110.4 156.5,110.1 161.5,110.0 166.5,109.8 171.5,109.6 176.5,109.5 181.5,109.4 186.5,109.4 191.5,109.3 196.5,109.5 201.5,109.6 206.5,109.6 211.5,109.6 216.5,109.7 221.5,109.7 226.5,109.6 231.5,109.7 236.5,109.7 241.5,109.8 246.5,109.9 251.5,110.0 256.5,110.0 261.5,109.9 266.5,109.7 271.5,109.4 276.5,109.2 281.5,109.0 286.5,108.8 291.5,108.5 296.5,108.3 301.5,108.1" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="55.2" y2="55.2" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="56.1" y2="56.1" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="47.7" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="59.0">0.2044</text>
+        <rect x="305" y="48.6" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="59.9">0.2043</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/25" data-o="0.1967" data-h="0.1968" data-l="0.1966" data-c="0.1966" data-up="0"></rect>
@@ -4108,31 +4129,31 @@
               data-d="09/15" data-o="0.2054" data-h="0.2056" data-l="0.2053" data-c="0.2054" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="0.2050" data-h="0.2053" data-l="0.2044" data-c="0.2044" data-up="0"></rect>
+              data-d="09/16" data-o="0.2050" data-h="0.2053" data-l="0.2043" data-c="0.2043" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 0.2018</span><span class="chg up">+1.3%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 0.2002</span><span class="chg up">+2.1%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 0.2001</span><span class="chg up">+2.1%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 0.2018</span><span class="chg up">+1.3%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 0.2002</span><span class="chg up">+2.0%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 0.2001</span><span class="chg up">+2.1%</span></span>
     
 </div>
 
 
-    <div class="knote">今日 ↓ 0.32%：日圓對台幣貶值（日本出口導向但進口通膨壓力）；近 3 個月 +3.94%，站上月線、季線、年線，均線多頭排列，處於 3 個月區間中段。</div>
+    <div class="knote">今日 ↓ 0.35%：日圓對台幣貶值（日本出口導向但進口通膨壓力）；近 3 個月 +3.91%，站上月線、季線、年線，均線多頭排列，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">韓元 (KRW/TWD)</span>
-        <span class="kcell-px">0.02327
-            <span class="chg down">-0.24%</span>
+        <span class="kcell-px">0.02325
+            <span class="chg down">-0.32%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+12.89%</b></span>
+        <span>近 3 個月 <b class="sp-up">+12.79%</b></span>
         <span>區間 0.02030–0.02364</span>
     </div>
     
@@ -4365,7 +4386,7 @@
             <rect x="294.9" y="19.8" width="3.2" height="0.9" fill="#ef4444"/>
             
             <line x1="301.5" x2="301.5" y1="30.3" y2="33.8" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="30.3" width="3.2" height="2.5" fill="#22c55e"/>
+            <rect x="299.9" y="30.3" width="3.2" height="3.4" fill="#22c55e"/>
             
             
             
@@ -4375,10 +4396,10 @@
             
             <polyline points="6.5,115.0 11.5,115.3 16.5,115.5 21.5,115.8 26.5,116.0 31.5,116.3 36.5,116.5 41.5,116.7 46.5,116.8 51.5,116.9 56.5,117.0 61.5,117.1 66.5,117.2 71.5,117.2 76.5,117.2 81.5,117.2 86.5,117.2 91.5,117.1 96.5,117.0 101.5,116.9 106.5,116.8 111.5,116.7 116.5,116.6 121.5,116.5 126.5,116.4 131.5,116.2 136.5,115.9 141.5,115.6 146.5,115.4 151.5,115.1 156.5,114.8 161.5,114.5 166.5,114.2 171.5,114.0 176.5,113.7 181.5,113.5 186.5,113.2 191.5,113.0 196.5,112.7 201.5,112.4 206.5,112.1 211.5,111.7 216.5,111.3 221.5,110.9 226.5,110.5 231.5,110.1 236.5,109.8 241.5,109.4 246.5,109.0 251.5,108.6 256.5,108.2 261.5,107.7 266.5,107.2 271.5,106.8 276.5,106.3 281.5,105.9 286.5,105.4 291.5,104.9 296.5,104.4 301.5,104.0" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="32.8" y2="32.8" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="33.7" y2="33.7" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="25.299999999999997" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="36.599999999999994">0.02327</text>
+        <rect x="305" y="26.200000000000003" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="37.5">0.02325</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/25" data-o="0.02061" data-h="0.02066" data-l="0.02057" data-c="0.02062" data-up="1"></rect>
@@ -4558,31 +4579,31 @@
               data-d="09/15" data-o="0.02355" data-h="0.02357" data-l="0.02339" data-c="0.02357" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="0.02333" data-h="0.02333" data-l="0.02325" data-c="0.02327" data-up="0"></rect>
+              data-d="09/16" data-o="0.02333" data-h="0.02333" data-l="0.02325" data-c="0.02325" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 0.02323</span><span class="chg up">+0.2%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 0.02231</span><span class="chg up">+4.3%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 0.02165</span><span class="chg up">+7.5%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 0.02323</span><span class="chg up">+0.1%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 0.02231</span><span class="chg up">+4.2%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 0.02165</span><span class="chg up">+7.4%</span></span>
     
 </div>
 
 
-    <div class="knote">今日 ↓ 0.24%：韓元對台幣貶值（外資流出壓力）；近 3 個月 +12.89%，站上月線、季線、年線，均線多頭排列，處於 3 個月區間高檔。</div>
+    <div class="knote">今日 ↓ 0.32%：韓元對台幣貶值（外資流出壓力）；近 3 個月 +12.79%，站上月線、季線、年線，均線多頭排列，處於 3 個月區間高檔。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">澳幣 (AUD/TWD)</span>
-        <span class="kcell-px">22.636
-            <span class="chg down">-0.21%</span>
+        <span class="kcell-px">22.635
+            <span class="chg down">-0.22%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+3.14%</b></span>
+        <span>近 3 個月 <b class="sp-up">+3.12%</b></span>
         <span>區間 21.828–22.925</span>
     </div>
     
@@ -4809,8 +4830,8 @@
             <line x1="296.5" x2="296.5" y1="35.7" y2="65.8" stroke="#ef4444" stroke-width="1"/>
             <rect x="294.9" y="54.9" width="3.2" height="0.8" fill="#ef4444"/>
             
-            <line x1="301.5" x2="301.5" y1="35.7" y2="60.6" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="49.5" width="3.2" height="5.7" fill="#22c55e"/>
+            <line x1="301.5" x2="301.5" y1="35.7" y2="61.5" stroke="#22c55e" stroke-width="1"/>
+            <rect x="299.9" y="49.5" width="3.2" height="6.2" fill="#22c55e"/>
             
             
             
@@ -4820,10 +4841,10 @@
             
             <polyline points="6.5,207.8 11.5,206.6 16.5,205.3 21.5,203.9 26.5,202.5 31.5,201.2 36.5,199.7 41.5,198.3 46.5,196.8 51.5,195.2 56.5,193.7 61.5,192.3 66.5,190.9 71.5,189.4 76.5,187.9 81.5,186.3 86.5,184.6 91.5,183.0 96.5,181.3 101.5,179.5 106.5,177.7 111.5,176.0 116.5,174.2 121.5,172.4 126.5,170.6 131.5,168.9 136.5,167.0 141.5,165.1 146.5,163.3 151.5,161.6 156.5,159.8 161.5,158.1 166.5,156.3 171.5,154.6 176.5,152.9 181.5,151.2 186.5,149.4 191.5,147.7 196.5,146.0 201.5,144.4 206.5,142.7 211.5,141.1 216.5,139.4 221.5,137.8 226.5,135.9 231.5,134.2 236.5,132.5 241.5,130.8 246.5,129.2 251.5,127.6 256.5,126.0 261.5,124.3 266.5,122.7 271.5,121.2 276.5,119.7 281.5,118.2 286.5,116.9 291.5,115.6 296.5,114.3 301.5,113.1" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="55.2" y2="55.2" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="55.7" y2="55.7" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="47.7" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="59.0">22.637</text>
+        <rect x="305" y="48.2" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="59.5">22.633</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/25" data-o="21.935" data-h="22.058" data-l="21.879" data-c="21.948" data-up="1"></rect>
@@ -5003,7 +5024,7 @@
               data-d="09/15" data-o="22.637" data-h="22.783" data-l="22.558" data-c="22.639" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="22.680" data-h="22.783" data-l="22.596" data-c="22.637" data-up="0"></rect>
+              data-d="09/16" data-o="22.680" data-h="22.783" data-l="22.590" data-c="22.633" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
@@ -5015,11 +5036,11 @@
 </div>
 
 
-    <div class="knote">今日 ↓ 0.21%：澳幣對台幣貶值（商品價格走弱或全球風險趨避）；近 3 個月 +3.14%，站上季線、年線，但跌破月線，處於 3 個月區間中段。</div>
+    <div class="knote">今日 ↓ 0.22%：澳幣對台幣貶值（商品價格走弱或全球風險趨避）；近 3 個月 +3.12%，站上季線、年線，但跌破月線，處於 3 個月區間中段。</div>
 </div>
             
         </div>
-        <div class="card-ts">🕐 更新時間：2026/09/16 12:23</div>
+        <div class="card-ts">🕐 更新時間：2026/09/16 12:53</div>
     </div>
 
     <!-- 美股技術面（v14：兩檔並排、日 K 加高＋價格／日期刻度；解說放在各自圖下方） -->
@@ -5946,7 +5967,7 @@
             
             
         </div>
-        <div class="card-ts">🕐 更新時間：2026/09/16 12:23</div>
+        <div class="card-ts">🕐 更新時間：2026/09/16 12:53</div>
     </div>
 
     <!-- ③ 全球股市 + 市場情緒（VIX + Put/Call Ratio）+ 台灣三大法人 -->
@@ -5960,10 +5981,10 @@
             <div class="row">
                 <div class="lbl"><span>🇰🇷</span> 南韓綜合 (KOSPI)</div>
                 <div class="val">
-                    6,712.42
+                    6,689.52
                     
                     <span class="chg up">
-                        +1.28%
+                        +0.94%
                     </span>
                     
                 </div>
@@ -5972,12 +5993,12 @@
             
             
             <div class="row">
-                <div class="lbl"><span>🇯🇵</span> 日經 225 (Nikkei 225)</div>
+                <div class="lbl"><span>🇮🇳</span> 印度 Nifty 50 (Nifty 50)</div>
                 <div class="val">
-                    63,791
+                    23,217
                     
                     <span class="chg up">
-                        +0.48%
+                        +0.43%
                     </span>
                     
                 </div>
@@ -6000,26 +6021,12 @@
             
             
             <div class="row">
-                <div class="lbl"><span>🇮🇳</span> 印度 Nifty 50 (Nifty 50)</div>
+                <div class="lbl"><span>🇯🇵</span> 日經 225 (Nikkei 225)</div>
                 <div class="val">
-                    23,197
+                    63,704
                     
                     <span class="chg up">
-                        +0.34%
-                    </span>
-                    
-                </div>
-            </div>
-            
-            
-            
-            <div class="row">
-                <div class="lbl"><span>🇹🇼</span> 加權指數 (TAIEX)</div>
-                <div class="val">
-                    45,995
-                    
-                    <span class="chg up">
-                        +0.29%
+                        +0.35%
                     </span>
                     
                 </div>
@@ -6034,6 +6041,20 @@
                     
                     <span class="chg up">
                         +0.03%
+                    </span>
+                    
+                </div>
+            </div>
+            
+            
+            
+            <div class="row">
+                <div class="lbl"><span>🇹🇼</span> 加權指數 (TAIEX)</div>
+                <div class="val">
+                    45,858
+                    
+                    <span class="chg down">
+                        -0.01%
                     </span>
                     
                 </div>
@@ -6127,9 +6148,9 @@
             
             
             
-            <div class="commentary">股市偏弱（6 跌 / 6 漲）。<br>領漲：南韓綜合 (KOSPI) +1.28%。<br>領跌：恆生指數 (HSI) -0.88%。</div>
+            <div class="commentary">股市偏弱（7 跌 / 5 漲）。<br>領漲：南韓綜合 (KOSPI) +0.94%。<br>領跌：恆生指數 (HSI) -0.88%。</div>
             
-            <div class="card-ts">🕐 更新時間：2026/09/16 12:24</div>
+            <div class="card-ts">🕐 更新時間：2026/09/16 12:53</div>
         </div>
 
         <!-- 市場情緒：VIX gauge + Put/Call Ratio sparkline -->
@@ -6279,7 +6300,7 @@
             
             <div class="commentary">VIX 17.2，處於正常區間（長期均值 19-20），市場波動溫和。<br>VIX 期限結構 0.888（VIX 17.2 ÷ VIX3M 19.36）— <b>正價差</b>，近月波動低於遠月，屬常態結構，無立即壓力訊號。<br>台指選擇權未平倉 P/C 0.859（2026/09/15）— <b>中性</b>，台灣口徑：比值越高（賣權未平倉越多、多為法人賣 put）越偏多，與美股成交量 P/C 方向相反。</div>
             
-            <div class="card-ts">🕐 更新時間：2026/09/16 12:24</div>
+            <div class="card-ts">🕐 更新時間：2026/09/16 12:53</div>
         </div>
 
         <!-- 台灣市場：量能／寬度／籌碼 -->
@@ -6403,13 +6424,13 @@
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">WTI 原油</span>
-        <span class="kcell-px">$104.71<span class="unit">/桶</span>
-            <span class="chg down">-1.06%</span>
+        <span class="kcell-px">$104.60<span class="unit">/桶</span>
+            <span class="chg down">-1.16%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+43.03%</b></span>
+        <span>近 3 個月 <b class="sp-up">+42.88%</b></span>
         <span>區間 67.04–106.75</span>
     </div>
     
@@ -6629,7 +6650,7 @@
             <rect x="294.9" y="20.2" width="3.2" height="14.1" fill="#ef4444"/>
             
             <line x1="301.5" x2="301.5" y1="20.9" y2="26.1" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="21.5" width="3.2" height="2.8" fill="#22c55e"/>
+            <rect x="299.9" y="21.5" width="3.2" height="3.2" fill="#22c55e"/>
             
             
             
@@ -6639,10 +6660,10 @@
             
             <polyline points="6.5,138.4 11.5,138.2 16.5,138.1 21.5,137.9 26.5,137.8 31.5,137.7 36.5,137.6 41.5,137.5 46.5,137.4 51.5,137.3 56.5,137.1 61.5,136.9 66.5,136.8 71.5,136.5 76.5,136.2 81.5,135.9 86.5,135.7 91.5,135.4 96.5,135.0 101.5,134.5 106.5,134.1 111.5,133.5 116.5,133.0 121.5,132.6 126.5,132.3 131.5,131.9 136.5,131.4 141.5,130.9 146.5,130.5 151.5,130.2 156.5,129.9 161.5,129.5 166.5,129.1 171.5,128.7 176.5,128.2 181.5,127.8 186.5,127.5 191.5,127.1 196.5,126.6 201.5,126.2 206.5,125.7 211.5,125.2 216.5,124.7 221.5,124.3 226.5,123.9 231.5,123.5 236.5,123.0 241.5,122.6 246.5,122.1 251.5,121.5 256.5,121.0 261.5,120.4 266.5,119.8 271.5,119.2 276.5,118.5 281.5,117.7 286.5,117.0 291.5,116.2 296.5,115.3 301.5,114.4" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="24.3" y2="24.3" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="24.7" y2="24.7" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="16.8" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="28.1">104.71</text>
+        <rect x="305" y="17.2" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="28.5">104.60</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/23" data-o="74.14" data-h="74.45" data-l="72.48" data-c="73.21" data-up="0"></rect>
@@ -6822,31 +6843,31 @@
               data-d="09/15" data-o="102.01" data-h="106.75" data-l="101.21" data-c="105.83" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="105.48" data-h="105.63" data-l="104.23" data-c="104.71" data-up="0"></rect>
+              data-d="09/16" data-o="105.48" data-h="105.63" data-l="104.23" data-c="104.60" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 91.53</span><span class="chg up">+14.4%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 82.78</span><span class="chg up">+26.5%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 80.27</span><span class="chg up">+30.4%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 91.52</span><span class="chg up">+14.3%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 82.78</span><span class="chg up">+26.4%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 80.27</span><span class="chg up">+30.3%</span></span>
     
 </div>
 
 
-    <div class="knote">WTI 下跌 -1.06% 至 $104.71，需求面偏弱；油價處於 $105 高位，推升運輸與製造成本，通膨壓力不利 Fed 轉向寬鬆；近 3 個月 +43.03%，站上月線、季線、年線，均線多頭排列，處於 3 個月區間高檔。</div>
+    <div class="knote">WTI 下跌 -1.16% 至 $104.60，需求面偏弱；油價處於 $105 高位，推升運輸與製造成本，通膨壓力不利 Fed 轉向寬鬆；近 3 個月 +42.88%，站上月線、季線、年線，均線多頭排列，處於 3 個月區間高檔。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">布蘭特原油</span>
-        <span class="kcell-px">$107.97<span class="unit">/桶</span>
-            <span class="chg down">-0.72%</span>
+        <span class="kcell-px">$107.92<span class="unit">/桶</span>
+            <span class="chg down">-0.76%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+40.08%</b></span>
+        <span>近 3 個月 <b class="sp-up">+40.01%</b></span>
         <span>區間 70.14–110.19</span>
     </div>
     
@@ -7069,7 +7090,7 @@
             <rect x="294.9" y="22.1" width="3.2" height="8.9" fill="#ef4444"/>
             
             <line x1="301.5" x2="301.5" y1="22.6" y2="26.6" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="22.8" width="3.2" height="2.1" fill="#22c55e"/>
+            <rect x="299.9" y="22.8" width="3.2" height="2.3" fill="#22c55e"/>
             
             
             
@@ -7079,10 +7100,10 @@
             
             <polyline points="6.5,132.6 11.5,132.5 16.5,132.3 21.5,132.2 26.5,132.1 31.5,132.0 36.5,131.9 41.5,131.8 46.5,131.8 51.5,131.7 56.5,131.5 61.5,131.3 66.5,131.1 71.5,130.8 76.5,130.5 81.5,130.3 86.5,130.0 91.5,129.6 96.5,129.2 101.5,128.8 106.5,128.2 111.5,127.6 116.5,127.0 121.5,126.6 126.5,126.2 131.5,125.8 136.5,125.3 141.5,124.8 146.5,124.4 151.5,124.1 156.5,123.8 161.5,123.4 166.5,123.0 171.5,122.5 176.5,122.0 181.5,121.6 186.5,121.2 191.5,120.8 196.5,120.3 201.5,119.8 206.5,119.3 211.5,118.8 216.5,118.3 221.5,117.7 226.5,117.3 231.5,116.8 236.5,116.4 241.5,115.9 246.5,115.4 251.5,114.9 256.5,114.3 261.5,113.7 266.5,113.1 271.5,112.5 276.5,111.8 281.5,111.0 286.5,110.2 291.5,109.5 296.5,108.6 301.5,107.8" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="24.9" y2="24.9" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="25.1" y2="25.1" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="17.4" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="28.7">107.97</text>
+        <rect x="305" y="17.6" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="28.900000000000002">107.92</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/23" data-o="78.06" data-h="78.34" data-l="76.44" data-c="77.08" data-up="0"></rect>
@@ -7262,31 +7283,31 @@
               data-d="09/15" data-o="106.31" data-h="109.45" data-l="105.11" data-c="108.75" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="108.55" data-h="108.59" data-l="107.51" data-c="107.97" data-up="0"></rect>
+              data-d="09/16" data-o="108.55" data-h="108.59" data-l="107.51" data-c="107.92" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 96.69</span><span class="chg up">+11.7%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 87.81</span><span class="chg up">+23.0%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 85.30</span><span class="chg up">+26.6%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 96.68</span><span class="chg up">+11.6%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 87.81</span><span class="chg up">+22.9%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 85.30</span><span class="chg up">+26.5%</span></span>
     
 </div>
 
 
-    <div class="knote">Brent-WTI 價差 $3.3，處常態區間；近 3 個月 +40.08%，站上月線、季線、年線，均線多頭排列，處於 3 個月區間高檔。</div>
+    <div class="knote">Brent-WTI 價差 $3.3，處常態區間；近 3 個月 +40.01%，站上月線、季線、年線，均線多頭排列，處於 3 個月區間高檔。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">天然氣</span>
-        <span class="kcell-px">$2.922<span class="unit">/MMBtu</span>
-            <span class="chg up">+0.1%</span>
+        <span class="kcell-px">$2.920<span class="unit">/MMBtu</span>
+            <span class="chg up">+0.03%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-down">-7.15%</b></span>
+        <span>近 3 個月 <b class="sp-down">-7.21%</b></span>
         <span>區間 2.616–3.441</span>
     </div>
     
@@ -7510,21 +7531,21 @@
             <line x1="296.5" x2="296.5" y1="103.6" y2="118.1" stroke="#ef4444" stroke-width="1"/>
             <rect x="294.9" y="109.4" width="3.2" height="6.2" fill="#ef4444"/>
             
-            <line x1="301.5" x2="301.5" y1="104.3" y2="109.4" stroke="#22c55e" stroke-width="1"/>
-            <rect x="299.9" y="106.1" width="3.2" height="2.8" fill="#22c55e"/>
+            <line x1="301.5" x2="301.5" y1="104.3" y2="109.6" stroke="#22c55e" stroke-width="1"/>
+            <rect x="299.9" y="106.1" width="3.2" height="3.2" fill="#22c55e"/>
             
             
             
-            <polyline points="6.5,64.2 11.5,61.3 16.5,58.6 21.5,59.1 26.5,60.1 31.5,59.2 36.5,58.7 41.5,58.9 46.5,59.7 51.5,59.4 56.5,58.8 61.5,59.9 66.5,62.1 71.5,63.8 76.5,65.7 81.5,67.7 86.5,71.1 91.5,73.2 96.5,76.5 101.5,79.9 106.5,81.9 111.5,84.6 116.5,88.8 121.5,92.9 126.5,97.5 131.5,102.4 136.5,106.5 141.5,110.5 146.5,114.6 151.5,119.8 156.5,124.4 161.5,127.7 166.5,130.2 171.5,131.1 176.5,132.3 181.5,133.4 186.5,134.5 191.5,136.1 196.5,137.6 201.5,138.4 206.5,139.4 211.5,141.0 216.5,141.9 221.5,141.8 226.5,140.8 231.5,139.8 236.5,138.4 241.5,137.2 246.5,135.8 251.5,133.8 256.5,131.5 261.5,129.0 266.5,126.3 271.5,125.2 276.5,124.7 281.5,124.4 286.5,123.5 291.5,122.1 296.5,120.0 301.5,118.7" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            <polyline points="6.5,64.2 11.5,61.3 16.5,58.6 21.5,59.1 26.5,60.1 31.5,59.2 36.5,58.7 41.5,58.9 46.5,59.7 51.5,59.4 56.5,58.8 61.5,59.9 66.5,62.1 71.5,63.8 76.5,65.7 81.5,67.7 86.5,71.1 91.5,73.2 96.5,76.5 101.5,79.9 106.5,81.9 111.5,84.6 116.5,88.8 121.5,92.9 126.5,97.5 131.5,102.4 136.5,106.5 141.5,110.5 146.5,114.6 151.5,119.8 156.5,124.4 161.5,127.7 166.5,130.2 171.5,131.1 176.5,132.3 181.5,133.4 186.5,134.5 191.5,136.1 196.5,137.6 201.5,138.4 206.5,139.4 211.5,141.0 216.5,141.9 221.5,141.8 226.5,140.8 231.5,139.8 236.5,138.4 241.5,137.2 246.5,135.8 251.5,133.8 256.5,131.5 261.5,129.0 266.5,126.3 271.5,125.2 276.5,124.7 281.5,124.4 286.5,123.5 291.5,122.1 296.5,120.0 301.5,118.8" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,110.3 11.5,110.0 16.5,108.6 21.5,107.6 26.5,106.5 31.5,105.1 36.5,103.9 41.5,102.9 46.5,101.4 51.5,99.6 56.5,98.0 61.5,96.8 66.5,95.8 71.5,95.0 76.5,94.2 81.5,93.5 86.5,93.0 91.5,92.3 96.5,91.9 101.5,91.2 106.5,90.0 111.5,88.9 116.5,88.0 121.5,87.6 126.5,87.9 131.5,88.1 136.5,88.4 141.5,88.5 146.5,88.4 151.5,88.7 156.5,88.9 161.5,89.7 166.5,90.2 171.5,90.4 176.5,90.8 181.5,91.2 186.5,92.1 191.5,93.2 196.5,94.2 201.5,94.9 206.5,95.2 211.5,95.6 216.5,96.4 221.5,97.9 226.5,99.5 231.5,100.4 236.5,101.2 241.5,102.2 246.5,103.4 251.5,104.3 256.5,104.9 261.5,105.6 266.5,106.2 271.5,106.7 276.5,107.6 281.5,108.5 286.5,109.7 291.5,110.4 296.5,111.4 301.5,112.4" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,14.8 11.5,14.7 16.5,14.5 21.5,14.4 26.5,14.2 31.5,13.9 36.5,13.7 41.5,13.5 46.5,13.4 51.5,13.3 56.5,13.0 61.5,12.9 66.5,12.8 71.5,12.8 76.5,12.7 81.5,12.7 86.5,12.7 91.5,13.0 96.5,13.4 101.5,13.9 106.5,14.4 111.5,14.8 116.5,15.2 121.5,15.8 126.5,16.4 131.5,16.9 136.5,17.2 141.5,17.6 146.5,17.8 151.5,18.1 156.5,18.3 161.5,18.6 166.5,19.3 171.5,19.9 176.5,20.5 181.5,21.0 186.5,21.5 191.5,22.1 196.5,22.7 201.5,23.2 206.5,24.2 211.5,25.5 216.5,26.8 221.5,28.2 226.5,29.5 231.5,30.8 236.5,32.1 241.5,33.3 246.5,34.8 251.5,36.2 256.5,37.7 261.5,39.2 266.5,40.4 271.5,41.7 276.5,43.3 281.5,44.7 286.5,46.3 291.5,47.7 296.5,49.1 301.5,50.5" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="108.9" y2="108.9" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="109.3" y2="109.3" stroke="#22c55e" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="101.4" width="55" height="15" rx="2" fill="#22c55e"/>
-        <text class="kc-lastlab" x="309" y="112.7">2.922</text>
+        <rect x="305" y="101.8" width="55" height="15" rx="2" fill="#22c55e"/>
+        <text class="kc-lastlab" x="309" y="113.1">2.920</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/23" data-o="3.237" data-h="3.277" data-l="3.142" data-c="3.147" data-up="0"></rect>
@@ -7704,31 +7725,31 @@
               data-d="09/15" data-o="2.884" data-h="2.952" data-l="2.870" data-c="2.919" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="2.938" data-h="2.948" data-l="2.919" data-c="2.922" data-up="0"></rect>
+              data-d="09/16" data-o="2.938" data-h="2.948" data-l="2.918" data-c="2.920" data-up="0"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 2.867</span><span class="chg up">+1.9%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 2.903</span><span class="chg up">+0.7%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 3.251</span><span class="chg down">-10.1%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 2.867</span><span class="chg up">+1.9%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 2.903</span><span class="chg up">+0.6%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 3.251</span><span class="chg down">-10.2%</span></span>
     
 </div>
 
 
-    <div class="knote">今日 +0.10%，變動不大；近 3 個月 -7.15%，站上月線、季線，但跌破年線，處於 3 個月區間中段。</div>
+    <div class="knote">今日 +0.03%，變動不大；近 3 個月 -7.21%，站上月線、季線，但跌破年線，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">黃金</span>
-        <span class="kcell-px">$4,367<span class="unit">/盎司</span>
-            <span class="chg up">+0.78%</span>
+        <span class="kcell-px">$4,364<span class="unit">/盎司</span>
+            <span class="chg up">+0.73%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+5.23%</b></span>
+        <span>近 3 個月 <b class="sp-up">+5.18%</b></span>
         <span>區間 3,955–4,755</span>
     </div>
     
@@ -7951,20 +7972,20 @@
             <rect x="294.9" y="92.7" width="3.2" height="1.4" fill="#22c55e"/>
             
             <line x1="301.5" x2="301.5" y1="85.1" y2="97.3" stroke="#ef4444" stroke-width="1"/>
-            <rect x="299.9" y="87.9" width="3.2" height="6.1" fill="#ef4444"/>
+            <rect x="299.9" y="88.3" width="3.2" height="5.7" fill="#ef4444"/>
             
             
             
-            <polyline points="6.5,88.9 11.5,93.4 16.5,97.1 21.5,100.7 26.5,105.8 31.5,110.1 36.5,114.1 41.5,117.2 46.5,120.3 51.5,122.2 56.5,124.8 61.5,126.1 66.5,126.3 71.5,127.3 76.5,128.9 81.5,131.6 86.5,134.9 91.5,138.2 96.5,140.3 101.5,141.5 106.5,141.5 111.5,141.1 116.5,140.9 121.5,141.1 126.5,141.1 131.5,141.1 136.5,140.9 141.5,141.1 146.5,141.8 151.5,141.8 156.5,139.8 161.5,138.3 166.5,135.7 171.5,131.9 176.5,128.5 181.5,124.7 186.5,120.8 191.5,117.0 196.5,112.8 201.5,109.6 206.5,106.0 211.5,101.3 216.5,95.7 221.5,90.0 226.5,84.0 231.5,78.3 236.5,73.2 241.5,69.3 246.5,65.7 251.5,63.5 256.5,62.5 261.5,60.3 266.5,59.6 271.5,59.4 276.5,59.2 281.5,59.8 286.5,59.9 291.5,60.7 296.5,62.0 301.5,62.4" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            <polyline points="6.5,88.9 11.5,93.4 16.5,97.1 21.5,100.7 26.5,105.8 31.5,110.1 36.5,114.1 41.5,117.2 46.5,120.3 51.5,122.2 56.5,124.8 61.5,126.1 66.5,126.3 71.5,127.3 76.5,128.9 81.5,131.6 86.5,134.9 91.5,138.2 96.5,140.3 101.5,141.5 106.5,141.5 111.5,141.1 116.5,140.9 121.5,141.1 126.5,141.1 131.5,141.1 136.5,140.9 141.5,141.1 146.5,141.8 151.5,141.8 156.5,139.8 161.5,138.3 166.5,135.7 171.5,131.9 176.5,128.5 181.5,124.7 186.5,120.8 191.5,117.0 196.5,112.8 201.5,109.6 206.5,106.0 211.5,101.3 216.5,95.7 221.5,90.0 226.5,84.0 231.5,78.3 236.5,73.2 241.5,69.3 246.5,65.7 251.5,63.5 256.5,62.5 261.5,60.3 266.5,59.6 271.5,59.4 276.5,59.2 281.5,59.8 286.5,59.9 291.5,60.7 296.5,62.0 301.5,62.5" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,49.9 11.5,51.4 16.5,52.8 21.5,54.5 26.5,56.9 31.5,58.8 36.5,60.7 41.5,62.4 46.5,64.2 51.5,66.3 56.5,68.4 61.5,70.3 66.5,72.6 71.5,75.1 76.5,77.3 81.5,79.9 86.5,82.4 91.5,84.5 96.5,86.8 101.5,88.8 106.5,90.6 111.5,92.5 116.5,94.2 121.5,95.7 126.5,97.5 131.5,99.3 136.5,100.6 141.5,102.0 146.5,103.9 151.5,105.6 156.5,106.9 161.5,108.2 166.5,109.1 171.5,110.0 176.5,110.7 181.5,111.0 186.5,111.4 191.5,111.6 196.5,111.8 201.5,112.2 206.5,112.1 211.5,111.9 216.5,111.2 221.5,110.6 226.5,110.3 231.5,109.8 236.5,109.4 241.5,109.2 246.5,109.3 251.5,109.2 256.5,109.0 261.5,108.3 266.5,107.2 271.5,106.2 276.5,105.5 281.5,105.4 286.5,105.2 291.5,105.3 296.5,105.0 301.5,104.5" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="6.5,70.6 11.5,70.3 16.5,69.9 21.5,69.5 26.5,69.2 31.5,68.9 36.5,68.5 41.5,68.2 46.5,67.7 51.5,67.3 56.5,67.0 61.5,66.6 66.5,66.3 71.5,66.1 76.5,65.8 81.5,65.6 86.5,65.4 91.5,65.2 96.5,65.1 101.5,64.9 106.5,64.7 111.5,64.6 116.5,64.5 121.5,64.4 126.5,64.4 131.5,64.4 136.5,64.3 141.5,64.3 146.5,64.4 151.5,64.4 156.5,64.4 161.5,64.3 166.5,64.3 171.5,64.0 176.5,63.7 181.5,63.4 186.5,63.1 191.5,62.7 196.5,62.3 201.5,61.9 206.5,61.4 211.5,60.9 216.5,60.3 221.5,59.6 226.5,59.0 231.5,58.4 236.5,57.8 241.5,57.4 246.5,57.1 251.5,56.9 256.5,56.7 261.5,56.3 266.5,55.9 271.5,55.6 276.5,55.2 281.5,54.9 286.5,54.6 291.5,54.4 296.5,54.2 301.5,54.0" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="87.9" y2="87.9" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="88.3" y2="88.3" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="80.4" width="55" height="15" rx="2" fill="#ef4444"/>
-        <text class="kc-lastlab" x="309" y="91.7">4,367</text>
+        <rect x="305" y="80.8" width="55" height="15" rx="2" fill="#ef4444"/>
+        <text class="kc-lastlab" x="309" y="92.1">4,364</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/23" data-o="4,211" data-h="4,216" data-l="4,108" data-c="4,149" data-up="0"></rect>
@@ -8144,7 +8165,7 @@
               data-d="09/15" data-o="4,340" data-h="4,358" data-l="4,302" data-c="4,333" data-up="0"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="4,334" data-h="4,382" data-l="4,315" data-c="4,367" data-up="1"></rect>
+              data-d="09/16" data-o="4,334" data-h="4,382" data-l="4,315" data-c="4,364" data-up="1"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
@@ -8156,19 +8177,19 @@
 </div>
 
 
-    <div class="knote">黃金上漲 +0.78% 至 $4,367，避險買盤持續；金價 $4,367 處於歷史高位，反映去美元化趨勢與全球央行儲備多元化；近 3 個月 +5.23%，站上季線，但跌破月線、年線，處於 3 個月區間中段。</div>
+    <div class="knote">黃金上漲 +0.73% 至 $4,364，避險買盤持續；金價 $4,364 處於歷史高位，反映去美元化趨勢與全球央行儲備多元化；近 3 個月 +5.18%，站上季線，但跌破月線、年線，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">白銀</span>
-        <span class="kcell-px">$65.16<span class="unit">/盎司</span>
-            <span class="chg up">+2.03%</span>
+        <span class="kcell-px">$65.08<span class="unit">/盎司</span>
+            <span class="chg up">+1.92%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+5.05%</b></span>
+        <span>近 3 個月 <b class="sp-up">+4.94%</b></span>
         <span>區間 55.01–71.16</span>
     </div>
     
@@ -8391,7 +8412,7 @@
             <rect x="294.9" y="101.6" width="3.2" height="1.6" fill="#ef4444"/>
             
             <line x1="301.5" x2="301.5" y1="85.4" y2="96.3" stroke="#ef4444" stroke-width="1"/>
-            <rect x="299.9" y="87.2" width="3.2" height="7.3" fill="#ef4444"/>
+            <rect x="299.9" y="87.8" width="3.2" height="6.7" fill="#ef4444"/>
             
             
             
@@ -8401,10 +8422,10 @@
             
             <polyline points="6.5,65.9 11.5,65.3 16.5,64.6 21.5,63.9 26.5,63.3 31.5,62.6 36.5,62.0 41.5,61.3 46.5,60.6 51.5,59.8 56.5,59.2 61.5,58.6 66.5,58.0 71.5,57.4 76.5,56.9 81.5,56.4 86.5,56.1 91.5,55.7 96.5,55.3 101.5,54.9 106.5,54.4 111.5,54.0 116.5,53.6 121.5,53.2 126.5,52.8 131.5,52.4 136.5,52.0 141.5,51.7 146.5,51.4 151.5,51.1 156.5,50.7 161.5,50.3 166.5,49.8 171.5,49.2 176.5,48.5 181.5,47.9 186.5,47.3 191.5,46.6 196.5,45.9 201.5,45.3 206.5,44.6 211.5,43.9 216.5,43.1 221.5,42.3 226.5,41.5 231.5,40.7 236.5,39.9 241.5,39.3 246.5,38.7 251.5,38.3 256.5,37.8 261.5,37.2 266.5,36.7 271.5,36.1 276.5,35.4 281.5,34.9 286.5,34.3 291.5,33.8 296.5,33.4 301.5,32.9" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="87.2" y2="87.2" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="87.8" y2="87.8" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="79.7" width="55" height="15" rx="2" fill="#ef4444"/>
-        <text class="kc-lastlab" x="309" y="91.0">65.15</text>
+        <rect x="305" y="80.3" width="55" height="15" rx="2" fill="#ef4444"/>
+        <text class="kc-lastlab" x="309" y="91.6">65.08</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/23" data-o="61.95" data-h="62.02" data-l="61.95" data-c="62.02" data-up="1"></rect>
@@ -8584,31 +8605,31 @@
               data-d="09/15" data-o="63.03" data-h="63.64" data-l="63.03" data-c="63.24" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="64.18" data-h="65.39" data-l="63.94" data-c="65.15" data-up="1"></rect>
+              data-d="09/16" data-o="64.18" data-h="65.39" data-l="63.94" data-c="65.08" data-up="1"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 66.42</span><span class="chg down">-1.9%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 62.22</span><span class="chg up">+4.7%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 72.40</span><span class="chg down">-10.0%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 66.42</span><span class="chg down">-2.0%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 62.22</span><span class="chg up">+4.6%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 72.40</span><span class="chg down">-10.1%</span></span>
     
 </div>
 
 
-    <div class="knote">白銀上漲 2.03%，兼具工業（光伏、電子）與貴金屬屬性，跟隨金價走強；近 3 個月 +5.05%，站上季線，但跌破月線、年線，處於 3 個月區間中段。</div>
+    <div class="knote">白銀上漲 1.92%，兼具工業（光伏、電子）與貴金屬屬性，跟隨金價走強；近 3 個月 +4.94%，站上季線，但跌破月線、年線，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">銅</span>
-        <span class="kcell-px">$6.484<span class="unit">/磅</span>
-            <span class="chg up">+0.63%</span>
+        <span class="kcell-px">$6.480<span class="unit">/磅</span>
+            <span class="chg up">+0.57%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+5.59%</b></span>
+        <span>近 3 個月 <b class="sp-up">+5.52%</b></span>
         <span>區間 5.929–6.806</span>
     </div>
     
@@ -8833,7 +8854,7 @@
             <rect x="294.9" y="89.7" width="3.2" height="8.2" fill="#ef4444"/>
             
             <line x1="301.5" x2="301.5" y1="69.3" y2="77.8" stroke="#ef4444" stroke-width="1"/>
-            <rect x="299.9" y="70.5" width="3.2" height="4.1" fill="#ef4444"/>
+            <rect x="299.9" y="71.1" width="3.2" height="3.5" fill="#ef4444"/>
             
             
             
@@ -8843,10 +8864,10 @@
             
             <polyline points="6.5,220.1 11.5,218.8 16.5,217.5 21.5,216.2 26.5,214.9 31.5,213.5 36.5,212.2 41.5,211.0 46.5,209.7 51.5,208.4 56.5,207.1 61.5,205.8 66.5,204.4 71.5,203.0 76.5,201.7 81.5,200.4 86.5,199.0 91.5,197.9 96.5,196.6 101.5,195.2 106.5,193.9 111.5,192.9 116.5,191.8 121.5,190.7 126.5,189.6 131.5,188.6 136.5,187.3 141.5,186.2 146.5,184.9 151.5,183.5 156.5,182.1 161.5,180.6 166.5,179.3 171.5,177.9 176.5,176.5 181.5,175.3 186.5,174.0 191.5,172.8 196.5,171.6 201.5,170.5 206.5,169.4 211.5,168.2 216.5,166.9 221.5,165.5 226.5,164.1 231.5,162.7 236.5,161.3 241.5,160.1 246.5,158.8 251.5,157.6 256.5,156.4 261.5,155.1 266.5,153.8 271.5,152.3 276.5,150.8 281.5,149.6 286.5,148.4 291.5,147.2 296.5,146.1 301.5,144.9" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="70.5" y2="70.5" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="71.1" y2="71.1" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="63.0" width="55" height="15" rx="2" fill="#ef4444"/>
-        <text class="kc-lastlab" x="309" y="74.3">6.484</text>
+        <rect x="305" y="63.599999999999994" width="55" height="15" rx="2" fill="#ef4444"/>
+        <text class="kc-lastlab" x="309" y="74.89999999999999">6.480</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="5.0" height="164" fill="transparent"
               data-d="06/23" data-o="6.178" data-h="6.179" data-l="6.123" data-c="6.141" data-up="0"></rect>
@@ -9026,19 +9047,19 @@
               data-d="09/15" data-o="6.319" data-h="6.387" data-l="6.319" data-c="6.369" data-up="1"></rect>
         
         <rect class="kc-hit" x="299.0" y="8" width="5.0" height="164" fill="transparent"
-              data-d="09/16" data-o="6.459" data-h="6.491" data-l="6.440" data-c="6.484" data-up="1"></rect>
+              data-d="09/16" data-o="6.459" data-h="6.491" data-l="6.440" data-c="6.480" data-up="1"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 6.551</span><span class="chg down">-1.0%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 6.416</span><span class="chg up">+1.1%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 6.038</span><span class="chg up">+7.4%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 6.551</span><span class="chg down">-1.1%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 6.416</span><span class="chg up">+1.0%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 6.038</span><span class="chg up">+7.3%</span></span>
     
 </div>
 
 
-    <div class="knote">銅價小漲 0.63%，反映工業活動溫和波動；近 3 個月 +5.59%，站上季線、年線，但跌破月線，處於 3 個月區間中段。</div>
+    <div class="knote">銅價小漲 0.57%，反映工業活動溫和波動；近 3 個月 +5.52%，站上季線、年線，但跌破月線，處於 3 個月區間中段。</div>
 </div>
             
         </div>
@@ -9048,13 +9069,13 @@
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">BTC</span>
-        <span class="kcell-px">$75,984
-            <span class="chg down">-2.12%</span>
+        <span class="kcell-px">$75,831
+            <span class="chg down">-2.25%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+20.71%</b></span>
+        <span>近 3 個月 <b class="sp-up">+20.46%</b></span>
         <span>區間 57,748–82,262</span>
     </div>
     
@@ -9367,20 +9388,20 @@
             <rect x="297.9" y="41.3" width="2.1" height="7.9" fill="#ef4444"/>
             
             <line x1="302.3" x2="302.3" y1="54.2" y2="57.7" stroke="#ef4444" stroke-width="1"/>
-            <rect x="301.2" y="54.6" width="2.1" height="2.1" fill="#ef4444"/>
+            <rect x="301.2" y="55.6" width="2.1" height="1.1" fill="#ef4444"/>
             
             
             
-            <polyline points="5.7,119.6 9.0,122.7 12.3,125.5 15.7,127.9 19.0,128.7 22.3,129.1 25.7,130.0 29.0,130.3 32.3,130.6 35.7,131.6 39.0,132.6 42.3,133.1 45.7,133.9 49.0,135.0 52.3,135.6 55.7,136.2 59.0,137.0 62.3,137.8 65.7,138.3 69.0,138.6 72.3,138.8 75.7,138.9 79.0,138.9 82.3,138.8 85.7,138.8 89.0,138.9 92.3,137.8 95.7,136.3 99.0,135.1 102.3,134.0 105.7,132.4 109.0,131.0 112.3,129.0 115.7,127.1 119.0,125.7 122.3,125.0 125.7,124.7 129.0,124.4 132.3,124.0 135.7,123.9 139.0,123.4 142.3,123.2 145.7,123.0 149.0,123.3 152.3,123.6 155.7,123.3 159.0,123.7 162.3,123.9 165.7,123.7 169.0,123.5 172.3,123.5 175.7,123.5 179.0,123.6 182.3,124.3 185.7,125.1 189.0,125.6 192.3,125.8 195.7,126.2 199.0,126.9 202.3,127.2 205.7,127.0 209.0,126.7 212.3,125.4 215.7,122.3 219.0,117.7 222.3,113.6 225.7,109.4 229.0,104.9 232.3,100.7 235.7,96.3 239.0,91.7 242.3,87.9 245.7,83.9 249.0,79.8 252.3,75.3 255.7,71.1 259.0,66.9 262.3,61.5 265.7,56.5 269.0,51.4 272.3,46.7 275.7,42.4 279.0,39.6 282.3,38.1 285.7,38.6 289.0,38.6 292.3,38.7 295.7,39.4 299.0,39.5 302.3,40.4" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            <polyline points="5.7,119.6 9.0,122.7 12.3,125.5 15.7,127.9 19.0,128.7 22.3,129.1 25.7,130.0 29.0,130.3 32.3,130.6 35.7,131.6 39.0,132.6 42.3,133.1 45.7,133.9 49.0,135.0 52.3,135.6 55.7,136.2 59.0,137.0 62.3,137.8 65.7,138.3 69.0,138.6 72.3,138.8 75.7,138.9 79.0,138.9 82.3,138.8 85.7,138.8 89.0,138.9 92.3,137.8 95.7,136.3 99.0,135.1 102.3,134.0 105.7,132.4 109.0,131.0 112.3,129.0 115.7,127.1 119.0,125.7 122.3,125.0 125.7,124.7 129.0,124.4 132.3,124.0 135.7,123.9 139.0,123.4 142.3,123.2 145.7,123.0 149.0,123.3 152.3,123.6 155.7,123.3 159.0,123.7 162.3,123.9 165.7,123.7 169.0,123.5 172.3,123.5 175.7,123.5 179.0,123.6 182.3,124.3 185.7,125.1 189.0,125.6 192.3,125.8 195.7,126.2 199.0,126.9 202.3,127.2 205.7,127.0 209.0,126.7 212.3,125.4 215.7,122.3 219.0,117.7 222.3,113.6 225.7,109.4 229.0,104.9 232.3,100.7 235.7,96.3 239.0,91.7 242.3,87.9 245.7,83.9 249.0,79.8 252.3,75.3 255.7,71.1 259.0,66.9 262.3,61.5 265.7,56.5 269.0,51.4 272.3,46.7 275.7,42.4 279.0,39.6 282.3,38.1 285.7,38.6 289.0,38.6 292.3,38.7 295.7,39.4 299.0,39.5 302.3,40.5" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="5.7,68.2 9.0,69.5 12.3,70.7 15.7,72.2 19.0,73.6 22.3,75.1 25.7,76.7 29.0,78.6 32.3,80.3 35.7,82.0 39.0,83.6 42.3,85.2 45.7,87.1 49.0,89.0 52.3,90.7 55.7,92.4 59.0,94.2 62.3,96.0 65.7,97.6 69.0,99.2 72.3,101.1 75.7,103.0 79.0,104.7 82.3,106.4 85.7,107.9 89.0,109.8 92.3,111.2 95.7,112.5 99.0,113.9 102.3,115.2 105.7,116.4 109.0,117.6 112.3,118.9 115.7,119.8 119.0,120.8 122.3,122.0 125.7,123.3 129.0,124.5 132.3,125.4 135.7,126.3 139.0,127.3 142.3,128.3 145.7,129.1 149.0,130.0 152.3,130.4 155.7,130.4 159.0,130.5 162.3,130.2 165.7,129.8 169.0,129.7 172.3,129.5 175.7,129.2 179.0,128.8 182.3,128.8 185.7,128.8 189.0,128.9 192.3,129.1 195.7,129.5 199.0,129.7 202.3,129.9 205.7,129.7 209.0,129.6 212.3,129.1 215.7,128.1 219.0,126.7 222.3,125.3 225.7,123.6 229.0,121.7 232.3,119.8 235.7,117.9 239.0,115.9 242.3,114.1 245.7,112.2 249.0,110.4 252.3,108.7 255.7,107.2 259.0,105.8 262.3,104.0 265.7,102.5 269.0,100.8 272.3,99.0 275.7,97.4 279.0,96.0 282.3,94.6 285.7,93.3 289.0,91.8 292.3,90.6 295.7,89.4 299.0,88.0 302.3,86.8" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="5.7,47.5 9.0,48.2 12.3,49.0 15.7,49.9 19.0,50.7 22.3,51.5 25.7,52.4 29.0,53.3 32.3,54.2 35.7,55.2 39.0,56.1 42.3,57.1 45.7,58.0 49.0,59.0 52.3,59.7 55.7,60.5 59.0,61.2 62.3,61.9 65.7,62.5 69.0,63.3 72.3,64.0 75.7,64.8 79.0,65.5 82.3,66.2 85.7,66.9 89.0,67.7 92.3,68.4 95.7,69.0 99.0,69.8 102.3,70.5 105.7,71.2 109.0,71.8 112.3,72.5 115.7,73.2 119.0,74.0 122.3,74.8 125.7,75.7 129.0,76.5 132.3,77.3 135.7,78.1 139.0,78.9 142.3,79.7 145.7,80.5 149.0,81.3 152.3,82.3 155.7,83.3 159.0,84.3 162.3,85.2 165.7,86.1 169.0,87.0 172.3,87.8 175.7,88.5 179.0,89.3 182.3,90.0 185.7,90.8 189.0,91.6 192.3,92.3 195.7,93.0 199.0,93.8 202.3,94.6 205.7,95.2 209.0,95.8 212.3,96.0 215.7,96.2 219.0,96.2 222.3,96.1 225.7,96.0 229.0,95.5 232.3,95.3 235.7,95.0 239.0,94.7 242.3,94.4 245.7,94.1 249.0,93.8 252.3,93.5 255.7,93.2 259.0,93.0 262.3,92.6 265.7,92.3 269.0,91.9 272.3,91.5 275.7,91.1 279.0,90.8 282.3,90.5 285.7,90.3 289.0,89.9 292.3,89.5 295.7,89.2 299.0,88.9 302.3,88.6" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="54.6" y2="54.6" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="55.6" y2="55.6" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="47.1" width="55" height="15" rx="2" fill="#ef4444"/>
-        <text class="kc-lastlab" x="309" y="58.4">75,924</text>
+        <rect x="305" y="48.1" width="55" height="15" rx="2" fill="#ef4444"/>
+        <text class="kc-lastlab" x="309" y="59.4">75,764</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="3.3" height="164" fill="transparent"
               data-d="06/18" data-o="64,420" data-h="64,737" data-l="62,201" data-c="62,896" data-up="0"></rect>
@@ -9650,31 +9671,31 @@
               data-d="09/14" data-o="76,830" data-h="79,569" data-l="76,367" data-c="78,163" data-up="1"></rect>
         
         <rect class="kc-hit" x="300.7" y="8" width="3.3" height="164" fill="transparent"
-              data-d="09/16" data-o="75,587" data-h="76,003" data-l="75,418" data-c="75,924" data-up="1"></rect>
+              data-d="09/16" data-o="75,587" data-h="76,003" data-l="75,418" data-c="75,764" data-up="1"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 78,306</span><span class="chg down">-3.0%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 70,547</span><span class="chg up">+7.6%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 70,239</span><span class="chg up">+8.1%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 78,298</span><span class="chg down">-3.2%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 70,545</span><span class="chg up">+7.4%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 70,238</span><span class="chg up">+7.9%</span></span>
     
 </div>
 
 
-    <div class="knote">BTC 下跌 -2.12%，加密市場風險偏好下降；近 3 個月 +20.71%，站上季線、年線，但跌破月線，處於 3 個月區間中段。</div>
+    <div class="knote">BTC 下跌 -2.25%，加密市場風險偏好下降；近 3 個月 +20.46%，站上季線、年線，但跌破月線，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">ETH</span>
-        <span class="kcell-px">$2,408.20
-            <span class="chg down">-3.54%</span>
+        <span class="kcell-px">$2,403.74
+            <span class="chg down">-3.55%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+40.75%</b></span>
+        <span>近 3 個月 <b class="sp-up">+40.49%</b></span>
         <span>區間 1,510.51–2,663.05</span>
     </div>
     
@@ -9989,20 +10010,20 @@
             <rect x="297.9" y="35.7" width="2.1" height="4.8" fill="#ef4444"/>
             
             <line x1="302.3" x2="302.3" y1="49.1" y2="51.5" stroke="#ef4444" stroke-width="1"/>
-            <rect x="301.2" y="49.4" width="2.1" height="1.1" fill="#ef4444"/>
+            <rect x="301.2" y="50.0" width="2.1" height="0.8" fill="#ef4444"/>
             
             
             
-            <polyline points="5.7,132.6 9.0,134.5 12.3,136.2 15.7,138.1 19.0,138.9 22.3,139.9 25.7,140.8 29.0,140.9 32.3,140.9 35.7,141.6 39.0,142.4 42.3,142.5 45.7,142.9 49.0,143.3 52.3,143.0 55.7,142.6 59.0,142.2 62.3,142.3 65.7,142.2 69.0,142.1 72.3,141.9 75.7,141.7 79.0,141.3 82.3,140.8 85.7,140.3 89.0,139.6 92.3,137.9 95.7,135.7 99.0,133.8 102.3,132.1 105.7,130.3 109.0,128.6 112.3,126.5 115.7,124.5 119.0,123.0 122.3,122.2 125.7,121.7 129.0,121.1 132.3,120.1 135.7,119.4 139.0,118.2 142.3,117.2 145.7,116.4 149.0,116.0 152.3,115.7 155.7,115.0 159.0,115.2 162.3,115.5 165.7,115.3 169.0,114.9 172.3,114.5 175.7,114.3 179.0,114.2 182.3,114.6 185.7,114.9 189.0,114.9 192.3,114.8 195.7,114.7 199.0,115.2 202.3,115.3 205.7,115.3 209.0,115.3 212.3,113.2 215.7,110.2 219.0,105.9 222.3,102.5 225.7,98.6 229.0,94.7 232.3,91.3 235.7,87.5 239.0,83.7 242.3,80.4 245.7,76.9 249.0,73.4 252.3,69.7 255.7,66.3 259.0,63.0 262.3,59.0 265.7,55.4 269.0,51.5 272.3,47.7 275.7,44.1 279.0,42.6 282.3,41.7 285.7,42.2 289.0,41.6 292.3,41.2 295.7,41.2 299.0,40.8 302.3,41.4" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+            <polyline points="5.7,132.6 9.0,134.5 12.3,136.2 15.7,138.1 19.0,138.9 22.3,139.9 25.7,140.8 29.0,140.9 32.3,140.9 35.7,141.6 39.0,142.4 42.3,142.5 45.7,142.9 49.0,143.3 52.3,143.0 55.7,142.6 59.0,142.2 62.3,142.3 65.7,142.2 69.0,142.1 72.3,141.9 75.7,141.7 79.0,141.3 82.3,140.8 85.7,140.3 89.0,139.6 92.3,137.9 95.7,135.7 99.0,133.8 102.3,132.1 105.7,130.3 109.0,128.6 112.3,126.5 115.7,124.5 119.0,123.0 122.3,122.2 125.7,121.7 129.0,121.1 132.3,120.1 135.7,119.4 139.0,118.2 142.3,117.2 145.7,116.4 149.0,116.0 152.3,115.7 155.7,115.0 159.0,115.2 162.3,115.5 165.7,115.3 169.0,114.9 172.3,114.5 175.7,114.3 179.0,114.2 182.3,114.6 185.7,114.9 189.0,114.9 192.3,114.8 195.7,114.7 199.0,115.2 202.3,115.3 205.7,115.3 209.0,115.3 212.3,113.2 215.7,110.2 219.0,105.9 222.3,102.5 225.7,98.6 229.0,94.7 232.3,91.3 235.7,87.5 239.0,83.7 242.3,80.4 245.7,76.9 249.0,73.4 252.3,69.7 255.7,66.3 259.0,63.0 262.3,59.0 265.7,55.4 269.0,51.5 272.3,47.7 275.7,44.1 279.0,42.6 282.3,41.7 285.7,42.2 289.0,41.6 292.3,41.2 295.7,41.2 299.0,40.8 302.3,41.5" fill="none" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="5.7,91.6 9.0,92.9 12.3,94.1 15.7,95.5 19.0,96.8 22.3,98.2 25.7,99.7 29.0,101.4 32.3,102.9 35.7,104.4 39.0,105.9 42.3,107.2 45.7,108.8 49.0,110.3 52.3,111.6 55.7,112.8 59.0,114.1 62.3,115.3 65.7,116.3 69.0,117.5 72.3,118.7 75.7,120.0 79.0,121.2 82.3,122.2 85.7,123.2 89.0,124.2 92.3,124.9 95.7,125.5 99.0,126.1 102.3,126.7 105.7,127.2 109.0,127.7 112.3,128.2 115.7,128.5 119.0,128.9 122.3,129.4 125.7,129.9 129.0,130.3 132.3,130.5 135.7,130.7 139.0,130.9 142.3,131.1 145.7,131.3 149.0,131.6 152.3,131.7 155.7,131.5 159.0,131.3 162.3,130.7 165.7,130.0 169.0,129.5 172.3,129.1 175.7,128.5 179.0,127.9 182.3,127.4 185.7,127.0 189.0,126.6 192.3,126.2 195.7,126.0 199.0,125.9 202.3,125.6 205.7,125.2 209.0,124.7 212.3,123.6 215.7,122.3 219.0,120.7 222.3,119.0 225.7,117.3 229.0,115.3 232.3,113.5 235.7,111.5 239.0,109.5 242.3,107.7 245.7,105.9 249.0,104.2 252.3,102.5 255.7,101.1 259.0,99.8 262.3,98.3 265.7,96.9 269.0,95.4 272.3,93.8 275.7,92.2 279.0,90.7 282.3,89.3 285.7,87.9 289.0,86.4 292.3,85.0 295.7,83.8 299.0,82.5 302.3,81.3" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
             <polyline points="5.7,52.4 9.0,53.1 12.3,53.9 15.7,54.8 19.0,55.7 22.3,56.6 25.7,57.5 29.0,58.4 32.3,59.4 35.7,60.5 39.0,61.6 42.3,62.7 45.7,63.6 49.0,64.6 52.3,65.4 55.7,66.2 59.0,67.0 62.3,67.6 65.7,68.3 69.0,69.1 72.3,69.8 75.7,70.6 79.0,71.4 82.3,72.2 85.7,72.9 89.0,73.6 92.3,74.3 95.7,74.9 99.0,75.6 102.3,76.3 105.7,77.0 109.0,77.7 112.3,78.4 115.7,79.1 119.0,79.9 122.3,80.7 125.7,81.6 129.0,82.5 132.3,83.3 135.7,84.0 139.0,84.8 142.3,85.5 145.7,86.3 149.0,87.1 152.3,88.0 155.7,88.9 159.0,89.9 162.3,90.8 165.7,91.7 169.0,92.5 172.3,93.3 175.7,94.0 179.0,94.7 182.3,95.4 185.7,96.0 189.0,96.7 192.3,97.3 195.7,98.0 199.0,98.7 202.3,99.4 205.7,100.0 209.0,100.5 212.3,100.6 215.7,100.6 219.0,100.5 222.3,100.3 225.7,100.1 229.0,99.7 232.3,99.5 235.7,99.2 239.0,98.9 242.3,98.7 245.7,98.4 249.0,98.1 252.3,97.8 255.7,97.6 259.0,97.4 262.3,97.0 265.7,96.8 269.0,96.4 272.3,96.1 275.7,95.7 279.0,95.4 282.3,95.1 285.7,94.8 289.0,94.4 292.3,93.9 295.7,93.7 299.0,93.4 302.3,93.1" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="49.4" y2="49.4" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="50.0" y2="50.0" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="41.9" width="55" height="15" rx="2" fill="#ef4444"/>
-        <text class="kc-lastlab" x="309" y="53.199999999999996">2,406.15</text>
+        <rect x="305" y="42.5" width="55" height="15" rx="2" fill="#ef4444"/>
+        <text class="kc-lastlab" x="309" y="53.8">2,401.70</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="3.3" height="164" fill="transparent"
               data-d="06/18" data-o="1,747.88" data-h="1,760.88" data-l="1,670.10" data-c="1,709.53" data-up="0"></rect>
@@ -10272,31 +10293,31 @@
               data-d="09/14" data-o="2,476.60" data-h="2,612.40" data-l="2,465.43" data-c="2,514.41" data-up="1"></rect>
         
         <rect class="kc-hit" x="300.7" y="8" width="3.3" height="164" fill="transparent"
-              data-d="09/16" data-o="2,397.64" data-h="2,408.58" data-l="2,389.89" data-c="2,406.15" data-up="1"></rect>
+              data-d="09/16" data-o="2,397.64" data-h="2,408.58" data-l="2,389.89" data-c="2,401.70" data-up="1"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 2,469.11</span><span class="chg down">-2.6%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 2,155.53</span><span class="chg up">+11.6%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 2,062.62</span><span class="chg up">+16.7%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 2,468.89</span><span class="chg down">-2.7%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 2,155.45</span><span class="chg up">+11.4%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 2,062.60</span><span class="chg up">+16.4%</span></span>
     
 </div>
 
 
-    <div class="knote">今日下跌 3.54%，波動劇烈；近 3 個月 +40.75%，站上季線、年線，但跌破月線，處於 3 個月區間中段。</div>
+    <div class="knote">今日下跌 3.55%，波動劇烈；近 3 個月 +40.49%，站上季線、年線，但跌破月線，處於 3 個月區間中段。</div>
 </div>
             
             <div class="kcell">
     <div class="kcell-head">
         <span class="kcell-name">SOL</span>
-        <span class="kcell-px">$97.62
-            <span class="chg down">-3.88%</span>
+        <span class="kcell-px">$97.27
+            <span class="chg down">-4.0%</span>
         </span>
     </div>
     
     <div class="kcell-sub">
-        <span>近 3 個月 <b class="sp-up">+40.09%</b></span>
+        <span>近 3 個月 <b class="sp-up">+39.57%</b></span>
         <span>區間 64.42–110.04</span>
     </div>
     
@@ -10608,8 +10629,8 @@
             <line x1="299.0" x2="299.0" y1="34.0" y2="52.0" stroke="#ef4444" stroke-width="1"/>
             <rect x="297.9" y="41.0" width="2.1" height="10.4" fill="#ef4444"/>
             
-            <line x1="302.3" x2="302.3" y1="56.9" y2="60.5" stroke="#ef4444" stroke-width="1"/>
-            <rect x="301.2" y="56.9" width="2.1" height="2.1" fill="#ef4444"/>
+            <line x1="302.3" x2="302.3" y1="57.2" y2="60.5" stroke="#ef4444" stroke-width="1"/>
+            <rect x="301.2" y="58.1" width="2.1" height="0.9" fill="#ef4444"/>
             
             
             
@@ -10619,10 +10640,10 @@
             
             <polyline points="5.7,54.2 9.0,55.1 12.3,56.2 15.7,57.3 19.0,58.4 22.3,59.4 25.7,60.5 29.0,61.5 32.3,62.5 35.7,63.6 39.0,64.6 42.3,65.6 45.7,66.5 49.0,67.4 52.3,68.2 55.7,69.0 59.0,69.7 62.3,70.4 65.7,71.0 69.0,71.7 72.3,72.5 75.7,73.3 79.0,74.0 82.3,74.8 85.7,75.5 89.0,76.2 92.3,76.9 95.7,77.7 99.0,78.5 102.3,79.3 105.7,80.1 109.0,80.8 112.3,81.6 115.7,82.5 119.0,83.4 122.3,84.3 125.7,85.3 129.0,86.4 132.3,87.4 135.7,88.4 139.0,89.4 142.3,90.4 145.7,91.4 149.0,92.5 152.3,93.7 155.7,94.9 159.0,96.0 162.3,97.1 165.7,98.2 169.0,99.3 172.3,100.2 175.7,101.0 179.0,101.9 182.3,102.7 185.7,103.6 189.0,104.4 192.3,105.1 195.7,105.8 199.0,106.7 202.3,107.5 205.7,108.2 209.0,108.8 212.3,109.1 215.7,109.3 219.0,109.5 222.3,109.6 225.7,109.5 229.0,109.2 232.3,109.0 235.7,108.8 239.0,108.5 242.3,108.2 245.7,107.8 249.0,107.4 252.3,107.1 255.7,106.8 259.0,106.6 262.3,106.3 265.7,106.1 269.0,105.8 272.3,105.4 275.7,105.0 279.0,104.7 282.3,104.5 285.7,104.2 289.0,103.8 292.3,103.5 295.7,103.3 299.0,103.0 302.3,102.8" fill="none" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
             
-            <line x1="4" x2="304" y1="56.9" y2="56.9" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
+            <line x1="4" x2="304" y1="58.1" y2="58.1" stroke="#ef4444" stroke-width="0.9" stroke-dasharray="3 3"/>
         </g>
-        <rect x="305" y="49.4" width="55" height="15" rx="2" fill="#ef4444"/>
-        <text class="kc-lastlab" x="309" y="60.699999999999996">97.54</text>
+        <rect x="305" y="50.6" width="55" height="15" rx="2" fill="#ef4444"/>
+        <text class="kc-lastlab" x="309" y="61.9">97.18</text>
         
         <rect class="kc-hit" x="4.0" y="8" width="3.3" height="164" fill="transparent"
               data-d="06/18" data-o="71.93" data-h="72.55" data-l="68.31" data-c="69.63" data-up="0"></rect>
@@ -10892,23 +10913,23 @@
               data-d="09/14" data-o="99.25" data-h="104.67" data-l="99.08" data-c="102.50" data-up="1"></rect>
         
         <rect class="kc-hit" x="300.7" y="8" width="3.3" height="164" fill="transparent"
-              data-d="09/16" data-o="96.88" data-h="97.54" data-l="96.42" data-c="97.54" data-up="1"></rect>
+              data-d="09/16" data-o="96.88" data-h="97.46" data-l="96.42" data-c="97.18" data-up="1"></rect>
         
     </svg>
     <div class="ktip" hidden></div>
 </div>
 
 <div class="ma-legend">
-    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 102.54</span><span class="chg down">-4.9%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 86.77</span><span class="chg up">+12.4%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 83.25</span><span class="chg up">+17.2%</span></span>
+    <span style="color:#60a5fa;"><i></i><span style="color:var(--text-2);">月線 102.52</span><span class="chg down">-5.2%</span></span><span style="color:#a78bfa;"><i></i><span style="color:var(--text-2);">季線 86.76</span><span class="chg up">+12.0%</span></span><span style="color:#f59e0b;"><i></i><span style="color:var(--text-2);">年線 83.25</span><span class="chg up">+16.7%</span></span>
     
 </div>
 
 
-    <div class="knote">今日下跌 3.88%，波動劇烈；近 3 個月 +40.09%，站上季線、年線，但跌破月線，處於 3 個月區間中段。</div>
+    <div class="knote">今日下跌 4.00%，波動劇烈；近 3 個月 +39.57%，站上季線、年線，但跌破月線，處於 3 個月區間中段。</div>
 </div>
             
         </div>
-        <div class="card-ts">🕐 原物料：2026/09/16 12:24｜加密貨幣：2026/09/16 12:24</div>
+        <div class="card-ts">🕐 原物料：2026/09/16 12:53｜加密貨幣：2026/09/16 12:53</div>
     </div>
 
     <!-- ⑤ 本週經濟日曆 -->
@@ -10973,7 +10994,7 @@
             </tbody>
         </table>
         
-        <div class="card-ts">🕐 資料截至：2026/09/16 12:24</div>
+        <div class="card-ts">🕐 資料截至：2026/09/16 12:53</div>
         
     </div>
 
