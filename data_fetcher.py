@@ -517,7 +517,10 @@ def _get_fred_csv(series_id: str, n_rows: int = 10, retries: int = 1) -> list:
     last_err = None
     for attempt in range(retries + 1):
         try:
-            resp = requests.get(url, timeout=(5, 6), headers={"User-Agent": "Mozilla/5.0"})
+            # ⚠️ 不可帶 "Mozilla/5.0" User-Agent：FRED 會把它當可疑爬蟲、讀取直接卡死到逾時
+            #    （2026/09/16 實測：帶 Mozilla 25 秒逾時、預設 python-requests UA 0.4 秒回 200）。
+            #    上方註解所稱「雙峰行為」即此原因，並非 FRED 本身不穩。
+            resp = requests.get(url, timeout=(5, 6))
             if resp.status_code != 200:
                 last_err = f"HTTP {resp.status_code}"
                 if attempt < retries:
@@ -1566,187 +1569,280 @@ def _fetch_crypto_spot() -> list:
         return results
 
 
-def fetch_vol_term() -> dict:
-    """VIX 期限結構（v16）：VIX9D（9 天）／VIX（30 天）／VIX3M（3 個月）。
+# ── 其他風險先行指標（v18）：讀法與 VIX 相同，數字越高越緊張 ───────────────────────────
+# 取代 v16 的「VIX 期限結構」（Jeff：看不懂）與「台指選擇權 P/C」（Jeff：感覺還好）。
+RISK_DEFS = {
+    "twvix": {"icon": "🇹🇼", "name": "台指 VIX", "sub": "台股恐慌指數（期交所臺指選擇權波動率指數）",
+              "unit": "", "dec": 2, "scale": (10, 50),
+              "zones": [(18, "平靜", "#22c55e"), (25, "正常", "#eab308"), (35, "緊張", "#f97316"), (None, "恐慌", "#ef4444")]},
+    "move":  {"icon": "🏦", "name": "MOVE", "sub": "美債恐慌指數（美國公債隱含波動率，債市版 VIX）",
+              "unit": "", "dec": 1, "scale": (50, 200),
+              "zones": [(80, "平靜", "#22c55e"), (100, "正常", "#eab308"), (130, "緊張", "#f97316"), (None, "恐慌", "#ef4444")]},
+    "hyoas": {"icon": "💳", "name": "高收益債利差", "sub": "信用風險溫度計（美國垃圾債減公債殖利率，衰退前常先擴大）",
+              "unit": "%", "dec": 2, "scale": (2, 10),
+              "zones": [(3.5, "極低（市場樂觀）", "#22c55e"), (5, "正常", "#eab308"), (7, "緊張", "#f97316"), (None, "危機", "#ef4444")]},
+}
 
-    看 VIX ÷ VIX3M：
-      < 0.95  正價差＝常態（近月波動低於遠月，市場沒有立即壓力）
-      ≥ 1.00  逆價差＝壓力（搶短期保護，歷史上對應急跌與事件風險）
-    比單看 VIX 絕對值更能分辨「高波動但穩定」與「正在出事」。
-    """
-    q = {k: _get_quote(t) for k, t in (("vix9d", "^VIX9D"), ("vix", "^VIX"),
-                                       ("vix3m", "^VIX3M"), ("vvix", "^VVIX"))}
-    vix, v3m = q["vix"]["price"], q["vix3m"]["price"]
-    ratio = round(vix / v3m, 3) if (vix and v3m) else None
-    if ratio is None:
-        state, color, note = "N/A", "#6b7280", ""
-    elif ratio >= 1.05:
-        state, color = "深度逆價差", "#ef4444"
-        note = "近月恐慌明顯高於遠月，市場正在搶短期保護，通常對應急跌或重大事件"
-    elif ratio >= 1.00:
-        state, color = "逆價差", "#f97316"
-        note = "短期避險需求高於中期，風險意識升高，留意事件與消息面"
-    elif ratio >= 0.95:
-        state, color = "接近持平", "#eab308"
-        note = "期限結構轉平，市場對短期波動的定價開始上升"
-    else:
-        state, color = "正價差", "#22c55e"
-        note = "近月波動低於遠月，屬常態結構，無立即壓力訊號"
+
+def _risk_gauge(key: str, series: list) -> dict:
+    """series：[(YYYY-MM-DD, 值), ...] 舊→新 → 儀表（狀態、位置、分區漸層、刻度、近一月走勢）"""
+    d = RISK_DEFS[key]
+    series = [(ds, v) for ds, v in series if v is not None]
+    if not series:
+        return {}
+    last = series[-1][1]
+    prev = series[-2][1] if len(series) >= 2 else None
+    lo, hi = d["scale"]
+    label, color = d["zones"][-1][1], d["zones"][-1][2]
+    for th, lab, col in d["zones"]:
+        if th is not None and last < th:
+            label, color = lab, col
+            break
+    pct = lambda v: round(max(0.0, min(100.0, (v - lo) / (hi - lo) * 100)), 1)
+    stops, start = [], 0.0
+    for th, _, col in d["zones"]:
+        stop = 100.0 if th is None else pct(th)
+        stops.append(f"{col} {start}%, {col} {stop}%")
+        start = stop
+    ticks = [{"pos": 0, "label": f"{lo:g}", "a": "start"}]
+    ticks += [{"pos": pct(th), "label": f"{th:g}", "a": "mid"} for th, _, _ in d["zones"] if th is not None]
+    ticks.append({"pos": 100, "label": f"{hi:g}{d['unit']}", "a": "end"})
+    month = series[-22:]
+    dec = d["dec"]
+    ld = series[-1][0]
     return {
-        "vix9d": q["vix9d"]["price"], "vix": vix, "vix3m": v3m, "vvix": q["vvix"]["price"],
-        "ratio": ratio, "state": state, "color": color, "note": note,
-        # 刻度 0.85~1.15 對應 0~100%
-        "pos": None if ratio is None else round(min(max((ratio - 0.85) / 0.30 * 100, 0), 100), 1),
+        "key": key, "icon": d["icon"], "name": d["name"], "sub": d["sub"], "unit": d["unit"],
+        "value": last, "value_fmt": f"{last:,.{dec}f}",
+        "chg": None if prev is None else round(last - prev, dec),
+        "chg_fmt": "" if prev is None else f"{last - prev:+.{dec}f}",
+        "label": label, "color": color, "pos": pct(last),
+        "gradient": "linear-gradient(to right, " + ", ".join(stops) + ")",
+        "ticks": ticks,
+        "spark": _build_sparkline(month, width=100, height=30),
+        "lo": f"{min(v for _, v in month):,.{dec}f}", "hi": f"{max(v for _, v in month):,.{dec}f}",
+        "date": f"{int(ld[5:7])}/{int(ld[8:10])}",
     }
 
 
-def fetch_taifex_pc() -> dict:
-    """台指選擇權 Put/Call Ratio（期交所官方 CSV，v16 取代長期失效的 ycharts CBOE P/C）。
+def _tw_vix_series() -> list:
+    """期交所臺指選擇權波動率指數：每月一個 Big5 文字檔（log2data/YYYYMMnew.txt），取收盤欄"""
+    first = datetime.now(TAIPEI_TZ).date().replace(day=1)
+    out = {}
+    for f in ((first - timedelta(days=1)).replace(day=1), first):
+        try:
+            url = f"https://www.taifex.com.tw/file/taifex/Dailydownload/vix/log2data/{f:%Y%m}new.txt"
+            txt = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=12).content.decode("big5", errors="replace")
+            for line in txt.splitlines():
+                c = line.split()
+                if len(c) >= 3 and re.fullmatch(r"\d{8}", c[0]):
+                    out[f"{c[0][:4]}-{c[0][4:6]}-{c[0][6:]}"] = float(c[2])
+        except Exception as e:
+            logger.warning(f"台指 VIX {f:%Y%m} failed: {e}")
+    return sorted(out.items())
 
-    台灣慣例看「未平倉量比率」＝賣權未平倉 ÷ 買權未平倉：
-      > 1.0  偏多（賣權未平倉較多，多為法人賣 put 收權利金）
-      < 0.8  偏空
-    與美股 CBOE 的「成交量 P/C 高＝恐慌」方向相反，不可混用。
-    """
-    end   = datetime.now(TAIPEI_TZ).date()
-    start = end - timedelta(days=20)
-    url = ("https://www.taifex.com.tw/cht/3/pcRatioDown?down_type=1"
-           f"&queryStartDate={start:%Y/%m/%d}&queryEndDate={end:%Y/%m/%d}")
+
+def _move_series() -> list:
+    """ICE BofA MOVE（Yahoo ^MOVE；Yahoo 名稱誤標為 Northern Trust，數值經 9/1＝77.88 比對無誤）"""
+    return sorted(_get_history_raw("^MOVE", "3mo").items())
+
+
+def _hy_oas_series() -> list:
+    """ICE BofA 美國高收益債 OAS（FRED BAMLH0A0HYM2，fredgraph.csv 帶 cosd 只取近 75 天，約 1–2 秒）"""
+    start = (datetime.now(TAIPEI_TZ).date() - timedelta(days=75)).isoformat()
     try:
-        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=12)
-        text = resp.content.decode("big5", errors="replace")
-        rows = []
-        for line in text.strip().splitlines()[1:]:
-            c = [x.strip() for x in line.split(",")]
-            if len(c) < 7 or not re.match(r"\d{4}/\d{2}/\d{2}", c[0]):
-                continue
+        # 不帶 Mozilla UA（FRED 會卡死到逾時，見 _get_fred_csv 註解）
+        r = requests.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd={start}", timeout=20)
+        out = []
+        for line in r.text.strip().splitlines()[1:]:
+            ds, _, v = line.partition(",")
             try:
-                rows.append({"date": c[0], "vol_pc": round(float(c[3]) / 100, 3),
-                             "oi_pc": round(float(c[6]) / 100, 3)})
+                out.append((ds, float(v)))
             except ValueError:
                 continue
-        if not rows:
-            raise ValueError("no rows")
-        rows.sort(key=lambda r: r["date"])           # 官方 CSV 為新→舊
-        last = rows[-1]
-        prev = rows[-2] if len(rows) >= 2 else None
-        oi = last["oi_pc"]
-        if   oi >= 1.20: rating, color = "偏多濃厚", "#ef4444"
-        elif oi >= 1.00: rating, color = "偏多",     "#f97316"
-        elif oi >= 0.85: rating, color = "中性",     "#eab308"
-        elif oi >= 0.70: rating, color = "偏空",     "#22c55e"
-        else:            rating, color = "極度偏空", "#16a34a"
-        return {
-            "date": last["date"], "oi_pc": oi, "vol_pc": last["vol_pc"],
-            "chg": round(oi - prev["oi_pc"], 3) if prev else None,
-            "rating": rating, "color": color,
-            # 刻度 0.6~1.4 對應 0~100%
-            "pos": round(min(max((oi - 0.6) / 0.8 * 100, 0), 100), 1),
-            "hist": rows[-10:],
-        }
+        return out
     except Exception as e:
-        logger.warning(f"TAIFEX P/C failed: {e}")
-        return {}
+        logger.warning(f"HY OAS failed: {e}")
+        return []
 
 
-def _twse_market_stats() -> dict:
-    """台股量能與市場寬度（v16）：成交金額（FMTQIK，含 5／20 日均量）、漲跌家數（MI_INDEX）、
-    融資餘額（MI_MARGN）。⚠️ TWSE 對海外 IP 可能封鎖（GitHub Actions 在美國），
-    失敗時由 taiwan_backup.json 帶出上次本機跑的結果（與三大法人同一份備份）。"""
-    out, hdr = {}, {"User-Agent": "Mozilla/5.0"}
-    today = datetime.now(TAIPEI_TZ).date()
-
-    # ── 每日成交金額（本月＋上月，湊滿 20 個交易日）──
-    rows = []
-    first_this = today.replace(day=1)
-    for first in (first_this, (first_this - timedelta(days=1)).replace(day=1)):
+def fetch_risk_gauges() -> list:
+    """市場情緒區的三個風險先行儀表：台指 VIX／MOVE／高收益債利差"""
+    out = []
+    for key, fn in (("twvix", _tw_vix_series), ("move", _move_series), ("hyoas", _hy_oas_series)):
         try:
-            r = requests.get("https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK"
-                             f"?date={first:%Y%m%d}&response=json", headers=hdr, timeout=8).json()
-            for d in r.get("data", []) or []:
-                yy, mm, dd = (int(x) for x in d[0].split("/"))
-                rows.append({"d": date(yy + 1911, mm, dd),
-                             "amt": float(str(d[2]).replace(",", "")),
-                             "idx": float(str(d[4]).replace(",", "")),
-                             "chg": float(str(d[5]).replace(",", ""))})
+            g = _risk_gauge(key, fn())
+            if g:
+                out.append(g)
         except Exception as e:
-            logger.warning(f"FMTQIK {first:%Y%m} failed: {e}")
-    dstr = today.strftime("%Y%m%d")
-    if rows:
-        rows.sort(key=lambda x: x["d"])
-        last = rows[-1]
-        amts = [r["amt"] for r in rows]
-        ma5  = sum(amts[-5:])  / min(5,  len(amts))
-        ma20 = sum(amts[-20:]) / min(20, len(amts))
-        dstr = last["d"].strftime("%Y%m%d")
-        out.update({
-            "turnover_yi":      round(last["amt"] / 1e8),
-            "turnover_date":    last["d"].strftime("%Y/%m/%d"),
-            "turnover_ma5_yi":  round(ma5 / 1e8),
-            "turnover_ma20_yi": round(ma20 / 1e8),
-            "turnover_vs_ma5":  round(last["amt"] / ma5 * 100 - 100, 1) if ma5 else None,
-            "turnover_vs_ma20": round(last["amt"] / ma20 * 100 - 100, 1) if ma20 else None,
-            "taiex_close":      last["idx"],
-            "taiex_chg_pt":     last["chg"],
-            "turnover_hist":    [{"d": r["d"].strftime("%m/%d"), "amt_yi": round(r["amt"] / 1e8)}
-                                 for r in rows[-20:]],
-        })
-
-    # ── 漲跌家數（取「股票」欄，不含 ETF／權證）──
-    try:
-        r = requests.get("https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX"
-                         f"?date={dstr}&type=MS&response=json", headers=hdr, timeout=8).json()
-        def _n(s):
-            mo = re.match(r"([\d,]+)(?:\((\d+)\))?", str(s).strip())
-            return (int(mo.group(1).replace(",", "")), int(mo.group(2) or 0)) if mo else (0, 0)
-        for t in r.get("tables", []) or []:
-            if str(t.get("title", "")).startswith("漲跌證券數"):
-                for row in t.get("data", []) or []:
-                    if   str(row[0]).startswith("上漲"): out["adv"], out["limit_up"] = _n(row[2])
-                    elif str(row[0]).startswith("下跌"): out["dec"], out["limit_dn"] = _n(row[2])
-                    elif str(row[0]).startswith("持平"): out["flat"] = _n(row[2])[0]
-    except Exception as e:
-        logger.warning(f"MI_INDEX 漲跌家數 failed: {e}")
-
-    # ── 融資餘額（仟元 → 億元）──
-    try:
-        r = requests.get("https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN"
-                         f"?date={dstr}&selectType=MS&response=json", headers=hdr, timeout=8).json()
-        for t in r.get("tables", []) or []:
-            for row in t.get("data", []) or []:
-                if str(row[0]).startswith("融資金額"):
-                    prev_amt = float(str(row[4]).replace(",", "")) * 1000
-                    now_amt  = float(str(row[5]).replace(",", "")) * 1000
-                    out["margin_yi"]     = round(now_amt / 1e8)
-                    out["margin_chg_yi"] = round((now_amt - prev_amt) / 1e8, 1)
-    except Exception as e:
-        logger.warning(f"MI_MARGN 融資餘額 failed: {e}")
-
+            logger.warning(f"risk gauge {key} failed: {e}")
     return out
 
 
-def _tw_stats_note(tw) -> str:
-    """台股量能／寬度／融資的白話解讀（接在三大法人解說之後）"""
-    if not tw:
+def _finmind_token() -> str:
+    """FinMind token：環境變數 FINMIND_TOKEN → ~/.finmind_token（與個人基金腳本同一取用順序）"""
+    t = os.environ.get("FINMIND_TOKEN", "").strip()
+    if t:
+        return t
+    fp = os.path.expanduser("~/.finmind_token")
+    try:
+        return open(fp).read().strip() if os.path.exists(fp) else ""
+    except Exception:
         return ""
-    parts = []
-    if tw.get("turnover_yi"):
-        v5, v20 = tw.get("turnover_vs_ma5"), tw.get("turnover_vs_ma20")
-        lvl = ("量能明顯放大" if (v5 or 0) >= 15 else "量能放大" if (v5 or 0) >= 5 else
-               "量能明顯萎縮" if (v5 or 0) <= -15 else "量能萎縮" if (v5 or 0) <= -5 else "量能持平")
-        parts.append(f"成交金額 {tw['turnover_yi']:,} 億元，較 5 日均量 {v5:+.1f}%、"
-                     f"20 日均量 {v20:+.1f}%，{lvl}")
-    if tw.get("adv") is not None and tw.get("dec") is not None:
-        a, d = tw["adv"], tw["dec"]
-        breadth = ("上漲家數居多，市場寬度偏多" if a > d * 1.2 else
-                   "下跌家數居多，市場寬度偏空" if d > a * 1.2 else "漲跌家數接近，個股分歧")
-        parts.append(f"上市股票上漲 {a:,} 家（漲停 {tw.get('limit_up', 0)}）、"
-                     f"下跌 {d:,} 家（跌停 {tw.get('limit_dn', 0)}），{breadth}")
-    if tw.get("margin_yi"):
-        c = tw.get("margin_chg_yi") or 0
-        parts.append(f"融資餘額 {tw['margin_yi']:,} 億元（{c:+.1f} 億），"
-                     f"{'散戶加碼' if c > 0 else '散戶去槓桿' if c < 0 else '持平'}")
-    return ("<br>" + "<br>".join(p + "。" for p in parts)) if parts else ""
+
+
+def _chart_ticks(labels: list, PL: float, px2: float, slot: float, k: int = 4) -> list:
+    n = len(labels)
+    idxs = sorted({round(j * (n - 1) / k) for j in range(k + 1)})
+    out = []
+    for j, i in enumerate(idxs):
+        if j == 0:
+            out.append({"x": PL, "label": labels[i], "anchor": "start"})
+        elif j == len(idxs) - 1:
+            out.append({"x": px2, "label": labels[i], "anchor": "end"})
+        else:
+            out.append({"x": round(PL + (i + 0.5) * slot, 1), "label": labels[i], "anchor": "middle"})
+    return out
+
+
+def _build_tw_bar_chart(rows: list, W: int = 360, H: int = 150) -> dict:
+    """每日成交金額堆疊長條（億元）：上市在下、上櫃在上。rows 舊→新 {'d','twse','tpex'}"""
+    import math
+    if not rows:
+        return {}
+    PL, PR, PT, PB = 4, 46, 8, 18
+    px2, ph = W - PR, H - PT - PB
+    n = len(rows)
+    slot = (px2 - PL) / n
+    bw = max(slot * 0.68, 1.0)
+    top = max(r["twse"] + r["tpex"] for r in rows) * 1.08 or 1.0
+    y = lambda v: round(PT + (top - v) / top * ph, 1)
+    base = y(0)
+    bars = []
+    for i, r in enumerate(rows):
+        a, b = r["twse"], r["tpex"]
+        bars.append({"x": round(PL + i * slot + (slot - bw) / 2, 1), "w": round(bw, 1),
+                     "y1": y(a), "h1": round(base - y(a), 1),
+                     "y2": y(a + b), "h2": round(y(a) - y(a + b), 1),
+                     "tip": f"{r['d']}　合計 {a + b:,.0f} 億（上市 {a:,.0f}／上櫃 {b:,.0f}）"})
+    step = _axis_step(0, top, 4)
+    grid = [{"y": y(k * step), "label": f"{k * step:,.0f}"} for k in range(1, math.floor(top / step) + 1)]
+    return {"W": W, "H": H, "pl": PL, "px2": px2, "pt": PT, "ph": ph, "base": base,
+            "bars": bars, "grid": grid, "ticks": _chart_ticks([r["d"] for r in rows], PL, px2, slot)}
+
+
+def _build_tw_line_chart(rows: list, W: int = 360, H: int = 150) -> dict:
+    """融資餘額折線（億元）。rows 舊→新 {'d','v'}"""
+    import math
+    if len(rows) < 2:
+        return {}
+    PL, PR, PT, PB = 4, 46, 8, 18
+    px2, ph = W - PR, H - PT - PB
+    n = len(rows)
+    slot = (px2 - PL) / n
+    vals = [r["v"] for r in rows]
+    lo, hi = min(vals), max(vals)
+    pad = (hi - lo) * 0.12 or hi * 0.01
+    lo, hi = lo - pad, hi + pad
+    y = lambda v: round(PT + (hi - v) / (hi - lo) * ph, 1)
+    x = lambda i: round(PL + (i + 0.5) * slot, 1)
+    pts = " ".join(f"{x(i)},{y(v)}" for i, v in enumerate(vals))
+    step = _axis_step(lo, hi, 4)
+    grid = [{"y": y(k * step), "label": f"{k * step:,.0f}"}
+            for k in range(math.ceil(lo / step), math.floor(hi / step) + 1)]
+    return {"W": W, "H": H, "pl": PL, "px2": px2, "pt": PT, "ph": ph,
+            "points": pts, "area": f"{x(0)},{PT + ph} {pts} {x(n - 1)},{PT + ph}",
+            "grid": grid, "ticks": _chart_ticks([r["d"] for r in rows], PL, px2, slot),
+            "last_x": x(n - 1), "last_y": y(vals[-1]),
+            "hits": [{"x": round(PL + i * slot, 1), "w": round(slot, 1), "tip": f"{r['d']}　{r['v']:,.0f} 億"}
+                     for i, r in enumerate(rows)]}
+
+
+def _tw_market_stats() -> dict:
+    """台股（v18）：漲跌家數（上市＋上櫃）、每日成交金額圖（上市＋上櫃，近 20 個交易日）、
+    上市融資餘額走勢圖（FinMind，近 40 個交易日）。
+    ⚠️ TWSE／TPEx 對海外 IP 可能封鎖（GitHub Actions 在美國）→ 與三大法人共用 taiwan_backup.json 容錯。"""
+    out, hdr = {}, {"User-Agent": "Mozilla/5.0"}
+    today = datetime.now(TAIPEI_TZ).date()
+    first_this = today.replace(day=1)
+    first_prev = (first_this - timedelta(days=1)).replace(day=1)
+    num = lambda v: float(str(v).replace(",", "").strip() or 0)
+
+    twse, tpex = {}, {}
+    for f in (first_prev, first_this):
+        try:   # 上市：FMTQIK 成交金額（元）
+            r = requests.get(f"https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK?date={f:%Y%m%d}&response=json",
+                             headers=hdr, timeout=8).json()
+            for row in r.get("data", []) or []:
+                yy, mm, dd = (int(z) for z in row[0].split("/"))
+                twse[date(yy + 1911, mm, dd)] = num(row[2]) / 1e8
+        except Exception as e:
+            logger.warning(f"FMTQIK {f:%Y%m} failed: {e}")
+        try:   # 上櫃：tradingIndex 金額（仟元）
+            r = requests.get(f"https://www.tpex.org.tw/www/zh-tw/afterTrading/tradingIndex?date={f:%Y/%m/%d}&response=json",
+                             headers=hdr, timeout=8).json()
+            for row in ((r.get("tables") or [{}])[0].get("data") or []):
+                yy, mm, dd = (int(z) for z in str(row[0]).split("/"))
+                tpex[date(yy + 1911, mm, dd)] = num(row[2]) * 1000 / 1e8
+        except Exception as e:
+            logger.warning(f"TPEx tradingIndex {f:%Y%m} failed: {e}")
+
+    days = sorted(twse)[-20:]
+    dref = days[-1] if days else today
+    if days:
+        rows = [{"d": d.strftime("%m/%d"), "twse": twse[d], "tpex": tpex.get(d, 0.0)} for d in days]
+        out["turnover_chart"] = _build_tw_bar_chart(rows)
+        out["turnover_last"] = {"date": dref.strftime("%Y/%m/%d"), "twse": round(twse[dref]),
+                                "tpex": round(tpex.get(dref, 0.0)), "tot": round(twse[dref] + tpex.get(dref, 0.0))}
+
+    try:   # 上市漲跌家數：MI_INDEX「漲跌證券數合計」取股票欄，括號內為漲停／跌停
+        r = requests.get(f"https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date={dref:%Y%m%d}&type=MS&response=json",
+                         headers=hdr, timeout=8).json()
+        def _pair(v):
+            mo = re.match(r"([\d,]+)(?:\((\d+)\))?", str(v).strip())
+            return (int(mo.group(1).replace(",", "")), int(mo.group(2) or 0)) if mo else (0, 0)
+        b = {}
+        for t in r.get("tables", []) or []:
+            if str(t.get("title", "")).startswith("漲跌證券數"):
+                for row in t.get("data", []) or []:
+                    if   str(row[0]).startswith("上漲"): b["adv"], b["lu"] = _pair(row[2])
+                    elif str(row[0]).startswith("下跌"): b["dec"], b["ld"] = _pair(row[2])
+                    elif str(row[0]).startswith("持平"): b["flat"] = _pair(row[2])[0]
+        if b:
+            out["breadth_twse"] = b
+    except Exception as e:
+        logger.warning(f"MI_INDEX 漲跌家數 failed: {e}")
+
+    try:   # 上櫃漲跌家數：TPEx highlight
+        r = requests.get(f"https://www.tpex.org.tw/www/zh-tw/afterTrading/highlight?date={dref:%Y/%m/%d}&response=json",
+                         headers=hdr, timeout=8).json()
+        t = (r.get("tables") or [{}])[0]
+        idx = {k: i for i, k in enumerate(t.get("fields") or [])}
+        row = (t.get("data") or [[]])[0]
+        g = lambda k: int(num(row[idx[k]])) if k in idx and idx[k] < len(row) else 0
+        if row:
+            out["breadth_tpex"] = {"adv": g("上漲家數"), "lu": g("漲停家數"), "dec": g("下跌家數"),
+                                   "ld": g("跌停家數"), "flat": g("平盤家數")}
+    except Exception as e:
+        logger.warning(f"TPEx highlight 漲跌家數 failed: {e}")
+
+    try:   # 上市融資餘額：FinMind 全市場融資（一次取整段，免逐日打 MI_MARGN）
+        tok = _finmind_token()
+        r = requests.get("https://api.finmindtrade.com/api/v4/data",
+                         params={"dataset": "TaiwanStockTotalMarginPurchaseShortSale",
+                                 "start_date": (today - timedelta(days=75)).isoformat()},
+                         headers={"Authorization": f"Bearer {tok}"} if tok else {}, timeout=15).json()
+        rows = sorted((x for x in r.get("data", []) if x.get("name") == "MarginPurchaseMoney"),
+                      key=lambda x: x["date"])[-40:]
+        if rows:
+            out["margin_chart"] = _build_tw_line_chart(
+                [{"d": x["date"][5:].replace("-", "/"), "v": x["TodayBalance"] / 1e8} for x in rows])
+            out["margin_last"] = {"date": rows[-1]["date"].replace("-", "/"),
+                                  "yi": round(rows[-1]["TodayBalance"] / 1e8),
+                                  "chg": round((rows[-1]["TodayBalance"] - rows[-1]["YesBalance"]) / 1e8, 1)}
+    except Exception as e:
+        logger.warning(f"FinMind 融資餘額 failed: {e}")
+
+    return out
 
 
 def fetch_geopolitics() -> dict:
@@ -2069,9 +2165,20 @@ def fetch_cb_rates() -> dict:
     fed_rate = _resolve("聯準會 (Fed)", _fed_fred, _scrape_fed_official, "3.50–3.75")
 
     # ── ECB ──
+    # ECB 決議後約一週才生效（2026/09/10 決議 → 09/16 生效），FRED ECBDFR 是「每日生效利率」，
+    # 生效日之前、以及 FRED 尚未補上生效日當天時，都還是舊值（09/16 實測 FRED 仍 2.25）。
+    # → 與手動釘住的「最近一次決議新利率＋生效日」比日期，較新者勝。每次 ECB 會後更新 ECB_PINNED。
+    ECB_PINNED = ("2.50", date(2026, 9, 16))
+
     def _ecb_fred():
         r = _get_fred_csv("ECBDFR", 3)
-        return f"{r[-1][1]:.2f}" if r else ""
+        if not r:
+            return ""
+        pin_rate, pin_eff = ECB_PINNED
+        last_obs = datetime.strptime(r[-1][0], "%Y-%m-%d").date()
+        if pin_eff <= datetime.now(TAIPEI_TZ).date() and last_obs < pin_eff:
+            return pin_rate
+        return f"{r[-1][1]:.2f}"
 
     ecb_rate = _resolve("歐洲央行 (ECB)", _ecb_fred, _scrape_ecb_official, "2.50")
 
@@ -2749,7 +2856,7 @@ def fetch_taiwan_market() -> dict:
             "unit": "億元",
             "source": "live",
         }
-        result.update(_twse_market_stats())      # v16：量能／漲跌家數／融資餘額
+        result.update(_tw_market_stats())        # v18：漲跌家數（上市＋上櫃）／成交金額圖／融資餘額圖
         # 成功就更新 backup
         try:
             with open(TAIWAN_BACKUP, "w", encoding="utf-8") as f:
@@ -2796,8 +2903,7 @@ def fetch_all() -> dict:
     indices     = fetch_index_data();   indices_ts  = _now_taipei()
     fg          = fetch_fear_greed();   fg_ts       = _now_taipei()
     pc_ratio    = fetch_put_call_ratio()
-    vol_term    = fetch_vol_term()
-    taifex_pc   = fetch_taifex_pc()
+    risk_gauges = fetch_risk_gauges()
     comm_data   = fetch_commodity_data(); comm_ts   = _now_taipei()
     crypto_data = fetch_crypto_data(); crypto_ts    = _now_taipei()
     tw_data     = fetch_taiwan_market(); tw_ts      = _now_taipei()
@@ -2853,20 +2959,16 @@ def fetch_all() -> dict:
         "fear_greed":    fg,
         "put_call_ratio": pc_ratio,
         "vix_history":   vix_history,
-        "vol_term":      vol_term,
-        "taifex_pc":     taifex_pc,
+        "risk_gauges":   risk_gauges,
         "sentiment_commentary": _sentiment_commentary(vix_price, vix_chg, pc_ratio)
-            + (f"<br>VIX 期限結構 {vol_term['ratio']}（VIX {vol_term['vix']} ÷ VIX3M {vol_term['vix3m']}）"
-               f"— <b>{vol_term['state']}</b>，{vol_term['note']}。" if vol_term.get("ratio") else "")
-            + (f"<br>台指選擇權未平倉 P/C {taifex_pc['oi_pc']}（{taifex_pc['date']}）— <b>{taifex_pc['rating']}</b>，"
-               "台灣口徑：比值越高（賣權未平倉越多、多為法人賣 put）越偏多，與美股成交量 P/C 方向相反。"
-               if taifex_pc.get("oi_pc") else ""),
+            + ("<br>" + "｜".join(f"{g['name']} {g['value_fmt']}{g['unit']}（{g['label']}）" for g in risk_gauges) + "。"
+               if risk_gauges else ""),
         "fg_updated_at": fg_ts,
         "calendar":             cal_data,
         "calendar_commentary":  _calendar_commentary(cal_data),
         "calendar_updated_at":  cal_ts,
         "taiwan":             tw_data,
-        "taiwan_commentary":  _taiwan_commentary(tw_data) + _tw_stats_note(tw_data),
+        "taiwan_commentary":  _taiwan_commentary(tw_data),
         "taiwan_updated_at":  tw_ts,
         "geopolitics":   fetch_geopolitics(),
         "updated_at":    _now_taipei(),
