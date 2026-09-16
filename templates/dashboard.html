@@ -489,6 +489,61 @@
         .cal-up .dd { font-weight: 700; color: var(--text-2); }
         .cal-up .dd.soon { color: #fca5a5; }
 
+        /* ── v16：行事曆放大＋可點擊／台股量能／國際局勢可展開 ── */
+        .cb-cal .cal-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; }
+        @media (max-width: 900px) { .cb-cal .cal-layout { grid-template-columns: 1fr; } }
+        .cb-cal .cal-cell { min-height: 74px; align-items: stretch; padding: 4px 5px 5px; gap: 2px; }
+        .cb-cal .cal-d    { font-size: 11px; text-align: center; }
+        .cal-chip { font-size: 10px; line-height: 1.4; padding: 0 4px; border-radius: 3px; white-space: nowrap;
+                    background: rgba(96,165,250,0.20); color: #dbeafe; overflow: hidden; text-overflow: ellipsis; }
+        .cal-chip.data { background: rgba(201,165,78,0.18); color: #f0d78c; }
+        .cal-chip.done { opacity: 0.45; }
+        .cal-cell.clickable { cursor: pointer; }
+        .cal-cell.clickable:hover { background: rgba(255,255,255,0.07); }
+        .cal-cell.sel { outline: 1.5px solid #60a5fa; }
+        .cal-detail { min-height: 104px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.05);
+                      border-radius: 8px; padding: 9px 11px; font-size: 11px; color: var(--text-3); }
+        .cal-detail-h   { font-size: 12px; font-weight: 700; color: var(--gold); margin-bottom: 5px; }
+        .cal-detail-row { display: flex; gap: 7px; align-items: flex-start; padding: 5px 0; border-top: 1px solid rgba(255,255,255,0.05); }
+        .cal-detail-row:first-of-type { border-top: none; }
+        .cal-detail-row .f { font-size: 14px; line-height: 1.2; }
+        .cal-detail-row b  { display: block; color: var(--text); font-size: 11.5px; font-weight: 600; }
+        .cal-detail-row .w { display: block; color: var(--text-3); font-size: 10px; margin-top: 1px; }
+        .cal-detail-row.done b { color: var(--text-2); }
+
+        /* 台股量能／寬度 */
+        .tw-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+        @media (max-width: 480px) { .tw-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        .tw-stat { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.05); border-radius: 7px; padding: 7px 9px; }
+        .tw-stat .k { font-size: 9.5px; color: var(--text-3); }
+        .tw-stat .v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .tw-stat .v small { font-size: 10px; font-weight: 500; color: var(--text-3); }
+        .tw-stat .s { font-size: 9.5px; color: var(--text-3); margin-top: 1px; }
+        .tw-breadth-head { display: flex; justify-content: space-between; gap: 8px; font-size: 10.5px; color: var(--text-2); margin-bottom: 4px; }
+        .tw-breadth-bar  { display: flex; height: 9px; border-radius: 5px; overflow: hidden; background: #1e1e2e; }
+        .tw-breadth-bar span { display: block; height: 100%; }
+        .tw-breadth-foot { font-size: 9.5px; color: var(--text-3); margin-top: 3px; text-align: right; }
+
+        /* 國際局勢：今日焦點 + 可展開條目 */
+        .geo-flash { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 8px; margin-bottom: 14px; }
+        .geo-flash-item { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.5; color: var(--text);
+                          background: rgba(201,165,78,0.07); border: 1px solid rgba(201,165,78,0.20); border-radius: 7px; padding: 7px 9px; }
+        .geo-flash-item .n { flex: 0 0 17px; height: 17px; border-radius: 50%; background: var(--gold); color: #12121a;
+                             font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+        .geo-cats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; }
+        @media (max-width: 900px) { .geo-cats { grid-template-columns: 1fr; } }
+        .geo-item { border-bottom: 1px solid rgba(255,255,255,0.04); padding: 7px 0; }
+        .geo-item summary { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; list-style: none; }
+        .geo-item summary::-webkit-details-marker { display: none; }
+        .geo-sum  { flex: 1; min-width: 0; font-size: 12px; line-height: 1.55; }
+        .geo-sum b { display: block; color: var(--text); margin-bottom: 2px; font-weight: 600; }
+        .geo-read { color: var(--text-2); }
+        .geo-more { flex: 0 0 auto; font-size: 10px; color: var(--text-3); white-space: nowrap; margin-top: 2px; }
+        .geo-item[open] .geo-more { color: var(--gold); }
+        .geo-item[open] .geo-more::after { content: " 收合"; }
+        .geo-body { font-size: 11.5px; color: var(--text-2); line-height: 1.75; margin: 7px 0 2px 26px;
+                    padding: 8px 11px; background: rgba(255,255,255,0.02); border-left: 2px solid var(--border); border-radius: 0 5px 5px 0; }
+
         /* 解釋文字 */
         .commentary {
             margin-top: 10px; padding: 9px 12px;
@@ -586,7 +641,6 @@
 <div class="main">
 
     <!-- ① 央行利率（v15：右上倒數／上次＝灰標膠囊／市場預期＝藍框；右側當月行事曆） -->
-    <div class="cb-wrap">
     <div class="cb-bar">
         {% for name, info in data.cb_rates.items() %}
         {% set act = info.last_action %}
@@ -598,7 +652,7 @@
                 </div>
                 {% if info.release_iso %}
                 <div class="cb-count{{ ' soon' if info.days_to <= 3 }}" data-release="{{ info.release_iso }}" title="下次會議 {{ info.next_md }}，台北時間 {{ info.release_tpe }} 公布">
-                    <div class="cb-dn">{% if info.days_to <= 0 %}今天{% else %}D-{{ info.days_to }}<small>天</small>{% endif %}</div>
+                    <div class="cb-dn">{% if info.days_to <= 0 %}今天{% else %}<small>倒數</small>{{ info.days_to }}<small>天</small>{% endif %}</div>
                     <div class="cb-nd">{{ 'LPR ' if 'PBOC' in name }}{{ info.next_md }}</div>
                     <div class="cb-rt">台北 {{ info.release_tpe }}</div>
                 </div>
@@ -631,42 +685,50 @@
         {% endfor %}
     </div>
 
-    {% set cal = data.cb_calendar %}
-    {% if cal %}
-    <div class="card cb-cal">
-        <div class="card-title">🗓️ {{ cal.title }}｜央行行事曆</div>
-        <div class="cal-grid cal-head">{% for w in '日一二三四五六' %}<div>{{ w }}</div>{% endfor %}</div>
-        <div class="cal-grid">
-            {% for wk in cal.weeks %}{% for c in wk %}
-            <div class="cal-cell{{ ' out' if not c.in_month }}{{ ' past' if c.past }}{{ ' has-cb' if c.has_cb }}{{ ' today' if c.is_today }}"{% if c.tip %} title="{{ c.tip }}"{% endif %}>
-                <span class="cal-d">{{ c.day }}</span>
-                {% if c.flags %}<span class="cal-flags">{{ c.flags }}</span>{% endif %}
-                {% if c.n_data %}<span class="cal-dot">📊</span>{% endif %}
-            </div>
-            {% endfor %}{% endfor %}
-        </div>
-        <div class="cal-legend">旗幟＝央行利率決議（🇨🇳＝LPR）｜📊＝本週美國重要數據｜金框＝今天｜滑鼠移上看台北公布時間</div>
-        {% for u in cal.upcoming %}
-        <div class="cal-up">
-            <span class="who">{{ u.flag }} {{ u.abbr }}</span>
-            <span class="when">台北 {{ u.release }}</span>
-            <span class="dd{{ ' soon' if u.days <= 3 }}" data-release="{{ u.iso }}">{% if u.days <= 0 %}今天{% else %}D-{{ u.days }}{% endif %}</span>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    </div>
     <div style="font-size:10px; color:var(--text-3); text-align:right; margin-top:-8px; margin-bottom:2px;">
         🕐 央行利率更新時間：{{ data.cb_rates_updated_at }}（Fed 利率：FRED；Fed 預期：Fed Funds 期貨＋紐約聯儲 EFFR；會議日程：各央行年度公告）
     </div>
 
+    {% set cal = data.cb_calendar %}
+    {% if cal %}
+    <div class="card cb-cal">
+        <div class="card-title">🗓️ {{ cal.title }}｜央行行事曆
+            <span style="font-size:10px; color:var(--text-3); font-weight:400; text-transform:none; letter-spacing:0; margin-left:8px;">點日期看當天事件</span>
+        </div>
+        <div class="cal-layout">
+            <div>
+                <div class="cal-grid cal-head">{% for w in '日一二三四五六' %}<div>{{ w }}</div>{% endfor %}</div>
+                <div class="cal-grid" id="cal-grid">
+                    {% for wk in cal.weeks %}{% set wi = loop.index0 %}{% for c in wk %}
+                    <div class="cal-cell{{ ' out' if not c.in_month }}{{ ' past' if c.past }}{{ ' has-cb' if c.has_cb }}{{ ' today' if c.is_today }}{{ ' clickable' if c.events }}"{% if c.events %} data-idx="{{ wi * 7 + loop.index0 }}"{% endif %}>
+                        <span class="cal-d">{{ c.day }}</span>
+                        {% for e in c.events %}
+                        <span class="cal-chip {{ e.kind }}{{ ' done' if e.done }}">{{ e.flag }} {{ e.abbr }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}{% endfor %}
+                </div>
+                <div class="cal-legend">旗幟＋簡稱＝央行利率決議（🇨🇳＝LPR）｜📊＝本週美國重要數據｜金框＝今天｜淡色＝已公布</div>
+            </div>
+            <div class="cal-side">
+                <div class="cal-detail" id="cal-detail">點左邊有標記的日期，看當天的央行決議與重要數據</div>
+                <div class="kgroup-title" style="margin-top:10px;">接下來 <span>（倒數以台北公布時間計）</span></div>
+                {% for u in cal.upcoming %}
+                <div class="cal-up">
+                    <span class="who">{{ u.flag }} {{ u.abbr }}</span>
+                    <span class="when">台北 {{ u.release }}</span>
+                    <span class="dd{{ ' soon' if u.days <= 3 }}" data-release="{{ u.iso }}">{% if u.days <= 0 %}今天{% else %}倒數 {{ u.days }} 天{% endif %}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <script type="application/json" id="cal-json">{{ cal.weeks | tojson }}</script>
+    </div>
+    {% endif %}
+
     <!-- ② 匯率（v14：每檔一張近 3 個月日 K、3 欄格狀；解說放在各自圖下方） -->
     <div class="card">
         <div class="card-title">💱 匯率</div>
-        <div class="card-hint">
-            X/TWD ↑ = X 對台幣升值（台幣貶值）｜DXY ↑ = 美元全面走強｜標題右側＝現價與當日變動<br>
-            日 K＝近 3 個月（60 個交易日），紅漲綠跌，滑鼠移上看開高低收｜彩色線＝月線 MA20／季線 MA60／年線 MA200｜右側色塊＝最新價
-        </div>
         <div class="kgrid">
             {% for fx in data.fx %}
             {{ kcell(fx.name, fx.price_fmt if fx.price else '<span class="na">N/A</span>', fx.change_pct, fx.kc, fx.note) }}
@@ -678,9 +740,7 @@
     <!-- 美股技術面（v14：兩檔並排、日 K 加高＋價格／日期刻度；解說放在各自圖下方） -->
     <div class="card">
         <div class="card-title">📊 美股技術面</div>
-        <div class="card-hint">
-            過去 3 個月日 K（60 個交易日，紅漲綠跌，滑鼠移上看開高低收）｜月線 MA20／季線 MA60／年線 MA200 移動平均線｜右側色塊＝最新價｜RSI(21) 動能
-        </div>
+        <div class="card-hint">近 3 個月日 K｜月線 MA20／季線 MA60／年線 MA200｜RSI(21) 動能</div>
         <div class="kgrid kgrid-2">
             {% for key in ['spx', 'sox'] %}
             {% set t = data.spx_tech.get(key, {}) %}
@@ -787,96 +847,98 @@
 
             <div class="divider"></div>
 
-            <!-- ── Put/Call Ratio：白話橫條 + 比喻框 ── -->
-            {% set pc = data.put_call_ratio %}
-            {% if pc and pc.current is not none %}
-            {# 位置換算：0.4 → 0%, 1.0 → 60% (中性), 1.4 → 100% #}
-            {% set pc_pos_raw = ((pc.current - 0.4) / 1.0 * 100) %}
-            {% if pc_pos_raw < 0 %}{% set pc_pos = 0 %}
-            {% elif pc_pos_raw > 100 %}{% set pc_pos = 100 %}
-            {% else %}{% set pc_pos = pc_pos_raw %}{% endif %}
-            {% set puts_per_100c = (pc.current * 100)|round|int %}
+            <!-- ── VIX 近 1 個月走勢 ── -->
+            {% if data.vix_history and data.vix_history|length >= 3 %}
+            {% set vix_vals = data.vix_history | map(attribute='value') | list %}
+            {% set vmin = vix_vals | min %}{% set vmax = vix_vals | max %}
+            {% set vrng = (vmax - vmin) if (vmax - vmin) > 0.01 else 1.0 %}
+            {% set npts = vix_vals|length %}{% set vix_last = vix_vals[-1] %}
+            {% if vix_last >= 30 %}{% set vs_color = '#ef4444' %}
+            {% elif vix_last >= 20 %}{% set vs_color = '#f59e0b' %}
+            {% elif vix_last >= 15 %}{% set vs_color = '#94a3b8' %}
+            {% else %}{% set vs_color = '#22c55e' %}{% endif %}
+            <svg class="vix-spark" viewBox="0 0 100 36" preserveAspectRatio="none">
+                <defs><linearGradient id="vixGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="{{ vs_color }}" stop-opacity="0.32"/>
+                    <stop offset="100%" stop-color="{{ vs_color }}" stop-opacity="0.02"/>
+                </linearGradient></defs>
+                {% if vmin <= 20 <= vmax %}
+                <line x1="0" y1="{{ 34 - (20 - vmin) / vrng * 30 - 2 }}" x2="100" y2="{{ 34 - (20 - vmin) / vrng * 30 - 2 }}" stroke="rgba(255,255,255,0.25)" stroke-dasharray="3,2" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+                {% endif %}
+                <polygon fill="url(#vixGrad)" stroke="none"
+                    points="0,36 {% for v in vix_vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 34 - (v - vmin) / vrng * 30 - 2 }} {% endfor %} 100,36"/>
+                <polyline points="{% for v in vix_vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 34 - (v - vmin) / vrng * 30 - 2 }} {% endfor %}"
+                    fill="none" stroke="{{ vs_color }}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+                <circle cx="100" cy="{{ 34 - (vix_last - vmin) / vrng * 30 - 2 }}" r="2.2" fill="{{ vs_color }}" stroke="#0d0f14" stroke-width="0.8"/>
+            </svg>
+            <div class="pc-spark-meta"><span>VIX 近 1 個月走勢｜現值 <b style="color:{{ vs_color }};">{{ vix_last }}</b>｜低 {{ vmin }} / 高 {{ vmax }}（虛線＝長期均值 20）</span></div>
+            {% endif %}
+
+            <div class="divider"></div>
+
+            <!-- ── VIX 期限結構（v16 新增）── -->
+            {% set vt = data.vol_term %}
+            {% if vt and vt.ratio %}
+            <div class="vix-wrap">
+                <div class="vix-head">
+                    <span class="vix-lbl"><b style="color:var(--text); font-size:13px;">🌡️ VIX 期限結構</b>
+                        <span style="color:var(--text-3); font-size:10px; margin-left:4px;">VIX ÷ VIX3M</span></span>
+                    <span><span class="vix-num" style="color:{{ vt.color }}; font-size:20px;">{{ vt.ratio }}</span>
+                        <span style="font-size:11px; color:{{ vt.color }}; font-weight:600; margin-left:4px;">{{ vt.state }}</span></span>
+                </div>
+                <div class="vix-track" style="background:linear-gradient(to right,#22c55e 0%,#22c55e 33%,#eab308 33%,#eab308 50%,#f97316 50%,#f97316 67%,#ef4444 67%,#ef4444 100%);">
+                    <div class="vix-marker" style="left:{{ vt.pos }}%;"></div>
+                </div>
+                <div class="vix-ticks"><span>0.85</span><span>0.95 轉平</span><span>1.00 逆價差</span><span>1.05</span><span>1.15</span></div>
+                <div class="pc-plain" style="text-align:left;">
+                    9 天 <b>{{ vt.vix9d }}</b>｜30 天 <b>{{ vt.vix }}</b>｜3 個月 <b>{{ vt.vix3m }}</b>
+                    <span style="color:{{ vt.color }}; font-weight:600;">— {{ vt.state }}</span><br>
+                    <span style="font-size:10px; color:var(--text-3);">{{ vt.note }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="divider"></div>
+
+            <!-- ── 台指選擇權 Put/Call（期交所，v16 取代失效的 CBOE 來源）── -->
+            {% set tp = data.taifex_pc %}
+            {% if tp and tp.oi_pc %}
             <div class="pc-wrap">
                 <div class="pc-head">
-                    <span class="vix-lbl"><b style="color:var(--text); font-size:13px;">⚖️ Put/Call Ratio</b>
-                        <span style="color:var(--text-3); font-size:10px; margin-left:4px;">CBOE Equity</span>
-                    </span>
-                    <span>
-                        <span class="pc-num" style="color:{{ pc.rating_color }};">{{ pc.current }}</span>
-                        {% if pc.change is not none %}
-                        <span class="chg {{ 'up' if pc.change > 0 else ('down' if pc.change < 0 else 'flat') }}" style="font-size:11px; margin-left:4px;">
-                            {{ '+' if pc.change > 0 else '' }}{{ pc.change }}
-                        </span>
-                        {% endif %}
-                    </span>
+                    <span class="vix-lbl"><b style="color:var(--text); font-size:13px;">⚖️ 台指選擇權 P/C</b>
+                        <span style="color:var(--text-3); font-size:10px; margin-left:4px;">未平倉量比｜期交所 {{ tp.date }}</span></span>
+                    <span><span class="pc-num" style="color:{{ tp.color }};">{{ tp.oi_pc }}</span>
+                        {% if tp.chg is not none %}
+                        <span class="chg {{ 'up' if tp.chg > 0 else ('down' if tp.chg < 0 else 'flat') }}" style="font-size:11px; margin-left:4px;">{{ '+' if tp.chg > 0 else '' }}{{ tp.chg }}</span>
+                        {% endif %}</span>
                 </div>
-
-                <!-- 看多 ←→ 看空 白話橫條 -->
                 <div class="pc-bar-labels">
-                    <span style="color:#22c55e; font-weight:600;">📈 看多（call 多）</span>
-                    <span style="color:var(--text-3);">中性 1.0</span>
-                    <span style="color:#ef4444; font-weight:600;">📉 看空（put 多）</span>
+                    <span style="color:#22c55e; font-weight:600;">📉 偏空</span>
+                    <span style="color:var(--text-3);">中性 0.85–1.0</span>
+                    <span style="color:#ef4444; font-weight:600;">📈 偏多</span>
                 </div>
-                <div class="pc-bar-track">
-                    <div class="pc-bar-neutral"></div>
-                    <div class="pc-bar-marker" style="left:{{ pc_pos }}%;"></div>
+                <div class="pc-bar-track" style="background:linear-gradient(to right,#16a34a 0%,#22c55e 22%,#eab308 42%,#f97316 65%,#ef4444 100%);">
+                    <div class="pc-bar-neutral" style="left:50%;"></div>
+                    <div class="pc-bar-marker" style="left:{{ tp.pos }}%;"></div>
                 </div>
-                <div class="pc-bar-ticks">
-                    <span>0.4</span><span>0.7</span><span>1.0</span><span>1.2</span><span>1.4+</span>
-                </div>
-
-                <!-- 白話解讀：每 100 個 call 對應 X 個 put -->
+                <div class="pc-bar-ticks"><span>0.6</span><span>0.8</span><span>1.0</span><span>1.2</span><span>1.4</span></div>
                 <div class="pc-plain">
-                    每 <b style="color:#22c55e;">100 口 call</b> 對應 <b style="color:#ef4444;">{{ puts_per_100c }} 口 put</b>
-                    <span style="color:{{ pc.rating_color }}; font-weight:600;">— {{ pc.rating }}</span>
+                    未平倉 P/C <b>{{ tp.oi_pc }}</b>（成交量 P/C {{ tp.vol_pc }}）<span style="color:{{ tp.color }}; font-weight:600;">— {{ tp.rating }}</span><br>
+                    <span style="font-size:10px; color:var(--text-3);">台灣口徑：比值越高（賣權未平倉越多、多為法人賣 put）越偏多，與美股成交量 P/C 方向相反</span>
                 </div>
-
-                {% if data.vix_history and data.vix_history|length >= 3 %}
-                {# VIX 近 1 個月走勢（取代原 Put/Call 近 N 日走勢）#}
-                {% set vix_vals = data.vix_history | map(attribute='value') | list %}
-                {% set vmin = vix_vals | min %}
-                {% set vmax = vix_vals | max %}
-                {% set vrng = (vmax - vmin) if (vmax - vmin) > 0.01 else 1.0 %}
-                {% set npts = vix_vals|length %}
-                {% set vix_last = vix_vals[-1] %}
-                {# VIX 配色：≤15 綠 / 15-20 灰 / 20-30 橙 / >30 紅 #}
-                {% if vix_last >= 30 %}{% set vix_color = '#ef4444' %}
-                {% elif vix_last >= 20 %}{% set vix_color = '#f59e0b' %}
-                {% elif vix_last >= 15 %}{% set vix_color = '#94a3b8' %}
-                {% else %}{% set vix_color = '#22c55e' %}{% endif %}
-                <svg class="vix-spark" viewBox="0 0 100 36" preserveAspectRatio="none">
-                    <defs>
-                        <linearGradient id="vixGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="{{ vix_color }}" stop-opacity="0.32"/>
-                            <stop offset="100%" stop-color="{{ vix_color }}" stop-opacity="0.02"/>
-                        </linearGradient>
-                    </defs>
-                    {# y = 34 - (v-vmin)/vrng*30 - 2（上下各留 2 邊距）#}
-                    {# 20 為長期均值參考線 #}
-                    {% if vmin <= 20 <= vmax %}
-                    {% set neutral_y = 34 - (20 - vmin) / vrng * 30 - 2 %}
-                    <line x1="0" y1="{{ neutral_y }}" x2="100" y2="{{ neutral_y }}" stroke="rgba(255,255,255,0.25)" stroke-dasharray="3,2" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
-                    {% endif %}
-                    {# 面積填充凸顯走勢 #}
-                    <polygon fill="url(#vixGrad)" stroke="none"
-                        points="0,36 {% for v in vix_vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 34 - (v - vmin) / vrng * 30 - 2 }} {% endfor %} 100,36"/>
-                    {# 折線（non-scaling-stroke 保持任何寬度都清晰）#}
-                    <polyline
-                        points="{% for v in vix_vals %}{{ loop.index0 / (npts-1) * 100 if npts > 1 else 50 }},{{ 34 - (v - vmin) / vrng * 30 - 2 }} {% endfor %}"
-                        fill="none" stroke="{{ vix_color }}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-                    <circle cx="100" cy="{{ 34 - (vix_last - vmin) / vrng * 30 - 2 }}" r="2.2" fill="{{ vix_color }}" stroke="#0d0f14" stroke-width="0.8"/>
-                </svg>
-                <div class="pc-spark-meta">
-                    <span>VIX 近 1 個月走勢｜現值 <b style="color:{{ vix_color }};">{{ vix_last }}</b>｜低 {{ vmin }} / 高 {{ vmax }}（虛線=長均值 20）</span>
-                </div>
-                {% else %}
-                <div style="font-size:10px; color:var(--text-3); margin-top:6px; text-align:center;">
-                    VIX 走勢資料載入中
-                </div>
-                {% endif %}
             </div>
-            {% else %}
-            <div style="text-align:center; color:var(--text-3); padding:14px 0; font-size:11px;">Put/Call Ratio 資料無法取得</div>
+            {% endif %}
+
+            {% set pc = data.put_call_ratio %}
+            {% if pc and pc.current is not none %}
+            <div class="divider"></div>
+            <div class="pc-wrap">
+                <div class="pc-head">
+                    <span class="vix-lbl"><b style="color:var(--text); font-size:13px;">⚖️ CBOE Equity P/C</b></span>
+                    <span><span class="pc-num" style="color:{{ pc.rating_color }};">{{ pc.current }}</span>
+                        <span style="font-size:11px; color:{{ pc.rating_color }}; font-weight:600; margin-left:4px;">{{ pc.rating }}</span></span>
+                </div>
+            </div>
             {% endif %}
 
             {% if data.sentiment_commentary %}
@@ -885,12 +947,52 @@
             <div class="card-ts">🕐 更新時間：{{ data.fg_updated_at }}</div>
         </div>
 
-        <!-- 台灣市場 三大法人 -->
+        <!-- 台灣市場：量能／寬度／籌碼 -->
         <div class="card">
-            <div class="card-title">🇹🇼 台灣市場｜三大法人買賣超</div>
+            <div class="card-title">🇹🇼 台灣市場｜量能與籌碼</div>
             {% if data.taiwan %}
             {% set tw = data.taiwan %}
             {% set max_abs = [tw.foreign_yi|abs, tw.inv_trust_yi|abs, tw.dealer_yi|abs, 1]|max %}
+
+            {% if tw.turnover_yi %}
+            <div class="tw-stats">
+                <div class="tw-stat">
+                    <div class="k">成交金額</div>
+                    <div class="v">{{ "{:,}".format(tw.turnover_yi) }}<small> 億</small></div>
+                    <div class="s">5 日均 {{ "{:,}".format(tw.turnover_ma5_yi) }} 億｜<b style="color:{{ 'var(--red)' if tw.turnover_vs_ma5 >= 0 else 'var(--green)' }};">{{ '%+.1f'|format(tw.turnover_vs_ma5) }}%</b></div>
+                </div>
+                <div class="tw-stat">
+                    <div class="k">量能 vs 20 日均</div>
+                    <div class="v" style="color:{{ 'var(--red)' if tw.turnover_vs_ma20 >= 0 else 'var(--green)' }};">{{ '%+.1f'|format(tw.turnover_vs_ma20) }}%</div>
+                    <div class="s">20 日均 {{ "{:,}".format(tw.turnover_ma20_yi) }} 億</div>
+                </div>
+                {% if tw.margin_yi %}
+                <div class="tw-stat">
+                    <div class="k">融資餘額</div>
+                    <div class="v">{{ "{:,}".format(tw.margin_yi) }}<small> 億</small></div>
+                    <div class="s"><b style="color:{{ 'var(--red)' if tw.margin_chg_yi >= 0 else 'var(--green)' }};">{{ '%+.1f'|format(tw.margin_chg_yi) }} 億</b>｜{{ '散戶加碼' if tw.margin_chg_yi > 0 else '去槓桿' }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if tw.adv %}
+            {% set tot = (tw.adv + tw.dec + (tw.flat or 0)) or 1 %}
+            <div class="tw-breadth">
+                <div class="tw-breadth-head">
+                    <span>漲跌家數（上市股票）</span>
+                    <span><b style="color:var(--red);">{{ tw.adv }} 漲</b> ／ <b style="color:var(--green);">{{ tw.dec }} 跌</b>{% if tw.flat %} ／ {{ tw.flat }} 平{% endif %}</span>
+                </div>
+                <div class="tw-breadth-bar">
+                    <span style="width:{{ (tw.adv / tot * 100)|round(1) }}%; background:var(--red);"></span>
+                    <span style="width:{{ ((tw.flat or 0) / tot * 100)|round(1) }}%; background:#475569;"></span>
+                    <span style="width:{{ (tw.dec / tot * 100)|round(1) }}%; background:var(--green);"></span>
+                </div>
+                <div class="tw-breadth-foot">漲停 {{ tw.limit_up or 0 }} 家｜跌停 {{ tw.limit_dn or 0 }} 家{% if tw.turnover_date %}｜資料日 {{ tw.turnover_date }}{% endif %}</div>
+            </div>
+            {% endif %}
+
+            <div class="kgroup-title" style="margin-top:12px;">三大法人買賣超 <span>（億元，紅買超綠賣超）</span></div>
 
             {% for label, yi_val in [('外資', tw.foreign_yi), ('投信', tw.inv_trust_yi), ('自營商', tw.dealer_yi)] %}
             <div class="inst-row">
@@ -936,10 +1038,7 @@
     <!-- ④ 原物料＋加密貨幣（v14：每檔一張近 3 個月日 K，排列固定；解說放在各自圖下方） -->
     <div class="card">
         <div class="card-title">🛢️ 原物料</div>
-        <div class="card-hint">
-            日 K＝近 3 個月（原物料 60 個交易日；加密貨幣 24 小時交易，取 90 個日曆日），紅漲綠跌，滑鼠移上看開高低收<br>
-            彩色線＝月線 MA20／季線 MA60／年線 MA200｜右側色塊＝最新價｜排列固定：能源 → 金屬 → 加密貨幣
-        </div>
+        <div class="card-hint">近 3 個月日 K（加密貨幣取 90 個日曆日）｜排列固定：能源 → 金屬 → 加密貨幣</div>
         <div class="kgrid">
             {% for c in data.commodities %}
             {{ kcell(c.name, (c.symbol ~ c.price_fmt) if c.price else '<span class="na">N/A</span>', c.change_pct, c.kc, c.note, c.unit) }}
@@ -1004,17 +1103,34 @@
     <div class="card">
         <div class="card-title">🌍 國際局勢速覽</div>
         {% if data.geopolitics and data.geopolitics.categories %}
-        <div class="geo-section">
+        {% if data.geopolitics.bullets %}
+        <div class="geo-flash">
+            {% for b in data.geopolitics.bullets %}
+            <div class="geo-flash-item"><span class="n">{{ loop.index }}</span><span>{{ b }}</span></div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="geo-cats">
             {% for cat in data.geopolitics.categories %}
-            <div class="geo-category">
+            <section class="geo-category">
                 <div class="geo-cat-title">{{ cat.icon }} {{ cat.title }}</div>
                 {% for item in cat["items"] %}
-                <div class="geo-item">
-                    <span class="geo-icon">{{ item.icon }}</span>
-                    <div class="geo-text"><strong>{{ item.title }}</strong> — {{ item.desc }}</div>
-                </div>
+                {# desc 以「解讀：」分成背景與結論：預設只顯示標題＋解讀，詳細背景點開才看 #}
+                {% set parts = item.desc.split('解讀：') %}
+                <details class="geo-item">
+                    <summary>
+                        <span class="geo-icon">{{ item.icon }}</span>
+                        <span class="geo-sum">
+                            <b>{{ item.title }}</b>
+                            {% if parts|length > 1 %}<span class="geo-read">💡 {{ parts[1] }}</span>
+                            {% else %}<span class="geo-read">{{ parts[0][:90] }}{% if parts[0]|length > 90 %}…{% endif %}</span>{% endif %}
+                        </span>
+                        <span class="geo-more">詳細 ▾</span>
+                    </summary>
+                    <div class="geo-body">{{ parts[0] }}</div>
+                </details>
                 {% endfor %}
-            </div>
+            </section>
             {% endfor %}
         </div>
         <div style="font-size:10px; color:var(--text-3); margin-top:10px; padding-top:8px; border-top:1px dashed var(--border);">
@@ -1051,12 +1167,41 @@
             var t = Date.parse(el.dataset.release);
             if (isNaN(t)) return;
             var d = tpeDay(t) - tpeDay(now);
-            var txt = t <= now ? '已公布' : (d <= 0 ? '今天' : 'D-' + d);
+            var txt = t <= now ? '已公布' : (d <= 0 ? '今天' : '倒數 ' + d + ' 天');
             var dn = el.querySelector('.cb-dn');
-            if (dn) { dn.innerHTML = (t > now && d > 0) ? 'D-' + d + '<small>天</small>' : txt; }
+            if (dn) { dn.innerHTML = (t > now && d > 0) ? '<small>倒數</small>' + d + '<small>天</small>' : txt; }
             else { el.textContent = txt; }
             el.classList.toggle('soon', t > now && d <= 3);
         });
+    })();
+
+    // 央行行事曆：點日期看當天事件
+    (function () {
+        var src = document.getElementById('cal-json'), box = document.getElementById('cal-detail');
+        if (!src || !box) return;
+        var cells = [].concat.apply([], JSON.parse(src.textContent));
+        function render(c) {
+            if (!c) return;
+            var h = '<div class="cal-detail-h">' + c.date_md + '</div>';
+            (c.events || []).forEach(function (e) {
+                h += '<div class="cal-detail-row' + (e.done ? ' done' : '') + '">'
+                   + '<span class="f">' + e.flag + '</span><span><b>' + e.title + '</b>'
+                   + (e.when ? '<span class="w">' + e.when + (e.done ? '（已公布）' : '') + '</span>' : '')
+                   + (e.extra ? '<span class="w">' + e.extra + '</span>' : '')
+                   + '</span></div>';
+            });
+            box.innerHTML = h;
+        }
+        document.querySelectorAll('#cal-grid .cal-cell[data-idx]').forEach(function (cell) {
+            cell.addEventListener('click', function () {
+                document.querySelectorAll('#cal-grid .cal-cell.sel').forEach(function (x) { x.classList.remove('sel'); });
+                cell.classList.add('sel');
+                render(cells[+cell.dataset.idx]);
+            });
+        });
+        var first = document.querySelector('#cal-grid .cal-cell.today[data-idx]')
+                 || document.querySelector('#cal-grid .cal-cell[data-idx]');
+        if (first) first.click();
     })();
 
     // 日 K hover → 顯示開高低收（美股技術面／匯率／原物料／加密貨幣共用）
