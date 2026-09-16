@@ -492,7 +492,8 @@
         /* ── v17：市場預期框等高＋鷹鴿標色 ── */
         /* margin-top:auto 讓六張卡的預期框都貼齊底部；min-height＋3 行截斷讓框大小一致
            （完整文字用 title 提示），避免各國預期字數不同造成框忽大忽小 */
-        .cb-fc { margin-top: auto; min-height: 96px; }
+        /* 104px＝Fed（多一條機率條與來源說明）的自然高度，其餘卡片被撐到同高 */
+        .cb-fc { margin-top: auto; min-height: 104px; }
         .cb-fc-lbl { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
         .cb-stance { font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 9px; letter-spacing: 0.5px; }
         .cb-fc-txt { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
