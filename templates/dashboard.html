@@ -489,6 +489,14 @@
         .cal-up .dd { font-weight: 700; color: var(--text-2); }
         .cal-up .dd.soon { color: #fca5a5; }
 
+        /* ── v17：市場預期框等高＋鷹鴿標色 ── */
+        /* margin-top:auto 讓六張卡的預期框都貼齊底部；min-height＋3 行截斷讓框大小一致
+           （完整文字用 title 提示），避免各國預期字數不同造成框忽大忽小 */
+        .cb-fc { margin-top: auto; min-height: 96px; }
+        .cb-fc-lbl { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+        .cb-stance { font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 9px; letter-spacing: 0.5px; }
+        .cb-fc-txt { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
         /* ── v16：行事曆放大＋可點擊／台股量能／國際局勢可展開 ── */
         .cb-cal .cal-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; }
         @media (max-width: 900px) { .cb-cal .cal-layout { grid-template-columns: 1fr; } }
@@ -663,8 +671,10 @@
                 <span class="cb-pill {{ 'up' if act == '升息' else 'down' if act == '降息' else 'stale' if act == '待更新' else 'hold' }}">{% if act == '升息' %}▲ 升息 {{ info.last_bps }}bp{% elif act == '降息' %}▼ 降息 {{ info.last_bps }}bp{% elif act == '待更新' %}⚠️ 結果待更新{% else %}─ 維持{% endif %}</span>
                 <span class="cb-last-date">{{ info.last_date }}</span>
             </div>
-            <div class="cb-fc">
-                <div class="cb-fc-lbl">🎯 市場預期（下次會議）</div>
+            <div class="cb-fc"{% if info.stance %} style="border-left-color:{{ info.stance.color }};"{% endif %}>
+                <div class="cb-fc-lbl">🎯 市場預期（下次會議）
+                    {% if info.stance %}<span class="cb-stance" style="color:{{ info.stance.color }}; background:{{ info.stance.bg }};">{{ info.stance.label }}</span>{% endif %}
+                </div>
                 {% if info.odds and info.odds.probs %}
                 <div class="cb-prob">
                     {% for lbl, p in info.odds.probs.items() %}
@@ -678,7 +688,7 @@
                 </div>
                 <div class="cb-src">Fed Funds 期貨隱含（{{ info.odds.method }}）｜現行 EFFR {{ info.odds.effr }}% → 隱含會後 {{ '%.2f'|format(info.odds.implied) }}%</div>
                 {% else %}
-                <div class="cb-fc-txt">{{ info.forecast }}</div>
+                <div class="cb-fc-txt" title="{{ info.forecast }}">{{ info.forecast }}</div>
                 {% endif %}
             </div>
         </div>
@@ -710,9 +720,10 @@
                 </div>
                 <div class="cal-legend">旗幟＋簡稱＝央行利率決議（🇨🇳＝LPR）｜📊＝本週美國重要數據｜金框＝今天｜淡色＝已公布</div>
             </div>
+            {# 「接下來」固定在上、點選日期的明細在下：明細高度會隨當天事件數變動，
+               放下面才不會把上面的清單推來推去 #}
             <div class="cal-side">
-                <div class="cal-detail" id="cal-detail">點左邊有標記的日期，看當天的央行決議與重要數據</div>
-                <div class="kgroup-title" style="margin-top:10px;">接下來 <span>（倒數以台北公布時間計）</span></div>
+                <div class="kgroup-title" style="margin-top:0;">接下來 <span>（倒數以台北公布時間計）</span></div>
                 {% for u in cal.upcoming %}
                 <div class="cal-up">
                     <span class="who">{{ u.flag }} {{ u.abbr }}</span>
@@ -720,6 +731,7 @@
                     <span class="dd{{ ' soon' if u.days <= 3 }}" data-release="{{ u.iso }}">{% if u.days <= 0 %}今天{% else %}倒數 {{ u.days }} 天{% endif %}</span>
                 </div>
                 {% endfor %}
+                <div class="cal-detail" id="cal-detail" style="margin-top:10px;">點左邊有標記的日期，看當天的央行決議與重要數據</div>
             </div>
         </div>
         <script type="application/json" id="cal-json">{{ cal.weeks | tojson }}</script>
