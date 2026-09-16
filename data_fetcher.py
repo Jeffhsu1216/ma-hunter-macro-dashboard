@@ -1935,6 +1935,31 @@ def _attach_next_meeting(result: dict) -> None:
                 break
 
 
+def _attach_stance(result: dict) -> None:
+    """為每張央行卡片標出「市場預期」的鷹鴿立場（v17）。
+
+    Fed 有期貨機率 → 取機率最高者（升息＝鷹派、降息＝鴿派、維持＝中性）；
+    其餘依 forecast 文字關鍵字判斷，兩邊都出現或都沒有 → 中性。
+    顏色沿用台股慣例：鷹派（緊縮）紅、鴿派（寬鬆）綠、中性灰。
+    """
+    STY = {"鷹派": ("#ef4444", "rgba(239,68,68,0.18)"),
+           "鴿派": ("#22c55e", "rgba(34,197,94,0.18)"),
+           "中性": ("#94a3b8", "rgba(148,163,184,0.16)")}
+    for r in result.values():
+        lab = None
+        probs = (r.get("odds") or {}).get("probs") or {}
+        if probs:
+            top = max(probs.items(), key=lambda kv: kv[1])[0]
+            lab = "鷹派" if "升息" in top else "鴿派" if "降息" in top else "中性"
+        if lab is None:
+            txt  = str(r.get("forecast", ""))
+            hawk = any(k in txt for k in ("升息", "偏鷹", "鷹派", "緊縮"))
+            dove = any(k in txt for k in ("降息", "偏鴿", "鴿派", "寬鬆"))
+            lab  = "鷹派" if hawk and not dove else "鴿派" if dove and not hawk else "中性"
+        col, bg = STY[lab]
+        r["stance"] = {"label": lab, "color": col, "bg": bg}
+
+
 def build_cb_calendar(cal_events=None) -> dict:
     """當月央行行事曆（週日起算的月曆格）＋ 接下來 6 場央行決議倒數。
 
@@ -2108,6 +2133,7 @@ def fetch_cb_rates() -> dict:
 
     _stale_guard(result)
     _attach_next_meeting(result)
+    _attach_stance(result)
     return result
 
 
