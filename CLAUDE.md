@@ -142,7 +142,7 @@
 
 **執行流程：**
 1. 讀取 `/Users/jeffhsu/Desktop/Claude/投資分析/Screening.md`（取得欄位規格、API查詢策略、選股輔助提示）
-2. 開啟 `~/Desktop/Stock Analysis/Jeff_Stock Analysis_Draft.xlsx`（預設，除非明確指定正式檔案）
+2. 開啟 `~/Desktop/Stock Analysis/Jeff_Stock Analysis.xlsx`（直接寫入正式檔，不再使用 Draft；寫入前自動備份至 `Backup/`）
 3. 新增工作表 `YYYYMM`，複製上月格式
 4. 一次呼叫 `/api/metrics` 批次取得 40 支股票：名稱、產業、股價、EPS、PE、市值
 5. 寫入工作表，公式欄位用 Excel 公式（漲幅、排名）
@@ -200,7 +200,7 @@
 
 **執行流程：**
 1. 讀取 `/Users/jeffhsu/Desktop/Claude/個人基金/MonthlyAllocation.md`（取得配置邏輯、輸出格式）
-2. 開啟月選股 Excel（`~/Desktop/Stock Analysis/Jeff_Stock Analysis_Draft.xlsx`），讀取 `YYYYMM` 工作表
+2. 開啟月選股 Excel（`~/Desktop/Stock Analysis/Jeff_Stock Analysis.xlsx`），讀取 `YYYYMM` 工作表
 3. 掃描 N 欄 = `"是"` → 取代號（B）、名稱（C）、收盤價（H）
 4. 逐一讀取 4 位客戶最新 Excel → 取 C25 現金餘額（唯讀）
 5. 計算：月選股 80% equal weight / 短線備用 20% / 每支建議張數
