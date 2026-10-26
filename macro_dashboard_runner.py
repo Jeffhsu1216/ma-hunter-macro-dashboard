@@ -660,8 +660,10 @@ def _push_docs_html(geo_bullets=None):
         # 供儀表板走勢圖 + Render 讀取，須一併 commit+push（否則線上歷史停在舊版、
         # 且工作區永遠殘留未提交檔，埋下後續 autostash 撞檔的火種）。
         add_paths = ['docs/']
-        if os.path.exists(os.path.join(SCRIPT_DIR, 'pc_ratio_history.json')):
-            add_paths.append('pc_ratio_history.json')
+        # geo_history.json（v19）：國際局勢卡的共機架次等追蹤數列，每班累積一筆，同理須一併推送
+        for _f in ('pc_ratio_history.json', 'geo_history.json'):
+            if os.path.exists(os.path.join(SCRIPT_DIR, _f)):
+                add_paths.append(_f)
         subprocess.run(['git', '-C', SCRIPT_DIR, 'add'] + add_paths, check=True)
         # 先判斷是否真有變動，區分「無檔可 commit」（良性）與真失敗
         staged = subprocess.run(
