@@ -66,12 +66,13 @@ YIELD_FRED_IDS = [
 ]
 
 INDEX_TICKERS = [
+    # v19：固定依地區排列（美 → 歐 → 亞 → 台），不再依漲跌排序；每檔附近 3 個月日 K
     ("標普 500 (S&P 500)",        "^GSPC",     "🇺🇸"),
     ("那斯達克 (Nasdaq)",          "^IXIC",     "🇺🇸"),
     ("費城半導體 (SOX)",           "^SOX",      "🇺🇸"),
-    ("英國富時 100 (FTSE 100)",    "^FTSE",     "🇬🇧"),
-    ("德國 DAX (DAX)",             "^GDAXI",    "🇩🇪"),
     ("歐洲 STOXX 600 (STOXX 600)", "^STOXX",    "🇪🇺"),
+    ("德國 DAX (DAX)",             "^GDAXI",    "🇩🇪"),
+    ("英國富時 100 (FTSE 100)",    "^FTSE",     "🇬🇧"),
     ("日經 225 (Nikkei 225)",      "^N225",     "🇯🇵"),
     ("南韓綜合 (KOSPI)",            "^KS11",     "🇰🇷"),
     ("恆生指數 (HSI)",              "^HSI",      "🇭🇰"),
@@ -79,6 +80,8 @@ INDEX_TICKERS = [
     ("印度 Nifty 50 (Nifty 50)",   "^NSEI",     "🇮🇳"),
     ("加權指數 (TAIEX)",            "^TWII",     "🇹🇼"),
 ]
+# 已在「美股技術面」／「台灣股市」以大張技術面日 K 呈現者，全球指數格不再重複畫
+INDEX_TECH_TICKERS = {"^GSPC", "^SOX", "^TWII"}
 
 # (name, ticker, decimals, currency_symbol)
 COMMODITY_TICKERS = [
@@ -147,17 +150,17 @@ CBC_DATES_2026 = [
 # 每次該央行會後（見上方各 _DATES_2026）更新對應條目：
 #   last_action：升息 / 降息 / 維持   last_bps：本次變動基點（維持填 0）
 #   last_date：決議日 M/D            forecast：下次會議市場預期（一句話）
-# 最後更新：2026/09/16（Fed 7/29 維持 9-3；PBOC 8/20 LPR 未調；BOK 8/27 再升 25bps 至 3.00%；
-#          ECB 9/10 再升 25bps，DFR 2.50% 自 9/16 生效）
-# ⚠️ Fed 的 forecast 由 fetch_fed_hike_odds() 以 Fed Funds 期貨自動計算覆寫，此處僅為抓取失敗時的備援。
+# 最後更新：2026/10/26（Fed 9/16 升 25bps 至 3.75–4.00%，12-0；BOJ 9/18 升 25bps 至 1.25%，7-2；
+#          CBC 9/17 維持 2%（連 10 凍）；BOK 10/22 維持 3.00%；PBOC 10/20 LPR 未調；ECB 9/10 升 25bps）
+# ⚠️ Fed／ECB／BOJ 的 forecast 由利率期貨即時計算覆寫（fetch_fed_hike_odds／fetch_stir_odds），此處僅為抓取失敗時的備援。
 # ⚠️ 若某央行已開過新會議、這裡還停在舊日期，_stale_guard() 會把卡片標成「待更新」而不是顯示舊結論。
 CB_DECISION_META = {
-    "聯準會 (Fed)":    {"last_action": "維持", "last_bps": 0,  "last_date": "7/29", "forecast": "期貨隱含機率暫無法取得（9/10 報導 CME FedWatch 升息機率逾 60%）"},
-    "中國央行 (PBOC)": {"last_action": "維持", "last_bps": 0,  "last_date": "8/20", "forecast": "無調整訊號（8/20 LPR 1 年期 3.0%、5 年期 3.5% 皆未調）"},
+    "聯準會 (Fed)":    {"last_action": "升息", "last_bps": 25, "last_date": "9/16", "forecast": "期貨隱含機率暫無法取得（9/16 升息後點陣圖偏向年內再升一次）"},
+    "中國央行 (PBOC)": {"last_action": "維持", "last_bps": 0,  "last_date": "10/20", "forecast": "短期無調整訊號（LPR 1 年 3.0%、5 年 3.5%；10/19 宣布研究改以隔夜逆回購為主要操作）"},
     "歐洲央行 (ECB)":  {"last_action": "升息", "last_bps": 25, "last_date": "9/10", "forecast": "數據依賴、逐次決議（中東戰事推升通膨，不預設路徑）"},
-    "中央銀行 (CBC)":  {"last_action": "維持", "last_bps": 0,  "last_date": "6/18", "forecast": "維持（連 8 凍，通膨溫和）"},
-    "日本央行 (BOJ)":  {"last_action": "維持", "last_bps": 0,  "last_date": "7/31", "forecast": "偏鷹（7/31 維持 8-1，高田創主張升至 1.25%；稱核心通膨將明顯高於 2%）"},
-    "韓國央行 (BOK)":  {"last_action": "升息", "last_bps": 25, "last_date": "8/27", "forecast": "偏鷹，總裁稱連兩升為「預防性」緊縮（6-1 票）"},
+    "中央銀行 (CBC)":  {"last_action": "維持", "last_bps": 0,  "last_date": "9/17", "forecast": "偏鷹觀望（連 10 凍；CPI 連 4 個月逾 2%，9 月會前曾有升半碼預期）"},
+    "日本央行 (BOJ)":  {"last_action": "升息", "last_bps": 25, "last_date": "9/18", "forecast": "期貨隱含機率暫無法取得（9/18 升至 1.25% 為 31 年新高，7-2 票）"},
+    "韓國央行 (BOK)":  {"last_action": "維持", "last_bps": 0,  "last_date": "10/22", "forecast": "偏鷹：連兩升後暫停，路透調查中位數預測 11 月再升一碼"},
 }
 
 # PBOC 沒有固定會議日程；LPR 每月 20 日例行公布（遇假日順延）
@@ -206,6 +209,7 @@ def _get_quote(ticker_symbol: str, retries: int = 2) -> dict:
                 "price":      round(float(p),    6),
                 "prev_close": round(float(prev),  6),
                 "change_pct": round(float(chgp),  2),
+                "market_time": meta.get("regularMarketTime"),
             }
         except Exception as e:
             logger.warning(f"_get_quote {ticker_symbol} attempt {attempt+1}: {e}")
@@ -971,9 +975,9 @@ def _sentiment_commentary(vix_price: float = None, vix_chg: float = None,
 
 
 def _tech_notes(tech: dict) -> dict:
-    """SPX/SOX 各一段技術面解說（v14：放在各自日 K 下方），回傳 {key: str}"""
+    """SPX/SOX/TAIEX 各一段技術面解說（v14：放在各自日 K 下方），回傳 {key: str}"""
     out = {}
-    for key in ('spx', 'sox'):
+    for key in ('spx', 'sox', 'twii'):
         t = tech.get(key, {})
         if not t.get('ok'):
             continue
@@ -1450,18 +1454,28 @@ def fetch_yield_curve() -> dict:
 
 
 def fetch_index_data() -> list:
-    """抓指數，按漲跌幅排序（漲→跌），VIX 獨立置底"""
+    """抓指數（固定地區順序），每檔附近 3 個月日 K＋一句解說（v19）；VIX 獨立置底（is_vix）"""
+    from concurrent.futures import ThreadPoolExecutor
+    k_syms = [t for _, t, _ in INDEX_TICKERS if t not in INDEX_TECH_TICKERS]
+    with ThreadPoolExecutor(max_workers=len(k_syms)) as ex:
+        futs = {t: ex.submit(_get_ohlc, t, "2y") for t in k_syms}
+        ohlc = {t: f.result() for t, f in futs.items()}
+
     results = []
     for name, ticker, flag in INDEX_TICKERS:
         q = _get_quote(ticker)
+        kc = _build_kchart(ohlc[ticker], dec=0 if (q["price"] or 0) >= 1000 else 2) if ticker in ohlc else None
+        c = q["change_pct"]
+        day = "" if c is None else (f"今日 {c:+.2f}%" + ("，跌幅偏大" if c <= -1.5 else "，漲幅偏大" if c >= 1.5 else ""))
+        note = "；".join(x for x in (day, _kc_trend_note(kc)) if x)
         results.append({
-            "name": name, "flag": flag,
+            "name": name, "flag": flag, "ticker": ticker,
             "price": q["price"],
             "price_fmt": _fmt(q["price"]),
-            "change_pct": q["change_pct"],
+            "change_pct": c,
+            "kc": kc,
+            "note": note + "。" if note else "",
         })
-
-    results.sort(key=lambda x: x["change_pct"] if x["change_pct"] is not None else -999, reverse=True)
 
     vix_q = _get_quote(VIX_TICKER)
     results.append({
@@ -1572,6 +1586,10 @@ def _fetch_crypto_spot() -> list:
 # ── 其他風險先行指標（v18）：讀法與 VIX 相同，數字越高越緊張 ───────────────────────────
 # 取代 v16 的「VIX 期限結構」（Jeff：看不懂）與「台指選擇權 P/C」（Jeff：感覺還好）。
 RISK_DEFS = {
+    # v19：VIX 也改用同一套儀表（與 MOVE 並排），分區沿用舊 VIX gauge 的 15／20／30
+    "vix":   {"icon": "📉", "name": "VIX", "sub": "美股恐慌指數（S&P 500 選擇權隱含波動率）",
+              "unit": "", "dec": 2, "scale": (10, 50),
+              "zones": [(15, "平靜", "#22c55e"), (20, "正常", "#eab308"), (30, "緊張", "#f97316"), (None, "恐慌", "#ef4444")]},
     "twvix": {"icon": "🇹🇼", "name": "台指 VIX", "sub": "台股恐慌指數（期交所臺指選擇權波動率指數）",
               "unit": "", "dec": 2, "scale": (10, 50),
               "zones": [(18, "平靜", "#22c55e"), (25, "正常", "#eab308"), (35, "緊張", "#f97316"), (None, "恐慌", "#ef4444")]},
@@ -1665,16 +1683,45 @@ def _hy_oas_series() -> list:
         return []
 
 
+def _vix_series() -> list:
+    return sorted(_get_history_raw(VIX_TICKER, "3mo").items())
+
+
+def _risk_note(g: dict, vix: float = None) -> str:
+    """每個情緒儀表一句白話（放在儀表下方）"""
+    k, v, lab = g["key"], g["value"], g["label"]
+    if k == "vix":
+        return (_sentiment_commentary(v, None).split("<br>")[0].rstrip("。") + "。") if v is not None else ""
+    if k == "move":
+        tail = ("美債波動劇烈，長天期利率大起大落，股債可能同跌" if v >= 130 else
+                "美債波動偏高，利率路徑不確定性大，對成長股評價不利" if v >= 100 else
+                "美債波動正常" if v >= 80 else "美債市場平靜，利率預期穩定")
+        return f"MOVE {g['value_fmt']}（{lab}）：{tail}。"
+    if k == "twvix":
+        s = f"台指 VIX {g['value_fmt']}（{lab}）"
+        if vix:
+            gap = v - vix
+            s += (f"，比美國 VIX 高 {gap:.1f} 點：台股恐慌明顯高於美股，多半是本土因素（外資賣超、權值股重挫）"
+                  if gap >= 5 else
+                  f"，比美國 VIX 低 {-gap:.1f} 點：台股情緒相對穩定" if gap <= -3 else
+                  "，與美國 VIX 相近：台股情緒跟著美股走")
+        return s + "。"
+    return ""
+
+
 def fetch_risk_gauges() -> list:
-    """市場情緒區的三個風險先行儀表：台指 VIX／MOVE／高收益債利差"""
+    """情緒儀表（v19）：全球區 VIX／MOVE、台股區台指 VIX；高收益債利差已依 Jeff 指示移除（_hy_oas_series 保留備用）"""
     out = []
-    for key, fn in (("twvix", _tw_vix_series), ("move", _move_series), ("hyoas", _hy_oas_series)):
+    for key, fn in (("vix", _vix_series), ("move", _move_series), ("twvix", _tw_vix_series)):
         try:
             g = _risk_gauge(key, fn())
             if g:
                 out.append(g)
         except Exception as e:
             logger.warning(f"risk gauge {key} failed: {e}")
+    vix = next((g["value"] for g in out if g["key"] == "vix"), None)
+    for g in out:
+        g["note"] = _risk_note(g, vix)
     return out
 
 
@@ -1856,6 +1903,66 @@ def fetch_geopolitics() -> dict:
     return None
 
 
+# ── 國際局勢 v19：四大議題卡（台海／兩岸、美中貿易、中東／以阿戰爭、俄烏戰爭）──────────────────
+# geopolitics.json 的 issues[]（Claude 排程每班寫入）＋ 這裡補上可自動算的欄位：
+#   level 1–5 → 情勢燈號；trend up/flat/down → 箭頭
+#   kpis[].since "YYYY-MM-DD" → 「第 N 天」；kpis[].until → 「倒數 N 天」；kpis[].market "布蘭特原油" → 即時價格
+#   kpis[].track "pla_aircraft" → 每班數值寫進 geo_history.json，畫近 14 筆長條圖（共機架次等）
+GEO_HISTORY_FILE = os.path.join(os.path.dirname(__file__), "geo_history.json")
+GEO_LEVELS = {1: ("緩和", "#22c55e"), 2: ("穩定", "#84cc16"), 3: ("緊張", "#eab308"),
+              4: ("升溫", "#f97316"), 5: ("危機", "#ef4444")}
+GEO_TRENDS = {"up": ("▲ 升溫", "#f97316"), "flat": ("► 持平", "#94a3b8"), "down": ("▼ 降溫", "#22c55e")}
+
+
+def _resolve_geo(geo: dict, markets: list) -> dict:
+    if not geo or not geo.get("issues"):
+        return geo
+    today = datetime.now(TAIPEI_TZ).date()
+    mk = {m["name"]: m for m in markets if m.get("name")}
+    try:
+        hist = json.load(open(GEO_HISTORY_FILE, encoding="utf-8")) if os.path.exists(GEO_HISTORY_FILE) else {}
+    except Exception:
+        hist = {}
+    dirty = False
+    for iss in geo["issues"]:
+        lv = int(iss.get("level") or 2)
+        iss["level_lbl"], iss["level_color"] = GEO_LEVELS.get(lv, GEO_LEVELS[2])
+        iss["trend_lbl"], iss["trend_color"] = GEO_TRENDS.get(iss.get("trend", "flat"), GEO_TRENDS["flat"])
+        for k in iss.get("kpis", []):
+            try:
+                if k.get("since"):
+                    k["value"] = (today - date.fromisoformat(k["since"])).days + 1
+                    k.setdefault("pre", "第")
+                    k.setdefault("unit", "天")
+                elif k.get("until"):
+                    k["value"] = max((date.fromisoformat(k["until"]) - today).days, 0)
+                    k.setdefault("pre", "倒數")
+                    k.setdefault("unit", "天")
+                elif k.get("market") in mk:
+                    m = mk[k["market"]]
+                    k["value"] = (m.get("symbol") or "") + (m.get("price_fmt") or "N/A")
+                    k.setdefault("unit", m.get("unit", ""))
+                    k["chg"] = m.get("change_pct")
+            except Exception as e:
+                logger.warning(f"geo kpi {k.get('label')} failed: {e}")
+            if k.get("track") and isinstance(k.get("value"), (int, float)):
+                d = k.get("date") or today.isoformat()
+                if hist.setdefault(k["track"], {}).get(d) != k["value"]:
+                    hist[k["track"]][d] = k["value"]
+                    dirty = True
+                pts = sorted(hist[k["track"]].items())[-14:]
+                top = max([v for _, v in pts] + [1])
+                k["hist"] = [{"d": f"{int(ds[5:7])}/{int(ds[8:10])}", "v": v,
+                              "h": round(v / top * 100, 1)} for ds, v in pts]
+    if dirty:
+        try:
+            with open(GEO_HISTORY_FILE, "w", encoding="utf-8") as f:
+                json.dump(hist, f, ensure_ascii=False, indent=1, sort_keys=True)
+        except Exception as e:
+            logger.warning(f"geo_history write failed: {e}")
+    return geo
+
+
 FF_MONTH_CODES = "FGHJKMNQUVXZ"          # 期貨月份代碼 1~12 月
 
 
@@ -1918,7 +2025,23 @@ def fetch_fed_hike_odds() -> dict:
         method = f"{nm_} 月合約"
 
     delta = (post - effr) * 100                       # bp
-    steps = delta / 25.0
+    probs, text = _odds_from_delta(delta)
+    return {
+        "meeting":  f"{mtg.month}/{mtg.day}",
+        "effr":     round(effr, 2), "effr_date": effr_date,
+        "base":     round(effr, 2), "base_lbl": "EFFR", "src": "Fed Funds 期貨",
+        "implied":  round(post, 3), "delta_bp": round(delta, 1),
+        "method":   method,
+        "probs":    probs,
+        "text":     f"{text}（Fed Funds 期貨隱含，{mtg.month}/{mtg.day} 會議）",
+    }
+
+
+def _odds_from_delta(delta_bp: float):
+    """會後隱含利率與現行利率的差距（bp）→ 以 25bp 為一碼拆成相鄰兩個碼數的機率（FedWatch 同法）。
+    回傳 ({標籤: 機率}, 「維持 90%／升息 1 碼 10%」)，依機率高→低排序。"""
+    import math
+    steps = delta_bp / 25.0
     if abs(steps) < 0.02:
         probs = {0: 1.0}
     else:
@@ -1930,14 +2053,154 @@ def fetch_fed_hike_odds() -> dict:
         return "維持" if k == 0 else (f"升息 {k} 碼" if k > 0 else f"降息 {-k} 碼")
 
     ranked = sorted(((k, p) for k, p in probs.items() if p >= 0.005), key=lambda kv: -kv[1])
-    text = "／".join(f"{_lbl(k)} {p * 100:.0f}%" for k, p in ranked)
+    return ({_lbl(k): round(p, 3) for k, p in ranked},
+            "／".join(f"{_lbl(k)} {p * 100:.0f}%" for k, p in ranked))
+
+
+# ── ECB／BOJ 下次會議機率（v19）：3 個月期隔夜利率期貨反推，FedWatch 同一套邏輯 ──────────────
+# 3 個月期期貨的結算＝參考期間（IMM：合約月第三個週三 → 三個月後第三個週三，不含末日）隔夜利率平均，
+# 期貨價 = 100 − 平均利率。期間內：已實現天數用官方每日利率、會議生效前用最新一筆、生效後為未知的會後利率：
+#   會後利率 = (平均 × 總天數 − 已實現加總 − 最新利率 × 生效前剩餘天數) / 生效後天數
+# 為何不用選擇權：央行機率的業界標準（CME FedWatch、Bloomberg WIRP）本來就是用期貨／OIS 反推；
+# 歐元、日圓短率選擇權成交極少且無免費報價，算出來雜訊比期貨大。
+# 資料源（皆免費、免金鑰）：
+#   ECB：CME 3 個月 €STR 期貨（Yahoo ESR{月碼}{年}.CME，成交稀薄，僅有成交日才有價）＋ ECB Data Portal 每日 €STR
+#   BOJ：大阪交易所 3 個月 TONA 期貨每日結算價（JPX 結算價 CSV，無成交也有結算價）＋ 日銀時系列 API 每日無擔保隔夜拆款利率
+def _third_wed(y: int, m: int) -> date:
+    d = date(y, m, 1)
+    return d + timedelta(days=(2 - d.weekday()) % 7 + 14)
+
+
+def _imm_period(d: date):
+    """d 所在的 3 個月 IMM 參考期間 (起, 迄, 合約月 YYYYMM)：起＝季月第三個週三（含）、迄＝下個季月第三個週三（不含）"""
+    y, m = d.year, d.month - (d.month - 1) % 3 + 2        # 本季季月（3/6/9/12）
+    start = _third_wed(y, m)
+    if d < start:
+        y, m = (y - 1, 12) if m == 3 else (y, m - 3)
+        start = _third_wed(y, m)
+    ny, nm = (y + 1, 3) if m == 12 else (y, m + 3)
+    return start, _third_wed(ny, nm), y * 100 + m
+
+
+def _ffill_daily(obs: dict, start: date, end: date) -> dict:
+    """官方每日利率（僅營業日）→ 逐日曆日序列：週末／假日沿用前一營業日（期貨結算即依此計息）"""
+    out, last = {}, None
+    prior = [k for k in obs if k < start]
+    if prior:
+        last = obs[max(prior)]
+    d = start
+    while d < end:
+        if d in obs:
+            last = obs[d]
+        if last is not None and d <= max(obs):
+            out[d] = last
+        d += timedelta(days=1)
+    return out
+
+
+def _estr_obs() -> dict:
+    """ECB Data Portal：€STR 每日利率（近 130 筆）→ {date: %}"""
+    r = requests.get("https://data-api.ecb.europa.eu/service/data/EST/B.EU000A2X2A25.WT"
+                     "?lastNObservations=130&format=csvdata", timeout=20)
+    import csv, io
+    return {datetime.strptime(x["TIME_PERIOD"], "%Y-%m-%d").date(): float(x["OBS_VALUE"])
+            for x in csv.DictReader(io.StringIO(r.text)) if x.get("OBS_VALUE")}
+
+
+def _tona_obs() -> dict:
+    """日銀時系列統計 API：無擔保隔夜拆款利率（TONA）每日平均 → {date: %}"""
+    start = (datetime.now(TAIPEI_TZ).date() - timedelta(days=130)).strftime("%Y%m")
+    r = requests.get("https://www.stat-search.boj.or.jp/api/v1/getDataCode"
+                     f"?format=json&lang=en&db=FM01&code=STRDCLUCON&startDate={start}", timeout=20)
+    v = r.json()["RESULTSET"][0]["VALUES"]
+    return {datetime.strptime(str(d), "%Y%m%d").date(): float(x)
+            for d, x in zip(v["SURVEY_DATES"], v["VALUES"]) if x is not None}
+
+
+def _esr_price(contract: int):
+    """CME 3 個月 €STR 期貨（Yahoo）→ (價格, 成交日)；超過 10 天沒成交視為無效"""
+    sym = f"ESR{FF_MONTH_CODES[contract % 100 - 1]}{contract // 100 % 100:02d}.CME"
+    q = _get_quote(sym)
+    p, ts = q.get("price"), q.get("market_time")
+    if not p:
+        return None, None
+    d = datetime.fromtimestamp(ts, TAIPEI_TZ).date() if ts else None
+    if d and (datetime.now(TAIPEI_TZ).date() - d).days > 10:
+        logger.warning(f"{sym} 最後成交 {d} 已逾 10 天，不採用")
+        return None, None
+    return p, d
+
+
+def _jpx_tona_price(contract: int):
+    """大阪交易所 3 個月 TONA 期貨最新結算價（JPX 每日結算價 CSV，約 4MB）→ (價格, 結算日)"""
+    base = "https://www.jpx.co.jp"
+    html = requests.get(f"{base}/english/markets/derivatives/settlement-price/index.html",
+                        headers={"User-Agent": "Mozilla/5.0"}, timeout=20).text
+    m = re.search(r'href="([^"]*rb_e(\d{8})\.csv)"', html)
+    if not m:
+        return None, None
+    txt = requests.get(base + m.group(1), headers={"User-Agent": "Mozilla/5.0"},
+                       timeout=60).content.decode("latin-1", errors="replace")
+    for line in txt.splitlines():
+        c = line.split(",")
+        if len(c) > 5 and c[1].startswith("FUT_TOA3M_") and c[3] == str(contract) and c[5]:
+            return float(c[5]), datetime.strptime(m.group(2), "%Y%m%d").date()
+    return None, None
+
+
+# 每家：(會議日程, 生效日規則, 期貨價函式, 每日利率函式, 現行利率簡稱, 期貨名稱)
+#   ECB：週四決議 → 下週三生效（2024/09 起新操作框架；9/10 決議 9/16 生效）
+#   BOJ：決議後下一個營業日生效（9/18 週五決議，日本連假後 9/24 生效；此處只跳週末，假日誤差 1–2 天可忽略）
+_STIR_CFG = {
+    "歐洲央行 (ECB)": (ECB_DATES_2026, lambda d: d + timedelta(days=(2 - d.weekday()) % 7 or 7),
+                       _esr_price, _estr_obs, "€STR", "CME €STR 期貨"),
+    "日本央行 (BOJ)": (BOJ_DATES_2026, lambda d: d + timedelta(days=3 if d.weekday() == 4 else 1),
+                       _jpx_tona_price, _tona_obs, "TONA", "大阪交易所 TONA 期貨"),
+}
+
+
+def fetch_stir_odds(name: str) -> dict:
+    """ECB／BOJ 下次會議升／降息機率（3 個月期隔夜利率期貨反推）；失敗回 {}，卡片改顯示釘住文字"""
+    from zoneinfo import ZoneInfo
+    dates, eff_fn, px_fn, obs_fn, base_lbl, src = _STIR_CFG[name]
+    now = datetime.now(ZoneInfo("Asia/Taipei"))
+    upcoming = [d for d in dates if _release_tpe(name, d)[0] > now]
+    if not upcoming:
+        return {}
+    mtg = upcoming[0]
+    eff = eff_fn(mtg)
+    start, end, contract = _imm_period(eff)
+    n_after = (end - eff).days
+    if n_after < 10:                         # 會議太靠近期間尾端，單一合約資訊不足
+        return {}
+    price, px_date = px_fn(contract)
+    if not price:
+        return {}
+    obs = obs_fn()
+    if not obs:
+        return {}
+    prev = [d for d in dates if d < mtg]
+    if prev and eff_fn(prev[-1]) > max(obs):    # 上次決議已公布但尚未生效：最新利率不是會前利率，先不算
+        return {}
+    realized = _ffill_daily(obs, start, end)
+    base = obs[max(obs)]                     # 最新官方利率＝會前利率
+    total = (end - start).days
+    n_mid = sum(1 for i in range((eff - start).days)
+                if start + timedelta(days=i) not in realized)
+    known = sum(v for d, v in realized.items() if d < eff)
+    avg   = 100.0 - price
+    post  = (avg * total - known - base * n_mid) / n_after
+    later = [d for d in dates if mtg < d and eff_fn(d) < end]
+    probs, text = _odds_from_delta((post - base) * 100)
+    cm = contract % 100
     return {
         "meeting":  f"{mtg.month}/{mtg.day}",
-        "effr":     round(effr, 2), "effr_date": effr_date,
-        "implied":  round(post, 3), "delta_bp": round(delta, 1),
-        "method":   method,
-        "probs":    {_lbl(k): round(p, 3) for k, p in ranked},
-        "text":     f"{text}（Fed Funds 期貨隱含，{mtg.month}/{mtg.day} 會議）",
+        "base":     round(base, 3), "base_lbl": base_lbl, "src": src,
+        "implied":  round(post, 3), "delta_bp": round((post - base) * 100, 1),
+        "method":   f"{cm} 月合約 {price:g}｜{px_date.month}/{px_date.day}"
+                    + ("；假設下一場前不再調整" if later else ""),
+        "probs":    probs,
+        "text":     f"{text}（{src}隱含，{mtg.month}/{mtg.day} 會議）",
     }
 
 
@@ -1973,7 +2236,7 @@ def _stale_guard(result: dict) -> None:
                            f"但 {last_mtg:%m/%d} 已開會 → 標示待更新")
             r["last_action"], r["last_bps"] = "待更新", 0
             r["last_date"] = f"{last_mtg.month}/{last_mtg.day}"
-            if "odds" not in r:                     # Fed 的預期由期貨自動算，不受影響
+            if "odds" not in r:                     # Fed／ECB／BOJ 的預期由期貨自動算，不受影響
                 r["forecast"] = f"—（{last_mtg.month}/{last_mtg.day} 會議結果待更新）"
 
 
@@ -2185,8 +2448,8 @@ def fetch_cb_rates() -> dict:
     # ── BOJ（釘住政策利率，手動維護）──
     # 不靠 FRED IRSTJPN156N：該序列為舊貼現率定義、嚴重落後，會與真實政策利率日日打架。
     # BOJ 一年僅 8 次會，利率為已知離散值；每次會後（見 BOJ_DATES_2026）手動更新此值。
-    # 2026/06/16 升息一碼至 1.00%（7-1 票，1995/9 以來最高）。
-    boj_rate = "1.00"
+    # 2026/06/16 升息一碼至 1.00%（7-1 票）；2026/09/18 再升一碼至 1.25%（7-2 票，31 年新高，9/24 生效）。
+    boj_rate = "1.25"
 
     # ── BoE（英國央行 Bank Rate）──
     # 2026/07/25 起不再顯示英國央行卡片；_scrape_boe_* 與 BOE_DATES_2026 保留供未來復用。
@@ -2238,6 +2501,17 @@ def fetch_cb_rates() -> dict:
         result["聯準會 (Fed)"]["forecast"] = odds["text"]
         result["聯準會 (Fed)"]["odds"] = odds
 
+    # ECB／BOJ（v19）：3 個月期隔夜利率期貨反推，同 Fed 覆寫釘住文字
+    for _name in _STIR_CFG:
+        try:
+            odds = fetch_stir_odds(_name)
+        except Exception as e:
+            logger.warning(f"fetch_stir_odds {_name} failed: {e}")
+            odds = {}
+        if odds.get("text"):
+            result[_name]["forecast"] = odds["text"]
+            result[_name]["odds"] = odds
+
     _stale_guard(result)
     _attach_next_meeting(result)
     _attach_stance(result)
@@ -2285,7 +2559,8 @@ def fetch_spx_technical() -> dict:
         return '深度熊市'
 
     result = {}
-    for key, sym, name in [('spx', '^GSPC', '標普 500 (S&P 500)'), ('sox', '^SOX', '費城半導體 (SOX)')]:
+    for key, sym, name in [('spx', '^GSPC', '標普 500 (S&P 500)'), ('sox', '^SOX', '費城半導體 (SOX)'),
+                           ('twii', '^TWII', '加權指數 (TAIEX)')]:     # v19：台股區同一套技術面
         try:
             rows   = _get_ohlc(sym, '2y')   # 2y：最左那根 K 也要能往前取滿 200 日畫年線
             closes = [r['c'] for r in rows]
@@ -2970,7 +3245,8 @@ def fetch_all() -> dict:
         "taiwan":             tw_data,
         "taiwan_commentary":  _taiwan_commentary(tw_data),
         "taiwan_updated_at":  tw_ts,
-        "geopolitics":   fetch_geopolitics(),
+        "geopolitics":   _resolve_geo(fetch_geopolitics(), comm_data["items"] + crypto_data
+                                      + [i for i in indices if not i.get("is_vix")] + fx_data["items"]),
         "updated_at":    _now_taipei(),
         "market_date":   _get_last_trading_day(),
     }
