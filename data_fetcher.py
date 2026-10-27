@@ -375,12 +375,13 @@ def _step_decimals(step: float) -> int:
 
 
 def _build_kchart(rows: list, dec: int = 2, n_show: int = 60,
-                  W: int = 360, H: int = 190, ma=KC_MA) -> dict:
+                  W: int = 360, H: int = 190, ma=KC_MA, rsi: int = 0) -> dict:
     """日 K 幾何（像素座標 viewBox 0 0 W H，模板等比縮放，不會被拉扁）。
 
     rows：_get_ohlc() 格式（舊→新）。顯示最後 n_show 根；均線用全段歷史逐根往前取窗
     （滾動序列曲線，不是水平線）。y 值域貼齊 K 線高低＋月線／季線；年線可能離價格很遠，
     不納入值域以免把 K 線壓扁，超框段以 clipPath 裁掉、圖例標「框上方／下方」。
+    rsi＞0：K 線下方加 RSI 副圖（與 K 線共用時間軸），日期刻度移到副圖下方，回傳的 H 為總高。
     """
     import math
     if len(rows) < 2:
@@ -462,8 +463,42 @@ def _build_kchart(rows: list, dec: int = 2, n_show: int = 60,
 
     last_y = _y(last)
     first  = cdl[0]["c"]
+
+    # v20：RSI 副圖（Jeff：「RSI 放在股票下面超混亂」→ 併進 K 線圖，與 K 線同一條時間軸）
+    H_total, rsi_d, hit_h = H, None, ph
+    if rsi:
+        def _rsi_at(i):
+            # 與 fetch_spx_technical._rsi 同算法（近 N 日漲跌幅簡單平均），副圖末點才會跟文字裡的 RSI 對得上
+            if i < rsi:
+                return None
+            dd = [closes[j] - closes[j - 1] for j in range(i - rsi + 1, i + 1)]
+            g = sum(x for x in dd if x > 0) / rsi
+            l = sum(-x for x in dd if x < 0) / rsi
+            return 100.0 if l == 0 else 100 - 100 / (1 + g / l)
+        rvals = [_rsi_at(i) for i in range(i0, len(rows))]
+        r_top, r_h = PT + ph + 14, 56
+        r_bot = r_top + r_h
+        H_total, hit_h = r_bot + PB, r_bot - PT
+
+        def _yr(v):
+            return round(r_top + (100 - v) / 100 * r_h, 1)
+
+        for c, v in zip(candles, rvals):
+            c["rsi"] = "" if v is None else f"{v:.1f}"
+        lv = next((v for v in reversed(rvals) if v is not None), None)
+        if lv is not None:
+            rsi_d = {
+                "period": rsi, "top": r_top, "bot": r_bot, "h": r_h,
+                "y70": _yr(70), "y50": _yr(50), "y30": _yr(30),
+                "points": " ".join(f"{_x(i)},{_yr(v)}" for i, v in enumerate(rvals) if v is not None),
+                "last": round(lv, 1), "last_y": _yr(lv),
+                "last_lab_y": min(max(_yr(lv), r_top + 7.5), r_bot - 7.5),
+                "last_color": "#ef4444" if lv >= 70 else ("#22c55e" if lv <= 30 else "#64748b"),
+            }
+
     return {
-        "uid": f"kc{next(_KC_SEQ)}", "W": W, "H": H,
+        "uid": f"kc{next(_KC_SEQ)}", "W": W, "H": H_total,
+        "rsi": rsi_d, "hit_h": hit_h,
         "pl": PL, "px2": px2, "pt": PT, "ph": ph,
         "grid": grid, "ticks": ticks, "candles": candles,
         "ma_lines": ma_lines, "ma_marks": ma_marks, "ma_out": ma_out, "ma_vals": ma_vals,
@@ -1602,8 +1637,89 @@ RISK_DEFS = {
 }
 
 
+def _build_riskchart(series: list, zones: list, dec: int = 2, n_show: int = 63,
+                     W: int = 600, H: int = 190, avg: float = None) -> dict:
+    """情緒指標近 3 個月走勢（v20，像素座標 viewBox、模板等比縮放）。
+
+    底色＝分區（平靜／正常／緊張／恐慌，與狀態標籤同色）、灰虛線＝分區門檻（右側刻度）、
+    金色虛線＝近 1 年均值。值域貼齊資料，但會延伸到上方／下方最近的門檻，看得出離下一區多遠。
+    取代 v19 的 risk-spark（viewBox 0 0 100 30＋preserveAspectRatio=none 硬拉滿寬、沒有刻度與門檻，
+    Jeff：「下面的線條很沒有意義」）。
+    """
+    import math
+    win = series[-n_show:]
+    if len(win) < 2:
+        return {}
+    vals = [v for _, v in win]
+    n = len(vals)
+    PL, PR, PT, PB = 4, 46, 8, 18
+    px2, ph = W - PR, H - PT - PB
+    slot = (px2 - PL) / n
+    lo_v, hi_v = min(vals), max(vals)
+    span = hi_v - lo_v
+    pad = span * 0.08 if span > 0 else max(abs(hi_v) * 0.05, 1.0)
+    d_lo, d_hi = lo_v - pad, hi_v + pad
+    ths = sorted(t for t, _, _ in zones if t is not None)
+    up = [t for t in ths if t > hi_v]
+    if up and up[0] <= hi_v * 1.35:
+        d_hi = max(d_hi, up[0] + (up[0] - d_lo) * 0.05)
+    dn = [t for t in ths if t < lo_v]
+    if dn and dn[-1] >= lo_v * 0.75:
+        d_lo = min(d_lo, dn[-1] - (d_hi - dn[-1]) * 0.05)
+    if avg is not None and d_lo < avg * 1.25 and avg * 0.75 < d_hi:     # 均值不遠就納入值域
+        d_lo, d_hi = min(d_lo, avg - pad * 0.5), max(d_hi, avg + pad * 0.5)
+    d_lo = max(d_lo, 0.0)
+    rng = d_hi - d_lo
+
+    def _y(v):
+        return round(PT + (d_hi - v) / rng * ph, 1)
+
+    def _x(i):
+        return round(PL + (i + 0.5) * slot, 1)
+
+    bands, prev = [], -math.inf
+    for t, lab, col in zones:
+        top_v = math.inf if t is None else t
+        a, b = max(prev, d_lo), min(top_v, d_hi)
+        if b > a:
+            y1, y2 = _y(b), _y(a)
+            bands.append({"y": y1, "h": round(y2 - y1, 1), "color": col, "label": lab,
+                          "show": y2 - y1 >= 16, "ly": round(y1 + 12, 1)})
+        prev = top_v
+    last = vals[-1]
+    last_col = zones[-1][2]
+    for t, _, col in zones:
+        if t is not None and last < t:
+            last_col = col
+            break
+    last_y = _y(last)
+    lab_y = min(max(last_y, PT + 7.5), PT + ph - 7.5)
+    lines = [{"y": _y(t), "label": f"{t:g}", "hide": abs(_y(t) - lab_y) < 11}   # 與末值色塊重疊的刻度隱藏
+             for t in ths if d_lo < t < d_hi]
+
+    def _dlab(ds):
+        return f"{int(ds[5:7])}/{int(ds[8:10])}"
+
+    idxs = sorted({round(k * (n - 1) / 4) for k in range(5)})
+    ticks = []
+    for j, i in enumerate(idxs):
+        x, anchor = ((PL, "start") if j == 0 else (px2, "end") if j == len(idxs) - 1 else (_x(i), "middle"))
+        ticks.append({"x": x, "label": _dlab(win[i][0]), "anchor": anchor})
+    return {
+        "W": W, "H": H, "pl": PL, "px2": px2, "pt": PT, "ph": ph,
+        "bands": bands, "lines": lines, "ticks": ticks,
+        "points": " ".join(f"{_x(i)},{_y(v)}" for i, v in enumerate(vals)),
+        "last_x": _x(n - 1), "last_y": last_y, "last_lab_y": lab_y,
+        "last_fmt": f"{last:,.{dec}f}", "last_color": last_col,
+        "avg_y": _y(avg) if avg is not None and d_lo <= avg <= d_hi else None,
+        "hits": [{"x": round(PL + i * slot, 1), "w": round(slot, 1), "tip": f"{_dlab(ds)}　{v:,.{dec}f}"}
+                 for i, (ds, v) in enumerate(win)],
+    }
+
+
 def _risk_gauge(key: str, series: list) -> dict:
-    """series：[(YYYY-MM-DD, 值), ...] 舊→新 → 儀表（狀態、位置、分區漸層、刻度、近一月走勢）"""
+    """series：[(YYYY-MM-DD, 值), ...] 舊→新（最多近 1 年）→ 狀態標籤＋近 3 個月分區走勢圖＋判讀數字
+    （近 1 週變化、近 1 年分位、近 1 年均值；資料不足 1 年時改標實際月數）"""
     d = RISK_DEFS[key]
     series = [(ds, v) for ds, v in series if v is not None]
     if not series:
@@ -1625,7 +1741,11 @@ def _risk_gauge(key: str, series: list) -> dict:
     ticks = [{"pos": 0, "label": f"{lo:g}", "a": "start"}]
     ticks += [{"pos": pct(th), "label": f"{th:g}", "a": "mid"} for th, _, _ in d["zones"] if th is not None]
     ticks.append({"pos": 100, "label": f"{hi:g}{d['unit']}", "a": "end"})
-    month = series[-22:]
+    win = series[-63:]                           # 走勢圖：近 3 個月
+    yv = [v for _, v in series[-252:]]           # 分位與均值：近 1 年
+    avg = sum(yv) / len(yv)
+    pctl = round(sum(1 for v in yv if v <= last) / len(yv) * 100)
+    wk = series[-6][1] if len(series) >= 6 else None
     dec = d["dec"]
     ld = series[-1][0]
     return {
@@ -1636,32 +1756,51 @@ def _risk_gauge(key: str, series: list) -> dict:
         "label": label, "color": color, "pos": pct(last),
         "gradient": "linear-gradient(to right, " + ", ".join(stops) + ")",
         "ticks": ticks,
-        "spark": _build_sparkline(month, width=100, height=30),
-        "lo": f"{min(v for _, v in month):,.{dec}f}", "hi": f"{max(v for _, v in month):,.{dec}f}",
+        "chart": _build_riskchart(series, d["zones"], dec, n_show=63, avg=avg),
+        "lo": f"{min(v for _, v in win):,.{dec}f}", "hi": f"{max(v for _, v in win):,.{dec}f}",
+        "wk_chg": None if wk is None else round(last - wk, dec),
+        "wk_chg_fmt": "" if wk is None else f"{last - wk:+.{dec}f}",
+        "pctl": pctl, "pctl_lbl": "偏高" if pctl >= 80 else ("偏低" if pctl <= 20 else "居中"),
+        "span_lbl": "近 1 年" if len(yv) >= 200 else f"近 {max(1, round(len(yv) / 21))} 個月",
+        "avg_fmt": f"{avg:,.{dec}f}",
         "date": f"{int(ld[5:7])}/{int(ld[8:10])}",
     }
 
 
-def _tw_vix_series() -> list:
-    """期交所臺指選擇權波動率指數：每月一個 Big5 文字檔（log2data/YYYYMMnew.txt），取收盤欄"""
-    first = datetime.now(TAIPEI_TZ).date().replace(day=1)
-    out = {}
-    for f in ((first - timedelta(days=1)).replace(day=1), first):
+def _tw_vix_series(months: int = 4) -> list:
+    """期交所臺指選擇權波動率指數：每月一個 Big5 文字檔（log2data/YYYYMMnew.txt），取收盤欄。
+    v20：並行抓近 4 個月畫 3 個月走勢；期交所只保留約 4 個月，更早的月份檔會被轉址（302），故分位只能算近 4 個月"""
+    from concurrent.futures import ThreadPoolExecutor
+    mons = [datetime.now(TAIPEI_TZ).date().replace(day=1)]
+    for _ in range(months - 1):
+        mons.append((mons[-1] - timedelta(days=1)).replace(day=1))
+
+    def _one(f):
+        part = {}
         try:
             url = f"https://www.taifex.com.tw/file/taifex/Dailydownload/vix/log2data/{f:%Y%m}new.txt"
-            txt = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=12).content.decode("big5", errors="replace")
-            for line in txt.splitlines():
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=12, allow_redirects=False)
+            if resp.status_code != 200:
+                return part
+            for line in resp.content.decode("big5", errors="replace").splitlines():
                 c = line.split()
                 if len(c) >= 3 and re.fullmatch(r"\d{8}", c[0]):
-                    out[f"{c[0][:4]}-{c[0][4:6]}-{c[0][6:]}"] = float(c[2])
+                    part[f"{c[0][:4]}-{c[0][4:6]}-{c[0][6:]}"] = float(c[2])
         except Exception as e:
             logger.warning(f"台指 VIX {f:%Y%m} failed: {e}")
+        return part
+
+    out = {}
+    with ThreadPoolExecutor(max_workers=len(mons)) as ex:
+        for part in ex.map(_one, mons):
+            out.update(part)
     return sorted(out.items())
 
 
 def _move_series() -> list:
-    """ICE BofA MOVE（Yahoo ^MOVE；Yahoo 名稱誤標為 Northern Trust，數值經 9/1＝77.88 比對無誤）"""
-    return sorted(_get_history_raw("^MOVE", "3mo").items())
+    """ICE BofA MOVE（Yahoo ^MOVE；Yahoo 名稱誤標為 Northern Trust，數值經 9/1＝77.88 比對無誤）。
+    v20：抓 1 年（走勢圖畫近 3 個月，分位與均值用 1 年）"""
+    return sorted(_get_history_raw("^MOVE", "1y").items())
 
 
 def _hy_oas_series() -> list:
@@ -1684,7 +1823,7 @@ def _hy_oas_series() -> list:
 
 
 def _vix_series() -> list:
-    return sorted(_get_history_raw(VIX_TICKER, "3mo").items())
+    return sorted(_get_history_raw(VIX_TICKER, "1y").items())     # v20：1 年（同 MOVE）
 
 
 def _risk_note(g: dict, vix: float = None) -> str:
@@ -2581,7 +2720,8 @@ def fetch_spx_technical() -> dict:
             trend, trend_ok = _trend_lbl(price, ma20, ma60, ma200)
 
             # ── 過去 3 個月（60 交易日）日 K + 月/季/年線滾動序列（v14 共用引擎，加高＋刻度）──
-            kc = _build_kchart(rows, dec=0, n_show=60, W=600, H=270)
+            # v20：RSI(21) 改畫在 K 線下方副圖（取代卡片底部的 RSI 橫條）
+            kc = _build_kchart(rows, dec=0, n_show=60, W=600, H=270, rsi=21)
 
             result[key] = {
                 'ok':       True,
