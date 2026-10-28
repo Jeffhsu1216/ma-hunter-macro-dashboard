@@ -1890,8 +1890,9 @@ def _chart_ticks(labels: list, PL: float, px2: float, slot: float, k: int = 4) -
     return out
 
 
-def _build_tw_bar_chart(rows: list, W: int = 360, H: int = 150) -> dict:
-    """每日成交金額堆疊長條（億元）：上市在下、上櫃在上。rows 舊→新 {'d','twse','tpex'}"""
+def _build_tw_flow_chart(rows: list, W: int = 360, H: int = 150) -> dict:
+    """每日三大法人買賣超（億元，v20）：外資／投信／自營商堆疊，買超由零軸往上（紅）、賣超往下（綠），
+    顏色由亮到暗（不透明度 1／0.6／0.32）＝外資／投信／自營商；白線＝當日合計。rows 舊→新 {'d','f','t','dl','tot'}"""
     import math
     if not rows:
         return {}
@@ -1900,19 +1901,29 @@ def _build_tw_bar_chart(rows: list, W: int = 360, H: int = 150) -> dict:
     n = len(rows)
     slot = (px2 - PL) / n
     bw = max(slot * 0.68, 1.0)
-    top = max(r["twse"] + r["tpex"] for r in rows) * 1.08 or 1.0
-    y = lambda v: round(PT + (top - v) / top * ph, 1)
-    base = y(0)
+    comps = lambda r: (r["f"], r["t"], r["dl"])
+    hi = max([sum(v for v in comps(r) if v > 0) for r in rows] + [0.0])
+    lo = min([sum(v for v in comps(r) if v < 0) for r in rows] + [0.0])
+    pad = (hi - lo) * 0.08 or 1.0
+    hi, lo = hi + pad, lo - pad
+    y = lambda v: round(PT + (hi - v) / (hi - lo) * ph, 1)
     bars = []
     for i, r in enumerate(rows):
-        a, b = r["twse"], r["tpex"]
-        bars.append({"x": round(PL + i * slot + (slot - bw) / 2, 1), "w": round(bw, 1),
-                     "y1": y(a), "h1": round(base - y(a), 1),
-                     "y2": y(a + b), "h2": round(y(a) - y(a + b), 1),
-                     "tip": f"{r['d']}　合計 {a + b:,.0f} 億（上市 {a:,.0f}／上櫃 {b:,.0f}）"})
-    step = _axis_step(0, top, 4)
-    grid = [{"y": y(k * step), "label": f"{k * step:,.0f}"} for k in range(1, math.floor(top / step) + 1)]
-    return {"W": W, "H": H, "pl": PL, "px2": px2, "pt": PT, "ph": ph, "base": base,
+        segs, up, dn = [], 0.0, 0.0
+        for v, op in zip(comps(r), (1.0, 0.6, 0.32)):
+            if v > 0:
+                segs.append({"y": y(up + v), "h": round(y(up) - y(up + v), 1), "color": "#ef4444", "op": op})
+                up += v
+            elif v < 0:
+                segs.append({"y": y(dn), "h": round(y(dn + v) - y(dn), 1), "color": "#22c55e", "op": op})
+                dn += v
+        bars.append({"x": round(PL + i * slot + (slot - bw) / 2, 1), "w": round(bw, 1), "segs": segs,
+                     "net_y": y(r["tot"]),
+                     "tip": f"{r['d']}　合計 {r['tot']:+,.1f} 億｜外資 {r['f']:+,.1f}／投信 {r['t']:+,.1f}／自營商 {r['dl']:+,.1f}"})
+    step = _axis_step(lo, hi, 4)
+    grid = [{"y": y(k * step), "label": f"{k * step:,.0f}", "zero": k == 0}
+            for k in range(math.ceil(lo / step), math.floor(hi / step) + 1)]
+    return {"W": W, "H": H, "pl": PL, "px2": px2, "pt": PT, "ph": ph,
             "bars": bars, "grid": grid, "ticks": _chart_ticks([r["d"] for r in rows], PL, px2, slot)}
 
 
@@ -1944,8 +1955,8 @@ def _build_tw_line_chart(rows: list, W: int = 360, H: int = 150) -> dict:
 
 
 def _tw_market_stats() -> dict:
-    """台股（v18）：漲跌家數（上市＋上櫃）、每日成交金額圖（上市＋上櫃，近 20 個交易日）、
-    上市融資餘額走勢圖（FinMind，近 40 個交易日）。
+    """台股（v18）：漲跌家數（上市＋上櫃）、上市融資餘額走勢圖（FinMind，近 40 個交易日）。
+    v20：成交金額圖依 Jeff 指示換成每日三大法人買賣超（_tw_inst_flow），FMTQIK 只留來定位最近交易日。
     ⚠️ TWSE／TPEx 對海外 IP 可能封鎖（GitHub Actions 在美國）→ 與三大法人共用 taiwan_backup.json 容錯。"""
     out, hdr = {}, {"User-Agent": "Mozilla/5.0"}
     today = datetime.now(TAIPEI_TZ).date()
@@ -1953,9 +1964,9 @@ def _tw_market_stats() -> dict:
     first_prev = (first_this - timedelta(days=1)).replace(day=1)
     num = lambda v: float(str(v).replace(",", "").strip() or 0)
 
-    twse, tpex = {}, {}
+    twse = {}
     for f in (first_prev, first_this):
-        try:   # 上市：FMTQIK 成交金額（元）
+        try:   # 上市：FMTQIK 每日成交（取交易日清單）
             r = requests.get(f"https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK?date={f:%Y%m%d}&response=json",
                              headers=hdr, timeout=8).json()
             for row in r.get("data", []) or []:
@@ -1963,22 +1974,7 @@ def _tw_market_stats() -> dict:
                 twse[date(yy + 1911, mm, dd)] = num(row[2]) / 1e8
         except Exception as e:
             logger.warning(f"FMTQIK {f:%Y%m} failed: {e}")
-        try:   # 上櫃：tradingIndex 金額（仟元）
-            r = requests.get(f"https://www.tpex.org.tw/www/zh-tw/afterTrading/tradingIndex?date={f:%Y/%m/%d}&response=json",
-                             headers=hdr, timeout=8).json()
-            for row in ((r.get("tables") or [{}])[0].get("data") or []):
-                yy, mm, dd = (int(z) for z in str(row[0]).split("/"))
-                tpex[date(yy + 1911, mm, dd)] = num(row[2]) * 1000 / 1e8
-        except Exception as e:
-            logger.warning(f"TPEx tradingIndex {f:%Y%m} failed: {e}")
-
-    days = sorted(twse)[-20:]
-    dref = days[-1] if days else today
-    if days:
-        rows = [{"d": d.strftime("%m/%d"), "twse": twse[d], "tpex": tpex.get(d, 0.0)} for d in days]
-        out["turnover_chart"] = _build_tw_bar_chart(rows)
-        out["turnover_last"] = {"date": dref.strftime("%Y/%m/%d"), "twse": round(twse[dref]),
-                                "tpex": round(tpex.get(dref, 0.0)), "tot": round(twse[dref] + tpex.get(dref, 0.0))}
+    dref = max(twse) if twse else today
 
     try:   # 上市漲跌家數：MI_INDEX「漲跌證券數合計」取股票欄，括號內為漲停／跌停
         r = requests.get(f"https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date={dref:%Y%m%d}&type=MS&response=json",
@@ -2028,6 +2024,42 @@ def _tw_market_stats() -> dict:
     except Exception as e:
         logger.warning(f"FinMind 融資餘額 failed: {e}")
 
+    return out
+
+
+def _tw_inst_flow(latest: dict) -> dict:
+    """每日三大法人買賣超（v20，近 20 個交易日；取代成交金額圖）：FinMind 全市場三大法人一次取整段，
+    口徑同 BFI82U（外資＝外資及陸資不含外資自營商；自營商＝自行買賣＋避險＋外資自營商，10/27 實測四數字全對）。
+    FinMind 收盤後要一段時間才有當日 → BFI82U（latest）若已是更新的交易日就補上當天。"""
+    out = {}
+    today = datetime.now(TAIPEI_TZ).date()
+    try:
+        tok = _finmind_token()
+        r = requests.get("https://api.finmindtrade.com/api/v4/data",
+                         params={"dataset": "TaiwanStockTotalInstitutionalInvestors",
+                                 "start_date": (today - timedelta(days=45)).isoformat()},
+                         headers={"Authorization": f"Bearer {tok}"} if tok else {}, timeout=15).json()
+        key = {"Foreign_Investor": "f", "Investment_Trust": "t",
+               "Dealer_self": "dl", "Dealer_Hedging": "dl", "Foreign_Dealer_Self": "dl"}
+        days = {}
+        for x in r.get("data", []):
+            k = key.get(x.get("name"))
+            if k:
+                d = days.setdefault(x["date"], {"f": 0.0, "t": 0.0, "dl": 0.0})
+                d[k] += (x.get("buy", 0) - x.get("sell", 0)) / 1e8
+        ld = str(latest.get("date", ""))
+        if len(ld) == 8 and f"{ld[:4]}-{ld[4:6]}-{ld[6:]}" not in days:
+            days[f"{ld[:4]}-{ld[4:6]}-{ld[6:]}"] = {"f": latest["foreign"] / 1e8, "t": latest["inv_trust"] / 1e8,
+                                                    "dl": latest["dealer"] / 1e8}
+        keys = sorted(days)[-20:]
+        for ds in keys:                          # 合計用原始值相加再四捨五入（先捨入再加會差 0.1，對不上 BFI82U）
+            days[ds]["tot"] = days[ds]["f"] + days[ds]["t"] + days[ds]["dl"]
+        rows = [{"d": ds[5:].replace("-", "/"), **{k: round(x, 1) for k, x in days[ds].items()}} for ds in keys]
+        if rows:
+            out["inst_chart"] = _build_tw_flow_chart(rows)
+            out["inst_sum"] = {"n": len(rows), **{k: round(sum(days[ds][k] for ds in keys), 1) for k in ("f", "t", "dl", "tot")}}
+    except Exception as e:
+        logger.warning(f"FinMind 三大法人歷史 failed: {e}")
     return out
 
 
@@ -3271,7 +3303,8 @@ def fetch_taiwan_market() -> dict:
             "unit": "億元",
             "source": "live",
         }
-        result.update(_tw_market_stats())        # v18：漲跌家數（上市＋上櫃）／成交金額圖／融資餘額圖
+        result.update(_tw_market_stats())        # v18：漲跌家數（上市＋上櫃）／融資餘額圖
+        result.update(_tw_inst_flow(result))     # v20：每日三大法人買賣超圖（取代成交金額圖）
         # 成功就更新 backup
         try:
             with open(TAIWAN_BACKUP, "w", encoding="utf-8") as f:
