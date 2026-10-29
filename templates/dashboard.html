@@ -900,7 +900,7 @@
             <div class="cb-last-row">
                 <span class="cb-tag">上次</span>
                 <span class="cb-pill {{ 'up' if act == '升息' else 'down' if act == '降息' else 'stale' if act == '待更新' else 'hold' }}">{% if act == '升息' %}▲ 升息 {{ info.last_bps }}bp{% elif act == '降息' %}▼ 降息 {{ info.last_bps }}bp{% elif act == '待更新' %}⚠️ 結果待更新{% else %}─ 維持{% endif %}</span>
-                <span class="cb-last-date">{{ info.last_date }}</span>
+                <span class="cb-last-date">{{ info.last_date }}{% if info.last_votes %}・{{ info.last_votes }} 票{% endif %}</span>
             </div>
             <div class="cb-fc"{% if info.stance %} style="border-left-color:{{ info.stance.color }};"{% endif %}>
                 <div class="cb-fc-lbl">🎯 市場預期（下次會議）

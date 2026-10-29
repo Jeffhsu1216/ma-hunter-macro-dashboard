@@ -155,7 +155,7 @@ CBC_DATES_2026 = [
 # ⚠️ Fed／ECB／BOJ 的 forecast 由利率期貨即時計算覆寫（fetch_fed_hike_odds／fetch_stir_odds），此處僅為抓取失敗時的備援。
 # ⚠️ 若某央行已開過新會議、這裡還停在舊日期，_stale_guard() 會把卡片標成「待更新」而不是顯示舊結論。
 CB_DECISION_META = {
-    "聯準會 (Fed)":    {"last_action": "升息", "last_bps": 25, "last_date": "9/16", "forecast": "期貨隱含機率暫無法取得（9/16 升息後點陣圖偏向年內再升一次）"},
+    "聯準會 (Fed)":    {"last_action": "維持", "last_bps": 0,  "last_date": "10/28", "forecast": "期貨隱含機率暫無法取得（10/28 維持 3.75–4.00%，10-2 票，Cook／Hammack 主張升一碼）"},
     "中國央行 (PBOC)": {"last_action": "維持", "last_bps": 0,  "last_date": "10/20", "forecast": "短期無調整訊號（LPR 1 年 3.0%、5 年 3.5%；10/19 宣布研究改以隔夜逆回購為主要操作）"},
     "歐洲央行 (ECB)":  {"last_action": "升息", "last_bps": 25, "last_date": "9/10", "forecast": "數據依賴、逐次決議（中東戰事推升通膨，不預設路徑）"},
     "中央銀行 (CBC)":  {"last_action": "維持", "last_bps": 0,  "last_date": "9/17", "forecast": "偏鷹觀望（連 10 凍；CPI 連 4 個月逾 2%，9 月會前曾有升半碼預期）"},
@@ -2385,6 +2385,108 @@ _CB_MEETING_DATES = {
 }
 
 
+def _fomc_statement(d: date) -> dict:
+    """聯準會官網當場會議聲明（monetary{YYYYMMDD}a.htm）→ {action, bps, votes}；抓不到回 {}"""
+    import html as _html
+    from fractions import Fraction
+    url = f"https://www.federalreserve.gov/newsevents/pressreleases/monetary{d:%Y%m%d}a.htm"
+    r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+    if r.status_code != 200:
+        return {}
+    r.encoding = "utf-8"                      # 伺服器未標 charset，requests 會誤判成 latin-1 把破折號解成亂碼
+    t = _html.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", r.text)))
+    m = re.search(r"decided to (maintain|raise|lower) the target range for the federal funds rate "
+                  r"(?:by ([\d/ -]+?) percentage point )?(?:at|to) ([\d/ -]+?) to ([\d/ -]+?) percent", t)
+    if not m:
+        return {}
+    out = {"action": {"maintain": "維持", "raise": "升息", "lower": "降息"}[m.group(1)], "bps": 0}
+    if m.group(2):                            # 「by 1/4 percentage point」→ 25bp
+        out["bps"] = int(sum(Fraction(x) for x in m.group(2).replace("-", " ").split()) * 100)
+    elif out["action"] != "維持":
+        out["bps"] = 25
+    v = re.search(r"by a (\d+)\s*[–-]\s*(\d+) vote", t)
+    out["votes"] = f"{v.group(1)}-{v.group(2)}" if v else ("全票" if "unanimous" in t else "")
+    return out
+
+
+def _ecb_dfr_changes() -> dict:
+    """ECB Data Portal 存款利率（DFR）變動點 → {生效日: %}；序列只在利率變動時新增一筆"""
+    r = requests.get("https://data-api.ecb.europa.eu/service/data/FM/B.U2.EUR.4F.KR.DFR.LEV"
+                     "?lastNObservations=12&format=csvdata", timeout=20)
+    import csv, io
+    return {datetime.strptime(x["TIME_PERIOD"], "%Y-%m-%d").date(): float(x["OBS_VALUE"])
+            for x in csv.DictReader(io.StringIO(r.text)) if x.get("OBS_VALUE")}
+
+
+def _decision_from_levels(before: float, after: float) -> tuple:
+    """會前／會後政策利率 → (升息／降息／維持, bp)；隔夜利率有 1–2bp 雜訊，取整到 5bp、<10bp 視為維持"""
+    bp = int(round((after - before) * 100 / 5) * 5)
+    if abs(bp) < 10:
+        return "維持", 0
+    return ("升息" if bp > 0 else "降息"), abs(bp)
+
+
+def _auto_last_decision(result: dict) -> None:
+    """「上次決議」自動判斷，取代 CB_DECISION_META 手動釘住（失敗時保留釘住值，再交給 _stale_guard）
+      Fed：聯準會官網會議聲明（公布當下即可抓，含票數）
+      ECB：ECB 官方 DFR 變動序列；決議後 2 天內查無新變動點才判「維持」（避免官網尚未登錄就誤判）
+      BOJ：TONA 隔夜利率生效日前後比對（日銀 API 約晚 2 個營業日，期間維持釘住／待更新）
+      CBC／BOK／PBOC 無穩定來源，仍手動維護"""
+    from zoneinfo import ZoneInfo
+    now = datetime.now(ZoneInfo("Asia/Taipei"))
+
+    def _last_mtg(name):
+        past = [d for d in _CB_MEETING_DATES[name] if _release_tpe(name, d)[0] <= now]
+        return max(past) if past else None
+
+    def _apply(name, mtg, action, bps, votes=""):
+        r = result.get(name)
+        if r is None:
+            return
+        r.update(last_action=action, last_bps=bps, last_date=f"{mtg.month}/{mtg.day}",
+                 last_votes=votes, last_auto=True)
+        logger.info(f"{name} 上次決議自動判斷：{mtg:%m/%d} {action} {bps}bp {votes}")
+
+    # ── Fed ──
+    mtg = _last_mtg("聯準會 (Fed)")
+    if mtg:
+        try:
+            s = _fomc_statement(mtg)
+            if s:
+                _apply("聯準會 (Fed)", mtg, s["action"], s["bps"], s["votes"])
+        except Exception as e:
+            logger.warning(f"Fed 會議聲明抓取失敗：{e}")
+
+    # ── ECB ──
+    mtg = _last_mtg("歐洲央行 (ECB)")
+    if mtg:
+        try:
+            ch = _ecb_dfr_changes()
+            prior = [d for d in ch if d <= mtg]
+            new = [d for d in ch if d > mtg]
+            if prior and new:
+                a, b = _decision_from_levels(ch[max(prior)], ch[min(new)])
+                _apply("歐洲央行 (ECB)", mtg, a, b)
+            elif prior and now - _release_tpe("歐洲央行 (ECB)", mtg)[0] >= timedelta(days=2):
+                _apply("歐洲央行 (ECB)", mtg, "維持", 0)
+        except Exception as e:
+            logger.warning(f"ECB DFR 變動序列抓取失敗：{e}")
+
+    # ── BOJ ──
+    mtg = _last_mtg("日本央行 (BOJ)")
+    if mtg:
+        try:
+            obs = _tona_obs()
+            eff = _STIR_CFG["日本央行 (BOJ)"][1](mtg)
+            pre = [obs[d] for d in sorted(obs) if d <= mtg][-3:]
+            post = [obs[d] for d in sorted(obs) if d >= eff][:3]
+            if pre and post:
+                a, b = _decision_from_levels(sum(pre) / len(pre), sum(post) / len(post))
+                _apply("日本央行 (BOJ)", mtg, a, b)
+        except Exception as e:
+            logger.warning(f"BOJ TONA 判斷失敗：{e}")
+
+
 def _stale_guard(result: dict) -> None:
     """CB_DECISION_META 是手動釘住的；若某央行已開過新會議、釘住值還停在更早日期，
     改標「待更新」而不是繼續顯示舊結論（2026/09 發現 Fed/BOK/BOJ 皆停在舊會議）。
@@ -2596,7 +2698,7 @@ def fetch_cb_rates() -> dict:
         u = _get_fred_csv("DFEDTARU", 3)
         return f"{l[-1][1]:.2f}–{u[-1][1]:.2f}" if (l and u) else ""
 
-    fed_rate = _resolve("聯準會 (Fed)", _fed_fred, _scrape_fed_official, "3.50–3.75")
+    fed_rate = _resolve("聯準會 (Fed)", _fed_fred, _scrape_fed_official, "3.75–4.00")
 
     # ── ECB ──
     # ECB 決議後約一週才生效（2026/09/10 決議 → 09/16 生效），FRED ECBDFR 是「每日生效利率」，
@@ -2683,6 +2785,7 @@ def fetch_cb_rates() -> dict:
             result[_name]["forecast"] = odds["text"]
             result[_name]["odds"] = odds
 
+    _auto_last_decision(result)
     _stale_guard(result)
     _attach_next_meeting(result)
     _attach_stance(result)
