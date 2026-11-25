@@ -12,16 +12,16 @@ import pytz
 
 logger = logging.getLogger(__name__)
 
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "***REMOVED***")
-TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "***REMOVED***")
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "")
 DASHBOARD_URL      = os.environ.get("DASHBOARD_URL", "https://ma-hunter-macro-dashboard.onrender.com")
 
 
 def _warmup_render(timeout: int = 60) -> bool:
-    """預熱 Render：先打一次 /api/refresh，等冷啟動完成"""
+    """預熱 Render：先打一次 /api/data，等冷啟動完成"""
     try:
         logger.info("Warming up Render...")
-        resp = requests.get(f"{DASHBOARD_URL}/api/refresh", timeout=timeout)
+        resp = requests.get(f"{DASHBOARD_URL}/api/data", timeout=timeout)
         ok = resp.status_code == 200
         logger.info(f"Render warmup {'OK' if ok else 'failed'}: {resp.status_code}")
         return ok
@@ -103,6 +103,9 @@ def _build_message(data: dict) -> str:
 
 def send_telegram_link(text: str) -> bool:
     """傳送含連結的 Telegram 訊息（含 inline 按鈕）"""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        logger.info("未設定 TELEGRAM_BOT_TOKEN／TELEGRAM_CHAT_ID，略過 Telegram 推播")
+        return False
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,

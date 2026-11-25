@@ -14,9 +14,9 @@ import pytz
 
 logger = logging.getLogger(__name__)
 
-# ── 環境變數（優先讀取），否則使用預設占位符 ──────────────────────────────
-LINE_CHANNEL_TOKEN = os.environ.get("LINE_CHANNEL_TOKEN", "***REMOVED***")
-LINE_USER_ID       = os.environ.get("LINE_USER_ID",       "***REMOVED***")
+# ── 只讀環境變數；未設定就略過推播（不放預設值）──────────────────────────
+LINE_CHANNEL_TOKEN = os.environ.get("LINE_CHANNEL_TOKEN", "")
+LINE_USER_ID       = os.environ.get("LINE_USER_ID",       "")
 DASHBOARD_URL      = os.environ.get("DASHBOARD_URL",      "https://ma-hunter-macro-dashboard.onrender.com")
 
 # LINE Messaging API v2 推送端點
@@ -321,6 +321,9 @@ def send_line_text(text: str) -> bool:
     Returns:
         bool: 傳送成功回傳 True，否則 False
     """
+    if not LINE_CHANNEL_TOKEN or not LINE_USER_ID:
+        logger.info("未設定 LINE_CHANNEL_TOKEN／LINE_USER_ID，略過 LINE 推播")
+        return False
     payload = {
         "to": LINE_USER_ID,
         "messages": [
@@ -355,6 +358,9 @@ def send_line_flex(dashboard_data: dict) -> bool:
     Returns:
         bool: 傳送成功回傳 True，否則 False
     """
+    if not LINE_CHANNEL_TOKEN or not LINE_USER_ID:
+        logger.info("未設定 LINE_CHANNEL_TOKEN／LINE_USER_ID，略過 LINE 推播")
+        return False
     bubble  = _build_flex_bubble(dashboard_data)
     payload = {
         "to": LINE_USER_ID,
@@ -492,8 +498,8 @@ def get_my_user_id() -> None:
     print("       -H 'Content-Type: application/json' \\")
     print("       -d '{\"to\":\"USER_ID\",\"messages\":[{\"type\":\"text\",\"text\":\"test\"}]}'")
     print()
-    print(f"目前設定的 LINE_USER_ID = {LINE_USER_ID!r}")
-    print(f"目前設定的 LINE_CHANNEL_TOKEN = {'(已設定)' if LINE_CHANNEL_TOKEN != 'YOUR_LINE_CHANNEL_TOKEN' else '(尚未設定)'}")
+    print(f"目前設定的 LINE_USER_ID = {'(已設定)' if LINE_USER_ID else '(尚未設定)'}")
+    print(f"目前設定的 LINE_CHANNEL_TOKEN = {'(已設定)' if LINE_CHANNEL_TOKEN else '(尚未設定)'}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

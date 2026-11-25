@@ -13,8 +13,8 @@
 import urllib.request, urllib.parse, json, datetime, threading, time, os, subprocess, re
 
 # ══════════════════════════════════════════
-TOKEN   = '***REMOVED***'
-CHAT_ID = '***REMOVED***'
+TOKEN   = os.environ.get('TELEGRAM_BOT_TOKEN', '')   # 只讀環境變數，未設定就略過推播
+CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', '')
 DASHBOARD_URL = 'https://jeffhsu1216.github.io/ma-hunter-macro-dashboard/'
 # ══════════════════════════════════════════
 
@@ -553,6 +553,8 @@ def run(geopolitics_bullets=None):
     msg = '\n'.join(L)
 
     # ── 送 Telegram ──
+    if not TOKEN or not CHAT_ID:
+        return False, msg
     payload = json.dumps({
         'chat_id': CHAT_ID,
         'text': msg,

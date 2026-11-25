@@ -16,8 +16,8 @@ import anthropic
 import pytz
 
 # ══════════════════════════════════════════
-TOKEN   = '***REMOVED***'
-CHAT_ID = '***REMOVED***'
+TOKEN   = os.environ.get('TELEGRAM_BOT_TOKEN', '')   # 只讀環境變數，未設定就略過推播
+CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', '')
 TAIPEI_TZ = pytz.timezone('Asia/Taipei')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR = os.path.join(SCRIPT_DIR, 'ma_weekly_log')
@@ -162,6 +162,9 @@ def run_claude(prompt: str) -> str:
 
 def send_telegram(text: str) -> bool:
     """推送純文字至 Telegram"""
+    if not TOKEN or not CHAT_ID:
+        print('未設定 TELEGRAM_BOT_TOKEN／TELEGRAM_CHAT_ID，略過 Telegram 推播')
+        return False
     payload = json.dumps({
         'chat_id': CHAT_ID,
         'text': text,
@@ -225,7 +228,7 @@ def main():
     print('================\n')
 
     ok = send_telegram(result)
-    print('✅ Telegram 推送成功' if ok else '❌ Telegram 推送失敗')
+    print('✅ Telegram 推送成功' if ok else 'ℹ️ Telegram 未推送（未設定金鑰或推送失敗）')
 
     save_and_push(result, date_str)
 

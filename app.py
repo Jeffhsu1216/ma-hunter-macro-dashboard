@@ -6,7 +6,8 @@ Macro Dashboard Web Application
 網址：https://ma-hunter-macro-dashboard.onrender.com
 """
 
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request, abort
+import hmac
 from data_fetcher import fetch_all, clear_cache
 from notifier import push_daily
 from datetime import datetime
@@ -51,21 +52,32 @@ def api_data():
     return jsonify(fetch_all())
 
 
-@app.route("/api/refresh")
+def _require_admin():
+    """有副作用的端點：只收 POST，且須帶 X-Admin-Token（環境變數 ADMIN_TOKEN）。
+    未設定 ADMIN_TOKEN 時端點一律關閉。"""
+    expected = os.environ.get("ADMIN_TOKEN", "")
+    given = request.headers.get("X-Admin-Token", "")
+    if not expected or not hmac.compare_digest(given.encode(), expected.encode()):
+        abort(403)
+
+
+@app.route("/api/refresh", methods=["POST"])
 def api_refresh():
     """強制刷新快取"""
+    _require_admin()
     clear_cache()
     data = fetch_all()
     return jsonify({"status": "refreshed", "data": data})
 
 
-@app.route("/api/push")
+@app.route("/api/push", methods=["POST"])
 def api_push():
     """手動觸發 Telegram 推送"""
+    _require_admin()
     success = push_daily()
     return jsonify({"status": "sent" if success else "failed"})
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=os.environ.get("FLASK_DEBUG") == "1")

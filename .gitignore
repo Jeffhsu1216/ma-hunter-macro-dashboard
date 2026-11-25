@@ -31,3 +31,11 @@ output/
 /圖靈金融/
 /投資分析/
 /併購新聞整理.txt
+
+# ── 個資／規格檔／金鑰：一律不進公開 repo ──
+/CLAUDE.md
+/Youtuber/
+/.gitmodules
+/docs/orion/
+.env
+.env.*
