@@ -9,9 +9,7 @@ Macro Dashboard Web Application
 from flask import Flask, render_template, jsonify, request, abort
 import hmac
 from data_fetcher import fetch_all, clear_cache
-from notifier import push_daily
 from datetime import datetime
-from apscheduler.schedulers.background import BackgroundScheduler
 import pytz
 import logging
 import os
@@ -19,13 +17,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 app = Flask(__name__)
 
-# ============================================================
-# 排程：每日台北時間 08:00 推送 Telegram
-# ============================================================
-scheduler = BackgroundScheduler()
 taipei_tz = pytz.timezone("Asia/Taipei")
-scheduler.add_job(push_daily, "cron", hour=8, minute=0, timezone=taipei_tz, id="daily_push")
-scheduler.start()
 
 
 @app.route("/")
@@ -68,14 +60,6 @@ def api_refresh():
     clear_cache()
     data = fetch_all()
     return jsonify({"status": "refreshed", "data": data})
-
-
-@app.route("/api/push", methods=["POST"])
-def api_push():
-    """手動觸發 Telegram 推送"""
-    _require_admin()
-    success = push_daily()
-    return jsonify({"status": "sent" if success else "failed"})
 
 
 if __name__ == "__main__":

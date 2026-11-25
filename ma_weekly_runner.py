@@ -2,7 +2,7 @@
 每週併購週報自動化 Runner
 - 每週日 14:00 台北時間由 GitHub Actions 觸發
 - 透過 Claude API (claude-opus-4-6) + web_search 工具搜尋 M&A 新聞
-- 結果推送至 Telegram，同時存入 ma_weekly_log/YYYYMMDD.txt
+- 結果存入 ma_weekly_log/YYYYMMDD.txt（Telegram 推送已移除）
 """
 
 import os
@@ -16,8 +16,6 @@ import anthropic
 import pytz
 
 # ══════════════════════════════════════════
-TOKEN   = os.environ.get('TELEGRAM_BOT_TOKEN', '')   # 只讀環境變數，未設定就略過推播
-CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', '')
 TAIPEI_TZ = pytz.timezone('Asia/Taipei')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR = os.path.join(SCRIPT_DIR, 'ma_weekly_log')
@@ -160,30 +158,6 @@ def run_claude(prompt: str) -> str:
     return "[錯誤] 超過最大工具呼叫次數"
 
 
-def send_telegram(text: str) -> bool:
-    """推送純文字至 Telegram"""
-    if not TOKEN or not CHAT_ID:
-        print('未設定 TELEGRAM_BOT_TOKEN／TELEGRAM_CHAT_ID，略過 Telegram 推播')
-        return False
-    payload = json.dumps({
-        'chat_id': CHAT_ID,
-        'text': text,
-        'disable_web_page_preview': False,
-    }).encode('utf-8')
-    req = urllib.request.Request(
-        f'https://api.telegram.org/bot{TOKEN}/sendMessage',
-        data=payload,
-        headers={'Content-Type': 'application/json'},
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as r:
-            result = json.loads(r.read())
-        return result.get('ok', False)
-    except Exception as e:
-        print(f'Telegram 推送失敗：{e}')
-        return False
-
-
 def save_and_push(text: str, date_str: str):
     """存檔 + git push"""
     os.makedirs(LOG_DIR, exist_ok=True)
@@ -226,9 +200,6 @@ def main():
     print('\n=== 週報內容 ===')
     print(result)
     print('================\n')
-
-    ok = send_telegram(result)
-    print('✅ Telegram 推送成功' if ok else 'ℹ️ Telegram 未推送（未設定金鑰或推送失敗）')
 
     save_and_push(result, date_str)
 
